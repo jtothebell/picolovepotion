@@ -149,8 +149,8 @@ local __pico_music = {}
 local __pico_current_music = nil
 
 function get_bits(v,s,e)
-	local mask = shl(shl(1,s)-1,e)
-	return shr(band(mask,v))
+	local mask = bit.lshift(bit.lshift(1,s)-1,e)
+	return bit.rshift(bit.band(mask,v))
 end
 
 local QueueableSource = require "QueueableSource"
@@ -578,7 +578,7 @@ function load_p8(filename)
 					-- get the two pixel values and merge them
 					local lo = flr(__pico_spritesheet_data:getPixel(sx,sy)/16)
 					local hi = flr(__pico_spritesheet_data:getPixel(sx+1,sy)/16)
-					local v = bor(shl(hi,4),lo)
+					local v = bit.bor(bit.lshift(hi,4),lo)
 					__pico_map[ty][tx] = v
 					shared = shared + 1
 					tx = tx + 1
@@ -1299,7 +1299,7 @@ function sfx(n,channel,offset)
 end
 
 function clip(x,y,w,h)
-	if x then
+	if x and x~="" then
 		love.graphics.setScissor(x,y,w,h)
 		__pico_clip = {x,y,w,h}
 	else
@@ -1359,7 +1359,7 @@ function fget(n,f)
 			warning(string.format('fget(%d,%d)',n,f))
 			return 0
 		end
-		return band(__pico_spriteflags[flr(n)],shl(1,flr(f))) ~= 0
+		return bit.band(__pico_spriteflags[flr(n)],bit.lshift(1,flr(f))) ~= 0
 	end
 	return __pico_spriteflags[flr(n)]
 end
@@ -1382,9 +1382,9 @@ function fset(n,f,v)
 	if f then
 		-- set specific bit to v (true or false)
 		if f then
-			__pico_spriteflags[n] = bor(__pico_spriteflags[n],shl(1,f))
+			__pico_spriteflags[n] = bit.bor(__pico_spriteflags[n],bit.lshift(1,f))
 		else
-			__pico_spriteflags[n] = band(bnot(__pico_spriteflags[n],shl(1,f)))
+			__pico_spriteflags[n] = bit.band(bit.bnot(__pico_spriteflags[n],bit.lshift(1,f)))
 		end
 	else
 		-- set bitfield to v (number)
@@ -1877,7 +1877,7 @@ function map(cel_x,cel_y,sx,sy,cel_w,cel_h,bitmask)
 						if bitmask == nil or bitmask == 0 then
 							love.graphics.draw(__pico_spritesheet,__pico_quads[v],sx+8*x,sy+8*y)
 						else
-							if band(__pico_spriteflags[v],bitmask) ~= 0 then
+							if bit.band(__pico_spriteflags[v],bitmask) ~= 0 then
 								love.graphics.draw(__pico_spritesheet,__pico_quads[v],sx+8*x,sy+8*y)
 							else
 							end
@@ -2104,6 +2104,30 @@ bxor = bit.bxor
 bnot = bit.bnot
 shl = bit.lshift
 shr = bit.rshift
+
+function band(x,y)
+	return bit.band(x*0x10000,y*0x10000)/0x10000
+end
+
+function bor(x,y)
+	return bit.bor(x*0x10000,y*0x10000)/0x10000
+end
+
+function bxor(x,y)
+	return bit.bxor(x*0x10000,y*0x10000)/0x10000
+end
+
+function bnot(x)
+	return bit.bnot(x*0x10000)/0x10000
+end
+
+function shl(x,y)
+	return bit.lshift(x*0x10000,y)/0x10000
+end
+
+function shr(x,y)
+	return bit.band(x*0x10000,y)/0x10000
+end
 
 sub = string.sub
 
