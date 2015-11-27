@@ -109,7 +109,7 @@ local __pico_palette = {
 	{255,241,232,255},
 	{255,0,77,255},
 	{255,163,0,255},
-	{255,255,39,255},
+	{255,240,36,255},
 	{0,231,86,255},
 	{41,173,255,255},
 	{131,118,156,255},
@@ -737,14 +737,18 @@ function load_p8(filename)
 	lua = lua:gsub("!=","~=")
 	-- rewrite shorthand if statements eg. if (not b) i=1 j=2
 	lua = lua:gsub("if%s*(%b())%s*([^\n]*)\n",function(a,b)
-		local nl = a:find('\n')
+		local nl = a:find('\n',nil,true)
 		local th = b:find('%f[%w]then%f[%W]')
 		local an = b:find('%f[%w]and%f[%W]')
-		local o = b:find('%f[%w]or%f[W]')
-		if nl or th or an or o then
-			return string.format('if %s %s\n',a,b)
-		else
-			return "if "..a:sub(2,#a-1).." then "..b.." end\n"
+		local o = b:find('%f[%w]or%f[%W]')
+		local ce = b:find('--',nil,true)
+		if not (nl or th or an or o) then
+			if ce then
+				local c,t = b:match("(.-)(%s-%-%-.*)")
+				return "if "..a:sub(2,-2).." then "..c.." end"..t.."\n"
+			else
+				return "if "..a:sub(2,-2).." then "..b.." end\n"
+			end
 		end
 	end)
 	-- rewrite assignment operators
@@ -754,8 +758,6 @@ function load_p8(filename)
 		-- extra functions provided by picolove
 		assert=assert,
 		error=error,
-		log=log,
-		pairs=pairs,
 		ipairs=ipairs,
 		warning=warning,
 		setfps=setfps,
@@ -772,6 +774,7 @@ function load_p8(filename)
 		fset=fset,
 		flip=flip,
 		print=print,
+		printh=log,
 		cursor=cursor,
 		color=color,
 		cls=cls,
@@ -784,6 +787,7 @@ function load_p8(filename)
 		rectfill=rectfill,
 		run=run,
 		reload=reload,
+		cstore=cstore,
 		pal=pal,
 		palt=palt,
 		spr=spr,
@@ -793,6 +797,7 @@ function load_p8(filename)
 		foreach=foreach,
 		count=count,
 		all=all,
+		pairs=pairs,
 		btn=btn,
 		btnp=btnp,
 		sfx=sfx,
@@ -801,6 +806,7 @@ function load_p8(filename)
 		mset=mset,
 		map=map,
 		memcpy=memcpy,
+		memset=memset,
 		peek=peek,
 		poke=poke,
 		max=max,
@@ -1163,7 +1169,7 @@ function love.keypressed(key)
 		return cart._keydown(key)
 	end
 	if key == 'r' and (love.keyboard.isDown('lctrl') or love.keyboard.isDown('lgui')) then
-		reload()
+		_reload()
 	elseif key == 'q' and (love.keyboard.isDown('lctrl') or love.keyboard.isDown('lgui')) then
 		love.event.quit()
 	elseif key == 'pause' then
@@ -1628,9 +1634,15 @@ function run()
 	if cart._init then cart._init() end
 end
 
-function reload()
+function _reload()
 	_load(cartname)
 	run()
+end
+
+function reload(dest_addr,source_addr,len)
+end
+
+function cstore(dest_addr,source_addr,len)
 end
 
 local __palette_modified = true
@@ -1718,20 +1730,16 @@ function spr(n,x,y,w,h,flip_x,flip_y)
 end
 
 function sspr(sx,sy,sw,sh,dx,dy,dw,dh,flip_x,flip_y)
--- Stretch rectangle from sprite sheet (sx, sy, sw, sh) // given in pixels
--- and draw in rectangle (dx, dy, dw, dh)
--- Colour 0 drawn as transparent by default (see palt())
--- dw, dh defaults to sw, sh
--- flip_x=true to flip horizontally
--- flip_y=true to flip vertically
 	dw = dw or sw
 	dh = dh or sh
 	-- FIXME: cache this quad
-	-- FIXME handle flipping
 	local q = love.graphics.newQuad(sx,sy,sw,sh,__pico_spritesheet:getDimensions())
 	love.graphics.setShader(__sprite_shader)
 	__sprite_shader:send('transparent',unpack(__pico_pal_transparent))
-	love.graphics.draw(__pico_spritesheet,q,flr(dx),flr(dy),0,dw/sw,dh/sh)
+	love.graphics.draw(__pico_spritesheet,q,
+		flr(dx)+(flip_x and dw or 0),
+		flr(dy)+(flip_y and dh or 0),
+		0,dw/sw*(flip_x and -1 or 1),dh/sh*(flip_y and -1 or 1))
 	love.graphics.setShader(__draw_shader)
 end
 
@@ -1884,10 +1892,14 @@ function memcpy(dest_addr,source_addr,len)
 	end
 end
 
-function peek(...)
+function memset(dest_addr,val,len)
 end
 
-function poke(...)
+function peek(addr)
+	return 0
+end
+
+function poke(addr,val)
 end
 
 function min(a,b)
@@ -1909,12 +1921,17 @@ function max(a,b)
 end
 
 function mid(x,y,z)
-	return x > y and x or y > z and z or y
+	return (x<=y)and((y<=z)and y or((x<z)and z or x))or((x<=z)and x or((y<z)and z or y))
 end
 
-assert(mid(1,5,6) == 5)
-assert(mid(3,2,6) == 3)
-assert(mid(3,9,6) == 6)
+assert(mid(1,2,3)==2)
+assert(mid(1,3,2)==2)
+assert(mid(2,1,3)==2)
+assert(mid(2,3,1)==2)
+assert(mid(3,1,2)==2)
+assert(mid(3,2,1)==2)
+assert(mid(1,1,3)==1)
+assert(mid(1,3,3)==3)
 
 function __pico_angle(a)
 	-- FIXME: why does this work?
@@ -1922,8 +1939,8 @@ function __pico_angle(a)
 end
 
 flr = math.floor
-cos = function(x) return math.cos((x or 0)*(math.pi*2)) end
-sin = function(x) return math.sin(-(x or 0)*(math.pi*2)) end
+cos = function(x) return math.cos((x or 0)*math.pi*2) end
+sin = function(x) return -math.sin((x or 0)*math.pi*2) end
 atan2 = function(y,x) return __pico_angle(math.atan2(y,x)) end
 
 sqrt = math.sqrt
@@ -1933,18 +1950,12 @@ srand = function(seed)
 	return love.math.setRandomSeed(flr(seed*32768))
 end
 sgn = function(x)
-	if x < 0 then
-		return -1
-	elseif x > 0 then
-		return 1
-	else
-		return 0
-	end
+	return x < 0 and -1 or 1
 end
 
 assert(sgn(-10) == -1)
 assert(sgn(10) == 1)
-assert(sgn(0) == 0)
+assert(sgn(0) == 1)
 
 local bit = require("bit")
 
