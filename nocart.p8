@@ -4,12 +4,12 @@ __lua__
 function _init()
 	t=0
 	linebuffer = ""
-	line = 4
+	line = 6
 	cls()
-	spr(32,0,3,6,1)
-	spr(38,40,0)
-	print("picolove-0.2",0,14,6)
-	print("a pico-8 clone made with love <3",0,14+8,6)
+	spr(32,1,5,6,1)
+	spr(38,45,1)
+	print("picolove-0.2",0,18,6)
+	print("a pico-8 clone made with love <3",0,24,6)
 end
 
 function _update()
@@ -18,16 +18,16 @@ end
 
 function _keydown(key)
 	if key == 'backspace' then
-		linebuffer = linebuffer:sub(1,#linebuffer-1)
+		linebuffer = sub(linebuffer,1,-2)
 	elseif key == 'return' then
-		if linebuffer:sub(1,5) == 'load ' then
-			load(linebuffer:sub(6,#linebuffer))
+		if sub(linebuffer,1,5) == 'load ' then
+			load(sub(linebuffer,6))
 			run()
 			return
 		end
 		linebuffer = ''
 		line+=1
-		cursor(1,line*8)
+		cursor(1,line*6)
 	end
 end
 
@@ -36,11 +36,11 @@ function _textinput(text)
 end
 
 function _draw()
-	rectfill(0,line*8,127,(line+1)*8,0)
+	rectfill(0,line*6,127,(line+1)*6,0)
 	color(7)
-	print("> "..linebuffer,0,line*8)
-	if t % 16 < 8 then
-		rectfill((#linebuffer+2)*4,line*8,(#linebuffer+2)*4+3,line*8+4,8)
+	print("> "..linebuffer,0,line*6)
+	if t % 15 < 7 then
+		rectfill((#linebuffer+2)*4,line*6,(#linebuffer+2)*4+3,line*6+4,8)
 	end
 end
 

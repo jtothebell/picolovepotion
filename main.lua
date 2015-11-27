@@ -159,7 +159,6 @@ function lowpass(y0,y1, cutoff)
 end
 
 local paused = false
-local focus = true
 
 function love.load(argv)
 	love_args = argv
@@ -260,6 +259,7 @@ function love.load(argv)
 		__audio_channels[i]:play()
 	end
 
+	love.graphics.setBackgroundColor(3, 5, 10, 255)
 	love.graphics.clear()
 	love.graphics.setDefaultFilter('nearest','nearest')
 	__screen = love.graphics.newCanvas(__pico_resolution[1],__pico_resolution[2])
@@ -343,7 +343,7 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 	camera()
 	pal()
 	palt()
-  color(6)
+	color(6)
 
 	_load(argv[2] or 'nocart.p8')
 	run()
@@ -364,7 +364,7 @@ function load_p8(filename)
 	__pico_spritesheet_data = love.image.newImageData(128,128)
 	__pico_spriteflags = {}
 
-	if filename:sub(#filename-3,#filename) == '.png' then
+	if filename:sub(-4) == '.png' then
 		local img = love.graphics.newImage(filename)
 		if img:getWidth() ~= 160 or img:getHeight() ~= 205 then
 			error("Image is the wrong size")
@@ -477,7 +477,7 @@ function load_p8(filename)
 						local length = bit.rshift(byte,4) + 2
 
 						local offset = #lua - offset
-						local buffer = lua:sub(offset+1,offset+1+length-1)
+						local buffer = lua:sub(offset+1,offset+length)
 						lua = lua .. buffer
 						mode = 0
 					elseif byte == 0x00 then
@@ -805,6 +805,9 @@ function load_p8(filename)
 		mget=mget,
 		mset=mset,
 		map=map,
+		cartdata=cartdata,
+		dget=dget,
+		dset=dset,
 		memcpy=memcpy,
 		memset=memset,
 		peek=peek,
@@ -929,7 +932,7 @@ function love.run()
 		local render = false
 		while dt > frametime do
 			host_time = host_time + dt
-			if paused or not focus then
+			if paused then
 			else
 				if love.update then love.update(frametime) end -- will pass 0 if love.timer is disabled
 				update_audio(frametime)
@@ -940,7 +943,7 @@ function love.run()
 
 		if render and love.window and love.graphics and love.window.isCreated() then
 			love.graphics.origin()
-			if paused or not focus then
+			if paused then
 				rectfill(64-4*4,60,64+4*4-2,64+4+4,1)
 				print("paused",64 - 3*4,64,(host_time*20)%8<4 and 7 or 13)
 				flip_screen()
@@ -951,10 +954,6 @@ function love.run()
 
 		if love.timer then love.timer.sleep(0.001) end
 	end
-end
-
-function love.focus(f)
-	focus = f
 end
 
 note_map = {
@@ -1123,7 +1122,7 @@ function flip_screen()
 	love.graphics.setCanvas()
 	love.graphics.origin()
 
-  -- love.graphics.setColor(255,255,255,255)
+	-- love.graphics.setColor(255,255,255,255)
 	love.graphics.setScissor()
 
 	love.graphics.clear()
@@ -1318,7 +1317,7 @@ end
 function pset(x,y,c)
 	if not c then return end
 	color(c)
-	love.graphics.point(flr(x),flr(y),c*16,0,0,255)
+	love.graphics.point(flr(x),flr(y))
 end
 
 function sget(x,y)
@@ -1385,16 +1384,17 @@ end
 log = print
 function print(str,x,y,col)
 	if col then color(col) end
-	if y==nil then
-		y = __pico_cursor[2]
+	if x or y then
+		__pico_cursor[1] = flr(tonumber(x) or 0)
+		__pico_cursor[2] = flr(tonumber(y) or 0)
+	end
+	love.graphics.setShader(__text_shader)
+	love.graphics.print(tostring(str),__pico_cursor[1],__pico_cursor[2])
+	love.graphics.setShader(__text_shader)
+	if not x and not y then
+		__pico_cursor[1] = 0
 		__pico_cursor[2] = __pico_cursor[2] + 6
 	end
-	if x==nil then
-		x = __pico_cursor[1]
-	end
-	love.graphics.setShader(__text_shader)
-	love.graphics.print(str,flr(x),flr(y))
-	love.graphics.setShader(__text_shader)
 end
 
 __pico_cursor = {0,0}
@@ -1463,6 +1463,9 @@ function circ(ox,oy,r,col)
 			decisionOver2 = decisionOver2 + 2 * (y-x) + 1
 		end
 	end
+	if #points == 0 then
+		return
+	end
 	lineMesh:setVertices(points)
 	lineMesh:setDrawRange(1,#points)
 	love.graphics.draw(lineMesh)
@@ -1508,11 +1511,12 @@ function circfill(cx,cy,r,col)
 			err = err - x
 		end
 	end
-
+	if #points == 0 then
+		return
+	end
 	lineMesh:setVertices(points)
 	lineMesh:setDrawRange(1,#points)
 	love.graphics.draw(lineMesh)
-
 end
 
 function line(x0,y0,x1,y1,col)
@@ -1613,17 +1617,13 @@ end
 function rectfill(x0,y0,x1,y1,col)
 	col = col or __pico_color
 	color(col)
-	local w = (x1-x0)+1
-	local h = (y1-y0)+1
-	if w < 0 then
-		w = -w
-		x0 = x0-w
+	if x1<x0 then
+		x0,x1=x1,x0
 	end
-	if h < 0 then
-		h = -h
-		y0 = y0-h
+	if y1<y0 then
+		y0,y1=y1,y0
 	end
-	love.graphics.rectangle("fill",flr(x0),flr(y0),w,h)
+	love.graphics.rectangle("fill",flr(x0),flr(y0),flr(x1-x0)+1,flr(y1-y0)+1)
 end
 
 function run()
@@ -1713,7 +1713,7 @@ function spr(n,x,y,w,h,flip_x,flip_y)
 	else
 		local id = string.format("%d-%d-%d",n,w,h)
 		if __pico_quads[id] then
-			q =  __pico_quads[id]
+			q = __pico_quads[id]
 		else
 			q = love.graphics.newQuad(flr(n%16)*8,flr(n/16)*8,8*w,8*h,128,128)
 			__pico_quads[id] = q
@@ -1868,6 +1868,16 @@ function map(cel_x,cel_y,sx,sy,cel_w,cel_h,bitmask)
 	love.graphics.setShader(__draw_shader)
 end
 
+function cartdata(id)
+end
+
+function dget(index)
+	return 0
+end
+
+function dset(index,value)
+end
+
 -- memory functions excluded
 
 function memcpy(dest_addr,source_addr,len)
@@ -1896,10 +1906,82 @@ function memset(dest_addr,val,len)
 end
 
 function peek(addr)
+	addr = flr(addr)
+	if addr < 0 then
+		return 0
+	elseif addr < 0x2000 then
+		local lo = __pico_spritesheet_data:getPixel(addr*2%128,flr(addr/64))
+		local hi = __pico_spritesheet_data:getPixel(addr*2%128+1,flr(addr/64))
+		return hi+lo/16
+	elseif addr < 0x3000 then
+		addr=addr-0x1000
+		return __pico_map[flr(addr/128)][addr%128]
+	elseif addr < 0x3100 then
+		return __pico_spriteflags[addr-0x3000]
+	elseif addr < 0x3200 then
+		--FIXME: Music
+	elseif addr < 0x4300 then
+		--FIXME: SFX
+	elseif addr < 0x5f00 then
+		--FIXME: User memory
+	elseif addr < 0x5f80 then
+		--FIXME: Draw state
+	elseif addr < 0x5fc0 then
+		--FIXME: Persistence data
+	elseif addr < 0x6000 then
+		--FIXME: Unused but memory
+	elseif addr < 0x8000 then
+		addr=addr-0x6000
+		local lo = __screen:getPixel(addr*2%128,flr(addr/64))
+		local hi = __screen:getPixel(addr*2%128+1,flr(addr/64))
+		return bit.band(hi,0xF0)+lo/17
+	end
 	return 0
 end
 
 function poke(addr,val)
+	addr,val = flr(addr),flr(val)%256
+	if addr < 0 or addr >= 0x8000 then
+		error("bad memory access")
+	elseif addr < 0x1000 then
+		local lo = val%16*16
+		local hi = bit.band(val,0xF0)
+		__pico_spritesheet_data:setPixel(addr*2%128,flr(addr/64),lo,0,0,255)
+		__pico_spritesheet_data:setPixel(addr*2%128+1,flr(addr/64),hi,0,0,255)
+	elseif addr < 0x2000 then
+		local lo = val%16*16
+		local hi = bit.band(val,0xF0)
+		__pico_spritesheet_data:setPixel(addr*2%128,flr(addr/64),lo,0,0,255)
+		__pico_spritesheet_data:setPixel(addr*2%128+1,flr(addr/64),hi,0,0,255)
+		addr=addr-0x1000
+		__pico_map[flr(addr/128)][addr%128]=val
+	elseif addr < 0x3000 then
+		addr=addr-0x1000
+		__pico_map[flr(addr/128)][addr%128]=val
+	elseif addr < 0x3100 then
+		__pico_spriteflags[addr-0x3000]=val
+	elseif addr < 0x3200 then
+		--FIXME: Music
+	elseif addr < 0x4300 then
+		--FIXME: SFX
+	elseif addr < 0x5f00 then
+		--FIXME: User memory
+	elseif addr < 0x5f80 then
+		--FIXME: Draw state
+	elseif addr < 0x5fc0 then
+		--FIXME: Persistence data
+	elseif addr < 0x6000 then
+		--FIXME: Unused but memory
+	elseif addr < 0x8000 then
+		addr=addr-0x6000
+		local lo = val%16*16
+		local hi = bit.band(val,0xF0)
+		love.graphics.setColor(lo,0,0,255)
+		love.graphics.point(addr*2%128,flr(addr/64))
+		love.graphics.setColor(hi,0,0,255)
+		love.graphics.point(addr*2%128+1,flr(addr/64))
+		love.graphics.setColor(__pico_color*16,0,0,255)
+	end
 end
 
 function min(a,b)
