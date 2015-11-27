@@ -78,6 +78,8 @@ local __pico_quads
 local __pico_spritesheet_data
 local __pico_spritesheet
 local __pico_spriteflags
+local __pico_usermemory
+local __pico_cartdata
 local __draw_palette
 local __draw_shader
 local __sprite_shader
@@ -97,6 +99,8 @@ local __pico_pal_transparent = {
 __pico_resolution = {128,128}
 
 local lineMesh = love.graphics.newMesh(128,nil,"points")
+local scrblitMesh = love.graphics.newMesh(128,nil,"points")
+scrblitMesh:setVertexColors(true)
 
 local __pico_palette = {
 	{0,0,0,255},
@@ -363,6 +367,14 @@ function load_p8(filename)
 	end
 	__pico_spritesheet_data = love.image.newImageData(128,128)
 	__pico_spriteflags = {}
+	__pico_usermemory = {}
+	for i=0, 0x1c00-1 do
+		__pico_usermemory[i] = 0
+	end
+	__pico_cartdata = {}
+	for i=0, 63 do
+		__pico_cartdata[i] = 0
+	end
 
 	if filename:sub(-4) == '.png' then
 		local img = love.graphics.newImage(filename)
@@ -1308,10 +1320,9 @@ function pget(x,y)
 	if x >= 0 and x < __pico_resolution[1] and y >= 0 and y < __pico_resolution[2] then
 		local r,g,b,a = __screen:getPixel(flr(x),flr(y))
 		return flr(r/17.0)
-	else
-		warning(string.format("pget out of screen %d,%d",x,y))
-		return 0
 	end
+	warning(string.format("pget out of screen %d,%d",x,y))
+	return 0
 end
 
 function pset(x,y,c)
@@ -1324,15 +1335,20 @@ function sget(x,y)
 	-- return the color from the spritesheet
 	x = flr(x)
 	y = flr(y)
-	local r,g,b,a = __pico_spritesheet_data:getPixel(x,y)
-	return flr(r/16)
+	if x >= 0 and x < 128 and y >= 0 and y < 128 then
+		local r,g,b,a = __pico_spritesheet_data:getPixel(x,y)
+		return flr(r/16)
+	end
+	return 0
 end
 
 function sset(x,y,c)
 	x = flr(x)
 	y = flr(y)
-	__pico_spritesheet_data:setPixel(x,y,c*16,0,0,255)
-	__pico_spritesheet:refresh()
+	if x >= 0 and x < 128 and y >= 0 and y < 128 then
+		__pico_spritesheet_data:setPixel(x,y,c*16,0,0,255)
+		__pico_spritesheet:refresh()
+	end
 end
 
 function fget(n,f)
@@ -1808,6 +1824,9 @@ __keymap = {
 
 function btn(i,p)
 	p = p or 0
+	if p < 0 or p > 1 then
+		return false
+	end
 	if __keymap[p][i] then
 		return __pico_keypressed[p][i] ~= nil
 	end
@@ -1816,6 +1835,9 @@ end
 
 function btnp(i,p)
 	p = p or 0
+	if p < 0 or p > 1 then
+		return false
+	end
 	if __keymap[p][i] then
 		local v = __pico_keypressed[p][i]
 		if v and (v == 0 or v == 12 or (v > 12 and v % 4 == 0)) then
@@ -1872,37 +1894,68 @@ function cartdata(id)
 end
 
 function dget(index)
-	return 0
+	index = flr(index)
+	if index < 0 or index > 63 then
+		warning('cartdata index out of range')
+		return
+	end
+	return __pico_cartdata[index]
 end
 
 function dset(index,value)
+	index = flr(index)
+	if index < 0 or index > 63 then
+		warning('cartdata index out of range')
+		return
+	end
+	__pico_cartdata[index] = value
 end
 
--- memory functions excluded
-
+local __scrblit,__scrimg
 function memcpy(dest_addr,source_addr,len)
-	-- only for range 0x6000+0x8000
-	if source_addr >= 0x6000 and dest_addr >= 0x6000 then
-		if source_addr + len >= 0x8000 then
-			return
-		end
-		if dest_addr + len >= 0x8000 then
-			return
-		end
-		local img = __screen:getImageData()
-		for i=1,len do
-			local x = flr(source_addr-0x6000+i)%128
-			local y = flr((source_addr-0x6000+i)/64)
-			local c = flr(img:getPixel(x,y)/16)
+	if len < 1 or dest_addr == source_addr then
+		return
+	end
 
-			local dx = flr(dest_addr-0x6000+i)%128
-			local dy = flr((dest_addr-0x6000+i)/64)
-			pset(dx,dy,c)
+	-- Screen Hack
+	if source_addr >= 0x6000 then
+		__scrimg = __screen:getImageData()
+	end
+	if dest_addr >= 0x6000 then
+		__scrblit = {}
+		if scrblitMesh:getVertexCount()<len*2 then
+			scrblitMesh = love.graphics.newMesh(len*2,nil,"points")
+			scrblitMesh:setVertexColors(true)
 		end
 	end
+
+	local offset = dest_addr-source_addr
+	if source_addr > dest_addr then
+		for i=dest_addr,dest_addr+len-1 do
+			poke(i,peek(i-offset))
+		end
+	else
+		for i=dest_addr+len-1,dest_addr,-1 do
+			poke(i,peek(i-offset))
+		end
+	end
+	if __scrblit then
+		scrblitMesh:setVertices(__scrblit)
+		scrblitMesh:setDrawRange(1,#__scrblit)
+		love.graphics.setColor(255,255,255,255)
+		love.graphics.draw(scrblitMesh)
+		love.graphics.setColor(__pico_color*16,0,0,255)
+	end
+	__scrblit,__scrimg = nil
 end
 
 function memset(dest_addr,val,len)
+	if len < 1 then
+		return
+	end
+	for i=dest_addr,dest_addr+len-1 do
+		poke(i,val)
+	end
 end
 
 function peek(addr)
@@ -1914,7 +1967,7 @@ function peek(addr)
 		local hi = __pico_spritesheet_data:getPixel(addr*2%128+1,flr(addr/64))
 		return hi+lo/16
 	elseif addr < 0x3000 then
-		addr=addr-0x1000
+		addr = addr-0x2000
 		return __pico_map[flr(addr/128)][addr%128]
 	elseif addr < 0x3100 then
 		return __pico_spriteflags[addr-0x3000]
@@ -1923,7 +1976,7 @@ function peek(addr)
 	elseif addr < 0x4300 then
 		--FIXME: SFX
 	elseif addr < 0x5f00 then
-		--FIXME: User memory
+		return __pico_usermemory[addr-0x4300]
 	elseif addr < 0x5f80 then
 		--FIXME: Draw state
 	elseif addr < 0x5fc0 then
@@ -1931,9 +1984,9 @@ function peek(addr)
 	elseif addr < 0x6000 then
 		--FIXME: Unused but memory
 	elseif addr < 0x8000 then
-		addr=addr-0x6000
-		local lo = __screen:getPixel(addr*2%128,flr(addr/64))
-		local hi = __screen:getPixel(addr*2%128+1,flr(addr/64))
+		addr = addr-0x6000
+		local lo = (__scrimg or __screen):getPixel(addr*2%128,flr(addr/64))
+		local hi = (__scrimg or __screen):getPixel(addr*2%128+1,flr(addr/64))
 		return bit.band(hi,0xF0)+lo/17
 	end
 	return 0
@@ -1953,19 +2006,18 @@ function poke(addr,val)
 		local hi = bit.band(val,0xF0)
 		__pico_spritesheet_data:setPixel(addr*2%128,flr(addr/64),lo,0,0,255)
 		__pico_spritesheet_data:setPixel(addr*2%128+1,flr(addr/64),hi,0,0,255)
-		addr=addr-0x1000
-		__pico_map[flr(addr/128)][addr%128]=val
+		__pico_map[flr(addr/128)][addr%128] = val
 	elseif addr < 0x3000 then
-		addr=addr-0x1000
-		__pico_map[flr(addr/128)][addr%128]=val
+		addr = addr-0x2000
+		__pico_map[flr(addr/128)][addr%128] = val
 	elseif addr < 0x3100 then
-		__pico_spriteflags[addr-0x3000]=val
+		__pico_spriteflags[addr-0x3000] = val
 	elseif addr < 0x3200 then
 		--FIXME: Music
 	elseif addr < 0x4300 then
 		--FIXME: SFX
 	elseif addr < 0x5f00 then
-		--FIXME: User memory
+		__pico_usermemory[addr-0x4300] = val
 	elseif addr < 0x5f80 then
 		--FIXME: Draw state
 	elseif addr < 0x5fc0 then
@@ -1973,14 +2025,19 @@ function poke(addr,val)
 	elseif addr < 0x6000 then
 		--FIXME: Unused but memory
 	elseif addr < 0x8000 then
-		addr=addr-0x6000
+		addr = addr-0x6000
 		local lo = val%16*16
 		local hi = bit.band(val,0xF0)
-		love.graphics.setColor(lo,0,0,255)
-		love.graphics.point(addr*2%128,flr(addr/64))
-		love.graphics.setColor(hi,0,0,255)
-		love.graphics.point(addr*2%128+1,flr(addr/64))
-		love.graphics.setColor(__pico_color*16,0,0,255)
+		if __scrblit then
+			table.insert(__scrblit,{addr*2%128,flr(addr/64),0,0,lo,0,0,255})
+			table.insert(__scrblit,{addr*2%128+1,flr(addr/64),0,0,hi,0,0,255})
+		else
+			love.graphics.setColor(lo,0,0,255)
+			love.graphics.point(addr*2%128,flr(addr/64))
+			love.graphics.setColor(hi,0,0,255)
+			love.graphics.point(addr*2%128+1,flr(addr/64))
+			love.graphics.setColor(__pico_color*16,0,0,255)
+		end
 	end
 end
 
