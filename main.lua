@@ -203,16 +203,15 @@ function love.load(argv)
 	osc[6] = function()
 		-- noise FIXME: (zep said this is brown noise)
 		local lastx = 0
-		local sample = love.math.random()*2-1
+		local sample = 0
 		local lsample = 0
+		local tscale = note_to_hz(63)/__sample_rate
 		return function(x)
-			x=x*8
-			if x%1 < lastx%1 then
-				lsample = sample
-				sample = love.math.random()*2-1
-			end
+			local scale = (x-lastx)/tscale
+			lsample = sample
+			sample = (lsample+scale*(love.math.random()*2-1))/(1+scale)
 			lastx = x
-			return lerp(lsample, sample, x%1)
+			return mid(-1,(lsample+sample)*4/3*(1.75-scale),1)
 		end
 	end
 	-- detuned tri
@@ -243,7 +242,11 @@ function love.load(argv)
 	__screen = love.graphics.newCanvas(__pico_resolution[1],__pico_resolution[2])
 	__screen:setFilter('linear','nearest')
 
-	local font = love.graphics.newImageFont("font.png","abcdefghijklmnopqrstuvwxyz\"'`-_/1234567890!?[](){}.,;:<>+=%#^*~ ")
+	local glyphs = ""
+	for i = 32,126 do
+		glyphs = glyphs..string.char(i)
+	end
+	local font = love.graphics.newImageFont("font.png",glyphs)
 	love.graphics.setFont(font)
 	font:setFilter('nearest','nearest')
 
@@ -983,7 +986,7 @@ function update_audio(time)
 
 	for i=0,samples-1 do
 		if __pico_current_music then
-			__pico_current_music.offset = __pico_current_music.offset + 1/(48*16)*(1/__pico_current_music.speed*4)
+			__pico_current_music.offset = __pico_current_music.offset + 1/(48*15.25)*(1/__pico_current_music.speed*4)
 			if __pico_current_music.offset >= 32 then
 				local next_track = __pico_current_music.music
 				if __pico_music[next_track].loop == 2 then
@@ -1019,7 +1022,7 @@ function update_audio(time)
 			end
 			if ch.sfx and __pico_sfx[ch.sfx] then
 				local sfx = __pico_sfx[ch.sfx]
-				ch.offset = ch.offset + 1/(48*16)*(1/sfx.speed*4)
+				ch.offset = ch.offset + 1/(48*15.25)*(1/sfx.speed*4)
 				if sfx.loop_end ~= 0 and ch.offset >= sfx.loop_end then
 					if ch.loop then
 						ch.last_step = -1
@@ -1299,6 +1302,8 @@ function restore_clip()
 end
 
 function pget(x,y)
+	x = x-__pico_camera_x
+	y = y-__pico_camera_y
 	if x >= 0 and x < __pico_resolution[1] and y >= 0 and y < __pico_resolution[2] then
 		local r,g,b,a = __screen:getPixel(flr(x),flr(y))
 		return flr(r/17.0)
@@ -1308,8 +1313,9 @@ function pget(x,y)
 end
 
 function pset(x,y,c)
-	if not c then return end
-	color(c)
+	if c then
+		color(c)
+	end
 	love.graphics.point(flr(x),flr(y))
 end
 
@@ -1327,6 +1333,7 @@ end
 function sset(x,y,c)
 	x = flr(x)
 	y = flr(y)
+	c = flr(c or 0)%16
 	if x >= 0 and x < 128 and y >= 0 and y < 128 then
 		__pico_spritesheet_data:setPixel(x,y,c*16,0,0,255)
 		__pico_spritesheet:refresh()
@@ -1339,11 +1346,11 @@ function fget(n,f)
 		-- return just that bit as a boolean
 		if not __pico_spriteflags[flr(n)] then
 			warning(string.format('fget(%d,%d)',n,f))
-			return 0
+			return false
 		end
 		return bit.band(__pico_spriteflags[flr(n)],bit.lshift(1,flr(f))) ~= 0
 	end
-	return __pico_spriteflags[flr(n)]
+	return __pico_spriteflags[flr(n)] or 0
 end
 
 assert(bit.band(0x01,bit.lshift(1,0)) ~= 0)
@@ -1398,12 +1405,11 @@ end
 __pico_cursor = {0,0}
 
 function cursor(x,y)
-	__pico_cursor = {x,y}
+	__pico_cursor = {x or 0,y or 0}
 end
 
 function color(c)
-	c = flr(c)
-	assert(c >= 0 and c <= 16,string.format("c is %s",c))
+	c = flr(c or 0)%16
 	__pico_color = c
 	love.graphics.setColor(c*16,0,0,255)
 end
@@ -1685,17 +1691,12 @@ function palt(c,t)
 		end
 	else
 		c = flr(c)%16
-		if t == false then
-			__pico_pal_transparent[c+1] = 1
-		elseif t == true then
-			__pico_pal_transparent[c+1] = 0
-		end
+		__pico_pal_transparent[c+1] = t and 0 or 1
 	end
 	__sprite_shader:send('transparent',unpack(__pico_pal_transparent))
 end
 
 function spr(n,x,y,w,h,flip_x,flip_y)
-	n = flr(n)
 	love.graphics.setShader(__sprite_shader)
 	__sprite_shader:send('transparent',unpack(__pico_pal_transparent))
 	n = flr(n)
@@ -1807,37 +1808,60 @@ __keymap = {
 function btn(i,p)
 	p = p or 0
 	if p < 0 or p > 1 then
+		return i and false or 0
+	end
+	if i then
+		if __keymap[p][i] then
+			return __pico_keypressed[p][i] ~= nil
+		end
 		return false
+	else
+		local bits = 0
+		for v=0,5 do
+			bits = bits + (__pico_keypressed[p][v] and 2^v or 0)
+		end
+		return bits
 	end
-	if __keymap[p][i] then
-		return __pico_keypressed[p][i] ~= nil
-	end
-	return false
 end
 
 function btnp(i,p)
 	p = p or 0
 	if p < 0 or p > 1 then
-		return false
+		return i and false or 0
 	end
-	if __keymap[p][i] then
-		local v = __pico_keypressed[p][i]
-		if v and (v == 0 or v == 12 or (v > 12 and v % 4 == 0)) then
-			return true
+	if i then
+		if __keymap[p][i] then
+			local v = __pico_keypressed[p][i]
+			if v and (v == 0 or (v >= 12 and v % 4 == 0)) then
+				return true
+			end
 		end
+		return false
+	else
+		local bits = 0
+		for v=0,5 do
+			local v = __pico_keypressed[p][v]
+			bits = bits + ((v and (v == 0 or (v >= 12 and v % 4 == 0))) and 2^v or 0)
+		end
+		return bits
 	end
-	return false
 end
 
 function mget(x,y)
-	if x == nil or y == nil then return 0 end
-	if y > 63 or x > 127 or x < 0 or y < 0 then return 0 end
-	return __pico_map[flr(y)][flr(x)]
+	x = flr(x or 0)
+	y = flr(y or 0)
+	if x >= 0 and x < 128 and y >= 0 and y < 64 then
+		return __pico_map[y][x]
+	end
+	return 0
 end
 
 function mset(x,y,v)
+	x = flr(x or 0)
+	y = flr(y or 0)
+	v = flr(v or 0)%256
 	if x >= 0 and x < 128 and y >= 0 and y < 64 then
-		__pico_map[flr(y)][flr(x)] = v
+		__pico_map[y][x] = v
 	end
 end
 
