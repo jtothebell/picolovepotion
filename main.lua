@@ -203,13 +203,13 @@ function love.load(argv)
 	osc[6] = function()
 		-- noise FIXME: (zep said this is brown noise)
 		local lastx = 0
-		local sample = math.random()*2-1
+		local sample = love.math.random()*2-1
 		local lsample = 0
 		return function(x)
-			x=x*32
+			x=x*8
 			if x%1 < lastx%1 then
 				lsample = sample
-				sample = math.random()*2-1
+				sample = love.math.random()*2-1
 			end
 			lastx = x
 			return lerp(lsample, sample, x%1)
@@ -878,6 +878,8 @@ function love.run()
 		love.math.setRandomSeed(os.time())
 		for i=1,3 do love.math.random() end
 	end
+	math.randomseed(os.time())
+	for i=1,3 do math.random() end
 
 	if love.event then
 		love.event.pump()
@@ -2064,9 +2066,9 @@ atan2 = function(y,x) return __pico_angle(math.atan2(y,x)) end
 
 sqrt = math.sqrt
 abs = math.abs
-rnd = function(x) return love.math.random()*(x or 1) end
+rnd = function(x) return math.random()*(x or 1) end
 srand = function(seed)
-	return love.math.setRandomSeed(flr(seed*32768))
+	return math.random(flr(seed*0x10000))
 end
 sgn = function(x)
 	return x < 0 and -1 or 1
