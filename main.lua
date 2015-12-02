@@ -1370,10 +1370,10 @@ function fset(n,f,v)
 	end
 	if f then
 		-- set specific bit to v (true or false)
-		if f then
+		if v then
 			__pico_spriteflags[n] = bit.bor(__pico_spriteflags[n],bit.lshift(1,f))
 		else
-			__pico_spriteflags[n] = bit.band(bit.bnot(__pico_spriteflags[n],bit.lshift(1,f)))
+			__pico_spriteflags[n] = bit.band(__pico_spriteflags[n],bit.bnot(bit.lshift(1,f)))
 		end
 	else
 		-- set bitfield to v (number)
