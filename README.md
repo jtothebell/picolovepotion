@@ -1,21 +1,21 @@
 PICOLOVE
 --------
 
-Implementation of PICO8 API for LOVE
+A fork of the original PICOLOVE, an implementation of PICO-8's API in LÖVE
 
-On github at: https://github.com/ftsf/picolove
+Original is on github at: https://github.com/ftsf/picolove
 
-Requires Love 0.9.x
+Requires Love 0.10.x
 
 What it is:
 
- * An implementation of pico-8's api in love
+ * An implementation of PICO-8's api in LÖVE
 
-What is Pico-8:
+What is PICO-8:
 
  * See http://www.lexaloffle.com/pico-8.php
 
-What is Love:
+What is LÖVE:
 
  * See https://love2d.org/
 
@@ -28,16 +28,16 @@ Why:
  * Extendable
  * No arbitrary cpu or memory limitations
  * No arbitrary code size limitations
- * Betting debugging tools available
+ * Better debugging tools available
  * Open source
 
 What it isn't:
 
- * A replacement for Pico-8
+ * A replacement for PICO-8
  * A perfect replica
  * No dev tools, no image editor, map editor, sfx editor, music editor
  * No modifying or saving carts
- * Not memory compatible with pico-8
+ * Not memory compatible with PICO-8
 
 Not Yet Implemented:
 
@@ -46,13 +46,11 @@ Not Yet Implemented:
 Differences:
 
  * Uses floating point numbers not fixed point
- * sqrt doesn't freeze
  * Uses luajit not lua 5.2
 
 Extra features:
 
  * `ipairs()`, `pairs()` standard lua functions
- * `log(...)` function prints to console for debugging
  * `assert(expr,message)` if expr is not true then errors with message
  * `error(message)` bluescreens with an error message
  * `warning(message)` prints warning and stacktrace to console

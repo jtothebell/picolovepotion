@@ -12,7 +12,7 @@ end
 local function color(c)
 	c = flr(c or 0)%16
 	pico8.color = c
-	love.graphics.setColor(c*16,0,0,255)
+	love.graphics.setColor(c,0,0,255)
 end
 
 local function warning(msg)
@@ -82,7 +82,7 @@ function api.pget(x,y)
 	y = y-pico8.camera_y
 	if x >= 0 and x < pico8.resolution[1] and y >= 0 and y < pico8.resolution[2] then
 		local r,g,b,a = pico8.screen:newImageData():getPixel(flr(x),flr(y))
-		return flr(r/17.0)
+		return r
 	end
 	warning(string.format("pget out of screen %d,%d",x,y))
 	return 0
@@ -93,14 +93,16 @@ function api.color(c)
 end
 
 function api.print(str,x,y,col)
-	if col then color(col) end
+	if col then
+		color(col)
+	end
 	if x or y then
 		pico8.cursor[1] = flr(tonumber(x) or 0)
 		pico8.cursor[2] = flr(tonumber(y) or 0)
 	end
 	love.graphics.setShader(pico8.text_shader)
 	love.graphics.print(tostring(str),pico8.cursor[1],pico8.cursor[2])
-	love.graphics.setShader(pico8.text_shader)
+	love.graphics.setShader(pico8.draw_shader)
 	if not x and not y then
 		pico8.cursor[1] = 0
 		pico8.cursor[2] = pico8.cursor[2] + 6
@@ -113,7 +115,6 @@ end
 
 function api.spr(n,x,y,w,h,flip_x,flip_y)
 	love.graphics.setShader(pico8.sprite_shader)
-	pico8.sprite_shader:send('transparent',unpack(pico8.pal_transparent))
 	n = flr(n)
 	w = w or 1
 	h = h or 1
@@ -149,7 +150,6 @@ function api.sspr(sx,sy,sw,sh,dx,dy,dw,dh,flip_x,flip_y)
 	-- FIXME: cache this quad
 	local q = love.graphics.newQuad(sx,sy,sw,sh,pico8.spritesheet:getDimensions())
 	love.graphics.setShader(pico8.sprite_shader)
-	pico8.sprite_shader:send('transparent',unpack(pico8.pal_transparent))
 	love.graphics.draw(pico8.spritesheet,q,
 		flr(dx)+(flip_x and dw or 0),
 		flr(dy)+(flip_y and dh or 0),
@@ -158,14 +158,16 @@ function api.sspr(sx,sy,sw,sh,dx,dy,dw,dh,flip_x,flip_y)
 end
 
 function api.rect(x0,y0,x1,y1,col)
-	col = col or pico8.color
-	color(col)
+	if col then
+		color(col)
+	end
 	love.graphics.rectangle("line",flr(x0)+1,flr(y0)+1,flr(x1-x0),flr(y1-y0))
 end
 
 function api.rectfill(x0,y0,x1,y1,col)
-	col = col or pico8.color
-	color(col)
+	if col then
+		color(col)
+	end
 	if x1<x0 then
 		x0,x1=x1,x0
 	end
@@ -176,8 +178,9 @@ function api.rectfill(x0,y0,x1,y1,col)
 end
 
 function api.circ(ox,oy,r,col)
-	col = col or pico8.color
-	color(col)
+	if col then
+		color(col)
+	end
 	ox = flr(ox)
 	oy = flr(oy)
 	r = flr(r)
@@ -210,8 +213,9 @@ function api.circ(ox,oy,r,col)
 end
 
 function api.circfill(cx,cy,r,col)
-	col = col or pico8.color
-	color(col)
+	if col then
+		color(col)
+	end
 	cx = flr(cx)
 	cy = flr(cy)
 	r = flr(r)
@@ -242,8 +246,9 @@ function api.circfill(cx,cy,r,col)
 end
 
 function api.line(x0,y0,x1,y1,col)
-	col = col or pico8.color
-	color(col)
+	if col then
+		color(col)
+	end
 
 	if x0 ~= x0 or y0 ~= y0 or x1 ~= x1 or y1 ~= y1 then
 		warning("line has NaN value")
@@ -290,51 +295,46 @@ local __palette_modified = true
 function api.pal(c0,c1,p)
 	if c0 == nil then
 		if __palette_modified == false then return end
-		for i=1,16 do
+		for i=0,15 do
 			pico8.draw_palette[i] = i
-			pico8.display_palette[i] = pico8.palette[i]
+			pico8.display_palette[i] = pico8.palette[i+1]
 		end
-		pico8.draw_shader:send('palette',unpack(pico8.draw_palette))
-		pico8.sprite_shader:send('palette',unpack(pico8.draw_palette))
-		pico8.text_shader:send('palette',unpack(pico8.draw_palette))
-		pico8.display_shader:send('palette',unpack(pico8.display_palette))
+		pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+		pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+		pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+		pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
 		__palette_modified = false
 	elseif p == 1 and c1 ~= nil then
 		c0 = flr(c0)%16
 		c1 = flr(c1)%16
-		c1 = c1+1
-		c0 = c0+1
 		pico8.display_palette[c0] = pico8.palette[c1]
-		pico8.display_shader:send('palette',unpack(pico8.display_palette))
+		pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
 		__palette_modified = true
 	elseif c1 ~= nil then
 		c0 = flr(c0)%16
 		c1 = flr(c1)%16
-		c1 = c1+1
-		c0 = c0+1
 		pico8.draw_palette[c0] = c1
-		pico8.draw_shader:send('palette',unpack(pico8.draw_palette))
-		pico8.sprite_shader:send('palette',unpack(pico8.draw_palette))
-		pico8.text_shader:send('palette',unpack(pico8.draw_palette))
+		pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+		pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+		pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
 		__palette_modified = true
 	end
 end
 
 function api.palt(c,t)
 	if c == nil then
-		for i=1,16 do
-			pico8.pal_transparent[i] = i == 1 and 0 or 1
+		for i=0,15 do
+			pico8.pal_transparent[i] = i == 0 and 0 or 1
 		end
 	else
 		c = flr(c)%16
-		pico8.pal_transparent[c+1] = t and 0 or 1
+		pico8.pal_transparent[c] = t and 0 or 1
 	end
-	pico8.sprite_shader:send('transparent',unpack(pico8.pal_transparent))
+	pico8.sprite_shader:send('transparent',shdr_unpack(pico8.pal_transparent))
 end
 
 function api.map(cel_x,cel_y,sx,sy,cel_w,cel_h,bitmask)
 	love.graphics.setShader(pico8.sprite_shader)
-	love.graphics.setColor(255,255,255,255)
 	cel_x = flr(cel_x)
 	cel_y = flr(cel_y)
 	sx = flr(sx)
@@ -346,14 +346,9 @@ function api.map(cel_x,cel_y,sx,sy,cel_w,cel_h,bitmask)
 			for x=0,cel_w-1 do
 				if cel_x+x < 128 and cel_x+x >= 0 then
 					local v = pico8.map[flr(cel_y+y)][flr(cel_x+x)]
-					if v > 0 then
-						if bitmask == nil or bitmask == 0 then
+					if v ~= 0 then
+						if bitmask == nil or bitmask == 0 or bit.band(pico8.spriteflags[v],bitmask) ~= 0 then
 							love.graphics.draw(pico8.spritesheet,pico8.quads[v],sx+8*x,sy+8*y)
-						else
-							if bit.band(pico8.spriteflags[v],bitmask) ~= 0 then
-								love.graphics.draw(pico8.spritesheet,pico8.quads[v],sx+8*x,sy+8*y)
-							else
-							end
 						end
 					end
 				end
@@ -420,7 +415,7 @@ function api.sget(x,y)
 	y = flr(y)
 	if x >= 0 and x < 128 and y >= 0 and y < 128 then
 		local r,g,b,a = pico8.spritesheet_data:getPixel(x,y)
-		return flr(r/16)
+		return r
 	end
 	return 0
 end
@@ -430,7 +425,7 @@ function api.sset(x,y,c)
 	y = flr(y)
 	c = flr(c or 0)%16
 	if x >= 0 and x < 128 and y >= 0 and y < 128 then
-		pico8.spritesheet_data:setPixel(x,y,c*16,0,0,255)
+		pico8.spritesheet_data:setPixel(x,y,c,0,0,255)
 		pico8.spritesheet:refresh()
 	end
 end
@@ -506,7 +501,7 @@ function api.peek(addr)
 	elseif addr < 0x2000 then
 		local lo = pico8.spritesheet_data:getPixel(addr*2%128,flr(addr/64))
 		local hi = pico8.spritesheet_data:getPixel(addr*2%128+1,flr(addr/64))
-		return hi+lo/16
+		return hi*16+lo
 	elseif addr < 0x3000 then
 		addr = addr-0x2000
 		return pico8.map[flr(addr/128)][addr%128]
@@ -528,7 +523,7 @@ function api.peek(addr)
 		addr = addr-0x6000
 		local lo = (__scrimg or pico8.screen):getPixel(addr*2%128,flr(addr/64))
 		local hi = (__scrimg or pico8.screen):getPixel(addr*2%128+1,flr(addr/64))
-		return bit.band(hi,0xF0)+lo/17
+		return hi*16+lo
 	end
 	return 0
 end
@@ -538,13 +533,13 @@ function api.poke(addr,val)
 	if addr < 0 or addr >= 0x8000 then
 		error("bad memory access")
 	elseif addr < 0x1000 then
-		local lo = val%16*16
-		local hi = bit.band(val,0xF0)
+		local lo = val%16
+		local hi = flr(val/16)
 		pico8.spritesheet_data:setPixel(addr*2%128,flr(addr/64),lo,0,0,255)
 		pico8.spritesheet_data:setPixel(addr*2%128+1,flr(addr/64),hi,0,0,255)
 	elseif addr < 0x2000 then
-		local lo = val%16*16
-		local hi = bit.band(val,0xF0)
+		local lo = val%16
+		local hi = flr(val/16)
 		pico8.spritesheet_data:setPixel(addr*2%128,flr(addr/64),lo,0,0,255)
 		pico8.spritesheet_data:setPixel(addr*2%128+1,flr(addr/64),hi,0,0,255)
 		pico8.map[flr(addr/128)][addr%128] = val
@@ -567,8 +562,8 @@ function api.poke(addr,val)
 		--FIXME: Unused but memory
 	elseif addr < 0x8000 then
 		addr = addr-0x6000
-		local lo = val%16*16
-		local hi = bit.band(val,0xF0)
+		local lo = val%16
+		local hi = flr(val/16)
 		if __scrblit then
 			table.insert(__scrblit,{addr*2%128,flr(addr/64),0,0,lo,0,0,255})
 			table.insert(__scrblit,{addr*2%128+1,flr(addr/64),0,0,hi,0,0,255})
@@ -577,7 +572,7 @@ function api.poke(addr,val)
 			love.graphics.point(addr*2%128,flr(addr/64))
 			love.graphics.setColor(hi,0,0,255)
 			love.graphics.point(addr*2%128+1,flr(addr/64))
-			love.graphics.setColor(pico8.color*16,0,0,255)
+			love.graphics.setColor(pico8.color,0,0,255)
 		end
 	end
 end
@@ -614,7 +609,7 @@ function api.memcpy(dest_addr,source_addr,len)
 		scrblitMesh:setDrawRange(1,#__scrblit)
 		love.graphics.setColor(255,255,255,255)
 		love.graphics.draw(scrblitMesh)
-		love.graphics.setColor(pico8.color*16,0,0,255)
+		love.graphics.setColor(pico8.color,0,0,255)
 	end
 	__scrblit,__scrimg = nil
 end
@@ -795,6 +790,7 @@ api.coresume=coroutine.resume
 api.yield=coroutine.yield
 api.costatus=coroutine.status
 
+-- The functions below are normally attached to the program code, but are here for simplicity
 function api.all(a)
 	local i = 0
 	local n = table.getn(a)

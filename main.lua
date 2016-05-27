@@ -1,5 +1,5 @@
-pico8={
-	fps=30,
+pico8 = {
+	fps = 30,
 	pal_transparent = {},
 	resolution = {128,128},
 	palette = {
@@ -56,6 +56,9 @@ pico8={
 	cursor = {0,0},
 	camera_x = 0,
 	camera_y = 0,
+	draw_palette = {},
+	display_palette = {},
+	pal_transparent = {},
 }
 
 require("strict")
@@ -86,6 +89,11 @@ local paused = false
 local api, cart
 
 log = print
+--log = function() end
+
+function shdr_unpack(thing)
+	return unpack(thing, 0, 15)
+end
 
 local function get_bits(v,s,e)
 	local mask = bit.lshift(bit.lshift(1,s)-1,e)
@@ -196,7 +204,6 @@ function love.load(argv)
 		pico8.audio_channels[i].noise = osc[6]()
 	end
 
-	love.graphics.setBackgroundColor(3, 5, 10, 255)
 	love.graphics.clear()
 	love.graphics.setDefaultFilter('nearest','nearest')
 	pico8.screen = love.graphics.newCanvas(pico8.resolution[1],pico8.resolution[2])
@@ -220,60 +227,51 @@ function love.load(argv)
 	love.graphics.setCanvas(pico8.screen)
 	restore_clip()
 
-	pico8.draw_palette = {}
-	pico8.display_palette = {}
-	pico8.pal_transparent = {}
-	for i=1,16 do
+	for i=0,15 do
 		pico8.draw_palette[i] = i
-		pico8.pal_transparent[i] = i == 1 and 0 or 1
-		pico8.display_palette[i] = pico8.palette[i]
+		pico8.pal_transparent[i] = i == 0 and 0 or 1
+		pico8.display_palette[i] = pico8.palette[i+1]
 	end
 
 	pico8.draw_shader = love.graphics.newShader([[
-extern float palette[16];
+extern int palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
-	int index = int(color.r*16.0);
-	return vec4(vec3(palette[index]/16.0),1.0);
+	int index = int(color.r*255.0);
+	return vec4(palette[index]/255.0,0.0,0.0,1.0);
 }]])
-	pico8.draw_shader:send('palette',unpack(pico8.draw_palette))
+	pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
 
 	pico8.sprite_shader = love.graphics.newShader([[
-extern float palette[16];
+extern int palette[16];
 extern float transparent[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
-	int index = int(floor(Texel(texture, texture_coords).r*16.0));
-	float alpha = transparent[index];
-	return vec4(vec3(palette[index]/16.0),alpha);
+	int index = int(Texel(texture, texture_coords).r*255.0);
+	return vec4(palette[index]/255.0,0.0,0.0,transparent[index]);
 }]])
-	pico8.sprite_shader:send('palette',unpack(pico8.draw_palette))
-	pico8.sprite_shader:send('transparent',unpack(pico8.pal_transparent))
+	pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+	pico8.sprite_shader:send('transparent',shdr_unpack(pico8.pal_transparent))
 
 	pico8.text_shader = love.graphics.newShader([[
-extern float palette[16];
+extern int palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	vec4 texcolor = Texel(texture, texture_coords);
-	if(texcolor.a == 0) {
-		return vec4(0.0,0.0,0.0,0.0);
-	}
-	int index = int(color.r*16.0);
-	// lookup the colour in the palette by index
-	return vec4(vec3(palette[index]/16.0),1.0);
+	int index = int(color.r*255.0);
+	return vec4(palette[index]/255.0,0.0,0.0,texcolor.a);
 }]])
-	pico8.text_shader:send('palette',unpack(pico8.draw_palette))
+	pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
 
 	pico8.display_shader = love.graphics.newShader([[
-
 extern vec4 palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
-	int index = int(Texel(texture, texture_coords).r*15.0);
+	int index = int(Texel(texture, texture_coords).r*255.0);
 	// lookup the colour in the palette by index
-	return palette[index]/256.0;
+	return palette[index]/255.0;
 }]])
-	pico8.display_shader:send('palette',unpack(pico8.display_palette))
+	pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
 
 	api=require("api")
 	cart=require("cart")
@@ -311,9 +309,8 @@ function restore_camera()
 end
 
 local function flip_screen()
-	--love.graphics.setShader(pico8.display_shader)
 	love.graphics.setShader(pico8.display_shader)
-	pico8.display_shader:send('palette',unpack(pico8.display_palette))
+	pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
 	love.graphics.setCanvas()
 	love.graphics.origin()
 
