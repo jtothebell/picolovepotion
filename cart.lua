@@ -63,6 +63,50 @@ local __compression_map = {
 
 local api=require("api")
 
+local function decompress(code)
+	-- decompress code
+	local lua = ""
+	local mode = 0
+	local copy = nil
+	local i = 8
+	local codelen = bit.lshift(code:byte(5,5),8) + code:byte(6,6)
+	log('codelen',codelen)
+	while #lua < codelen do
+		i = i + 1
+		local byte = string.byte(code,i,i)
+		if byte == nil then
+			error('reached end of code')
+		else
+			if mode == 1 then
+				lua = lua .. code:sub(i,i)
+				mode = 0
+			elseif mode == 2 then
+				-- copy from buffer
+				local offset = (copy - 0x3c) * 16 + bit.band(byte,0xf)
+				local length = bit.rshift(byte,4) + 2
+					local offset = #lua - offset
+				local buffer = lua:sub(offset+1,offset+length)
+				lua = lua .. buffer
+				mode = 0
+			elseif byte == 0x00 then
+				-- output next byte
+				mode = 1
+			elseif byte == 0x01 then
+				-- output newline
+				lua = lua .. "\n"
+			elseif byte >= 0x02 and byte <= 0x3b then
+				-- output this byte from map
+				lua = lua .. __compression_map[byte]
+			elseif byte >= 0x3c then
+				-- copy previous bytes
+				mode = 2
+				copy = byte
+			end
+		end
+	end
+	return lua
+end
+
 local cart={}
 
 function cart.load_p8(filename)
@@ -71,21 +115,34 @@ function cart.load_p8(filename)
 	local lua = ""
 	pico8.map = {}
 	pico8.quads = {}
+	pico8.spritesheet_data = love.image.newImageData(128,128)
 	for y=0,63 do
 		pico8.map[y] = {}
 		for x=0,127 do
 			pico8.map[y][x] = 0
 		end
 	end
-	pico8.spritesheet_data = love.image.newImageData(128,128)
 	pico8.spriteflags = {}
-	pico8.usermemory = {}
-	for i=0, 0x1c00-1 do
-		pico8.usermemory[i] = 0
+	pico8.sfx = {}
+	for i=0,63 do
+		pico8.sfx[i] = {
+			speed=16,
+			loop_start=0,
+			loop_end=0
+		}
+		for j=0,31 do
+			pico8.sfx[i][j] = {0,0,0,0}
+		end
 	end
-	pico8.cartdata = {}
-	for i=0, 63 do
-		pico8.cartdata[i] = 0
+	pico8.music = {}
+	for i=0,63 do
+		pico8.music[i] = {
+			loop = 0,
+			[0] = 64,
+			[1] = 64,
+			[2] = 64,
+			[3] = 64
+		}
 	end
 
 	if filename:sub(-4) == '.png' then
@@ -102,8 +159,7 @@ function cart.load_p8(filename)
 		local mapY = 32
 		local mapX = 0
 		local version = nil
-		local codelen = nil
-		local code = ""
+		local compressed = false
 		local sprite = 0
 		for y=0,204 do
 			for x=0,159 do
@@ -117,6 +173,7 @@ function cart.load_p8(filename)
 				local lo = bit.band(byte,0x0f)
 				local hi = bit.rshift(byte,4)
 				if inbyte < 0x2000 then
+					-- spritesheet
 					if outY >= 64 then
 						pico8.map[mapY][mapX] = byte
 						mapX = mapX + 1
@@ -147,6 +204,7 @@ function cart.load_p8(filename)
 						end
 					end
 				elseif inbyte < 0x3000 then
+					-- map data
 					pico8.map[mapY][mapX] = byte
 					mapX = mapX + 1
 					if mapX == 128 then
@@ -154,75 +212,53 @@ function cart.load_p8(filename)
 						mapY = mapY + 1
 					end
 				elseif inbyte < 0x3100 then
+					-- sprite flags
 					pico8.spriteflags[sprite] = byte
 					sprite = sprite + 1
 				elseif inbyte < 0x3200 then
-					-- load song
+					-- music
+					local _music = math.floor((inbyte - 0x3100) / 4)
+					pico8.music[_music][inbyte%4] = bit.band(byte,0x7F)
+					pico8.music[_music].loop = bit.bor(bit.rshift(bit.band(byte,0x80),7-inbyte%4),pico8.music[_music].loop)
 				elseif inbyte < 0x4300 then
 					-- sfx
+					local _sfx = math.floor((inbyte - 0x3200) / 68)
+					local step = (inbyte - 0x3200) % 68
+					if step < 64 and inbyte % 2 == 1 then
+						local note = bit.lshift(byte,8) + lastbyte
+						pico8.sfx[_sfx][(step-1)/2] = {bit.band(note,0x3f),bit.rshift(bit.band(note,0x1c0),6),bit.rshift(bit.band(note,0xe00),9),bit.rshift(bit.band(note,0x7000),12)}
+					elseif step == 65 then
+						pico8.sfx[_sfx].speed = byte
+					elseif step == 66 then
+						pico8.sfx[_sfx].loop_start = byte
+					elseif step == 67 then
+						pico8.sfx[_sfx].loop_end = byte
+					end
+				elseif inbyte < 0x8000 then
+					-- code, possibly compressed
+					if inbyte == 0x4300 then
+						compressed = (byte == 58)
+					end
+					lua = lua .. string.char(byte)
 				elseif inbyte == 0x8000 then
 					version = byte
-				else
-					-- code, possibly compressed
-					if inbyte == 0x4305 then
-						codelen = bit.lshift(lastbyte,8) + byte
-					elseif inbyte >= 0x4308 then
-						code = code .. string.char(byte)
-					end
-					lastbyte = byte
 				end
+				lastbyte = byte
 				inbyte = inbyte + 1
 			end
 		end
 
 		-- decompress code
 		log('version',version)
-		log('codelen',codelen)
-		if version == 0 then
-			lua = code
-		elseif version == 1 then
-			-- decompress code
-			local mode = 0
-			local copy = nil
-			local i = 0
-			while #lua < codelen do
-				i = i + 1
-				local byte = string.byte(code,i,i)
-				if byte == nil then
-					error('reached end of code')
-				else
-					if mode == 1 then
-						lua = lua .. code:sub(i,i)
-						mode = 0
-					elseif mode == 2 then
-						-- copy from buffer
-						local offset = (copy - 0x3c) * 16 + bit.band(byte,0xf)
-						local length = bit.rshift(byte,4) + 2
-
-						local offset = #lua - offset
-						local buffer = lua:sub(offset+1,offset+length)
-						lua = lua .. buffer
-						mode = 0
-					elseif byte == 0x00 then
-						-- output next byte
-						mode = 1
-					elseif byte == 0x01 then
-						-- output newline
-						lua = lua .. "\n"
-					elseif byte >= 0x02 and byte <= 0x3b then
-						-- output this byte from map
-						lua = lua .. __compression_map[byte]
-					elseif byte >= 0x3c then
-						-- copy previous bytes
-						mode = 2
-						copy = byte
-					end
-				end
-			end
-		else
+		if version > 7 then
 			error(string.format('unknown file version %d',version))
 		end
 
+		if compressed then
+			lua = decompress(lua)
+		elseif lua:find("\0",nil,true) then
+			lua = lua:match("(.-)%z")
+		end
 	else
 		local f = love.filesystem.newFile(filename,'r')
 		if not f then
@@ -386,18 +422,6 @@ function cart.load_p8(filename)
 		local sfx_end = data:find("__music__") - 1
 		local sfxdata = data:sub(sfx_start,sfx_end)
 
-		pico8.sfx = {}
-		for i=0,63 do
-			pico8.sfx[i] = {
-				speed=16,
-				loop_start=0,
-				loop_end=0
-			}
-			for j=0,31 do
-				pico8.sfx[i][j] = {0,0,0,0}
-			end
-		end
-
 		local _sfx = 0
 		local step = 0
 
@@ -434,7 +458,6 @@ function cart.load_p8(filename)
 		local musicdata = data:sub(music_start,music_end)
 
 		local _music = 0
-		pico8.music = {}
 
 		local next_line = 1
 		while next_line do
@@ -442,21 +465,18 @@ function cart.load_p8(filename)
 			if end_of_line == nil then break end
 			end_of_line = end_of_line - 1
 			local line = musicdata:sub(next_line,end_of_line)
-
-			pico8.music[_music] = {
-				loop = tonumber(line:sub(1,2),16),
-				[0] = tonumber(line:sub(4,5),16),
-				[1] = tonumber(line:sub(6,7),16),
-				[2] = tonumber(line:sub(8,9),16),
-				[3] = tonumber(line:sub(10,11),16)
-			}
+			local music = pico8.music[_music]
+			music.loop = tonumber(line:sub(1,2),16)
+			music[0] = tonumber(line:sub(4,5),16)
+			music[1] = tonumber(line:sub(6,7),16)
+			music[2] = tonumber(line:sub(8,9),16)
+			music[3] = tonumber(line:sub(10,11),16)
 			_music = _music + 1
 			next_line = musicdata:find("\n",end_of_line)+1
 		end
 	end
 
 	-- patch the lua
-	--lua = lua:gsub("%-%-[^\n]*\n","\n")
 	lua = lua:gsub("!=","~=")
 	-- rewrite shorthand if statements eg. if (not b) i=1 j=2
 	lua = lua:gsub("if%s*(%b())%s*([^\n]*)\n",function(a,b)

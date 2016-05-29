@@ -521,8 +521,8 @@ function api.peek(addr)
 		--FIXME: Unused but memory
 	elseif addr < 0x8000 then
 		addr = addr-0x6000
-		local lo = (__scrimg or pico8.screen):getPixel(addr*2%128,flr(addr/64))
-		local hi = (__scrimg or pico8.screen):getPixel(addr*2%128+1,flr(addr/64))
+		local lo = (__scrimg or pico8.screen:newImageData()):getPixel(addr*2%128,flr(addr/64))
+		local hi = (__scrimg or pico8.screen:newImageData()):getPixel(addr*2%128+1,flr(addr/64))
 		return hi*16+lo
 	end
 	return 0
@@ -583,10 +583,10 @@ function api.memcpy(dest_addr,source_addr,len)
 	end
 
 	-- Screen Hack
-	if source_addr >= 0x6000 then
+	if source_addr+len-1 >= 0x6000 then
 		__scrimg = pico8.screen:newImageData()
 	end
-	if dest_addr >= 0x6000 then
+	if dest_addr+len-1 >= 0x6000 then
 		__scrblit = {}
 		if scrblitMesh:getVertexCount()<len*2 then
 			scrblitMesh = love.graphics.newMesh(len*2,"points")
@@ -710,6 +710,12 @@ function api.run()
 	love.graphics.setShader(pico8.draw_shader)
 	restore_clip()
 	love.graphics.origin()
+	for i=0, 0x1c00-1 do
+		pico8.usermemory[i] = 0
+	end
+	for i=0, 63 do
+		pico8.cartdata[i] = 0
+	end
 	if pico8.cart._init then pico8.cart._init() end
 end
 

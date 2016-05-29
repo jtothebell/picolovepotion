@@ -20,8 +20,7 @@ pico8 = {
 		{255,119,168,255},
 		{255,204,170,255}
 	},
-	camera_x = 0,
-	camera_y = 0,
+	spriteflags = {},
 	audio_channels = {
 		[0]={oscpos=0},
 		[1]={oscpos=0},
@@ -31,6 +30,8 @@ pico8 = {
 	sfx = {},
 	music = {},
 	current_music = nil,
+	usermemory = {},
+	cartdata = {},
 	keypressed = {
 		[0] = {},
 		[1] = {}
