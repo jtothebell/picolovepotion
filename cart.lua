@@ -1,5 +1,5 @@
 local __compression_map = {
-	'INVALID',
+	'\n',
 	' ',
 	'0',
 	'1',
@@ -91,10 +91,7 @@ local function decompress(code)
 			elseif byte == 0x00 then
 				-- output next byte
 				mode = 1
-			elseif byte == 0x01 then
-				-- output newline
-				lua = lua .. "\n"
-			elseif byte >= 0x02 and byte <= 0x3b then
+			elseif byte >= 0x01 and byte <= 0x3b then
 				-- output this byte from map
 				lua = lua .. __compression_map[byte]
 			elseif byte >= 0x3c then
