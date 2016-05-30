@@ -19,18 +19,16 @@ local function warning(msg)
 	log(debug.traceback("WARNING: "..msg,3))
 end
 
-local function _horizontal_line(points,x0,y,x1)
+local function _horizontal_line(lines,x0,y,x1)
 	if y >= 0 and y < pico8.resolution[2] then
-		for x=math.max(x0,0),math.min(x1,pico8.resolution[1]-1) do
-			table.insert(points,{x,y})
-		end
+		table.insert(lines,{x0+0.5,y+0.5,x1+1.5,y+0.5})
 	end
 end
 
-local function _plot4points(points,cx,cy,x,y)
-	_horizontal_line(points, cx - x, cy + y, cx + x)
+local function _plot4points(lines,cx,cy,x,y)
+	_horizontal_line(lines, cx - x, cy + y, cx + x)
 	if x ~= 0 and y ~= 0 then
-		_horizontal_line(points, cx - x, cy - y, cx + x)
+		_horizontal_line(lines, cx - x, cy - y, cx + x)
 	end
 end
 
@@ -181,8 +179,8 @@ function api.circ(ox,oy,r,col)
 	if col then
 		color(col)
 	end
-	ox = flr(ox)
-	oy = flr(oy)
+	ox = flr(ox)+0.5
+	oy = flr(oy)+0.5
 	r = flr(r)
 	local points = {}
 	local x = r
@@ -200,7 +198,7 @@ function api.circ(ox,oy,r,col)
 		table.insert(points,{ox+x,oy-y})
 		table.insert(points,{ox+y,oy-x})
 		y = y + 1
-		if decisionOver2 <= 0 then
+		if decisionOver2 < 0 then
 			decisionOver2 = decisionOver2 + 2 * y + 1
 		else
 			x = x - 1
@@ -221,27 +219,27 @@ function api.circfill(cx,cy,r,col)
 	r = flr(r)
 	local x = r
 	local y = 0
-	local err = -r
+	local err = 1 - r
 
-	local points = {}
+	local lines = {}
 
 	while y <= x do
-		local lasty = y
-		err = err + y
-		y = y + 1
-		err = err + y
-		_plot4points(points,cx,cy,x,lasty)
-		if err > 0 then
-			if x ~= lasty then
-				_plot4points(points,cx,cy,lasty,x)
+		_plot4points(lines,cx,cy,x,y)
+		if err < 0 then
+			err = err + 2 * y + 3
+		else
+			if x ~= y then
+				_plot4points(lines,cx,cy,y,x)
 			end
-			err = err - x
 			x = x - 1
-			err = err - x
+			err = err + 2 * (y - x) + 3
 		end
+		y = y + 1
 	end
-	if #points > 0 then
-		love.graphics.points(points)
+	if #lines > 0 then
+		for i = 1,#lines do
+			love.graphics.line(lines[i])
+		end
 	end
 end
 
@@ -261,27 +259,30 @@ function api.line(x0,y0,x1,y1,col)
 	y1 = flr(y1)
 
 	local points = {}
-	if x0 == x1 then
-		-- simple case draw a vertical line
-		if y0 > y1 then y0,y1 = y1,y0 end
-		for y=math.max(y0,0),math.min(y1,127) do
-			table.insert(points,{x0,y})
-		end
-	elseif y0 == y1 then
-		-- simple case draw a horizontal line
-		if x0 > x1 then x0,x1 = x1,x0 end
-		for x=math.max(x0,0),math.min(x1,127) do
-			table.insert(points,{x,y0})
-		end
+	if x0 == x1 or y0 == y1 then
+		-- simple case draw a straight line
+		love.graphics.rectangle("fill",flr(x0),flr(y0),flr(x1 - x0) + 1,flr(y1 - y0) + 1)
 	else
 		local dv = math.max(math.abs(x1 - x0), math.abs(y1 - y0))
 		x1 = x1 - x0
 		y1 = y1 - y0
-		x0 = x0 + 0.5
-		y0 = y0 + 0.5
+		x0 = x0 + 1.5
+		y0 = y0 + 1.5
+		local cx0, cy0, cx1, cy1
+		if pico8.clip then
+			cx0 = pico8.camera_x + pico8.clip[1]
+			cy0 = pico8.camera_y + pico8.clip[2]
+			cx1 = pico8.camera_x + pico8.clip[1] + pico8.clip[3]
+			cy1 = pico8.camera_y + pico8.clip[2] + pico8.clip[4]
+		else
+			cx0 = pico8.camera_x
+			cy0 = pico8.camera_y
+			cx1 = pico8.camera_x + pico8.resolution[1]
+			cy1 = pico8.camera_y + pico8.resolution[2]
+		end
 		for i=0,dv do
 			local x,y = flr(x1*i/dv+x0),flr(y1*i/dv+y0)
-			if x >= 0 and x < pico8.resolution[1] and y >= 0 and y < pico8.resolution[2] then
+			if x >= cx0 and x < cx1 and y >= cy0 and y < cy1 then
 				table.insert(points,{flr(x1*i/dv+x0),flr(y1*i/dv+y0)})
 			end
 		end
@@ -737,30 +738,31 @@ function api.run()
 end
 
 function api.btn(i,p)
-	p = p or 0
-	if p < 0 or p > 1 then
-		return i and false or 0
-	end
-	if i then
+	if i~=nil or p~=nil then
+		p = p or 0
+		if p < 0 or p > 1 then
+			return false
+		end
 		if pico8.keymap[p][i] then
 			return pico8.keypressed[p][i] ~= nil
 		end
 		return false
 	else
 		local bits = 0
-		for v=0,5 do
-			bits = bits + (pico8.keypressed[p][v] and 2^v or 0)
+		for i=0,5 do
+			bits = bits + (pico8.keypressed[0][i] and 2^i or 0)
+			bits = bits + (pico8.keypressed[1][i] and 2^(i+8) or 0)
 		end
 		return bits
 	end
 end
 
 function api.btnp(i,p)
-	p = p or 0
-	if p < 0 or p > 1 then
-		return i and false or 0
-	end
-	if i then
+	if i~=nil or p~=nil then
+		p = p or 0
+		if p < 0 or p > 1 then
+			return false
+		end
 		if pico8.keymap[p][i] then
 			local v = pico8.keypressed[p][i]
 			if v and (v == 0 or (v >= 12 and v % 4 == 0)) then
@@ -770,9 +772,11 @@ function api.btnp(i,p)
 		return false
 	else
 		local bits = 0
-		for v=0,5 do
-			local v = pico8.keypressed[p][v]
-			bits = bits + ((v and (v == 0 or (v >= 12 and v % 4 == 0))) and 2^v or 0)
+		for i=0,5 do
+			local v = pico8.keypressed[0][i]
+			bits = bits + ((v and (v == 0 or (v >= 12 and v % 4 == 0))) and 2^i or 0)
+			local v = pico8.keypressed[i][i]
+			bits = bits + ((v and (v == 0 or (v >= 12 and v % 4 == 0))) and 2^(i+8) or 0)
 		end
 		return bits
 	end
