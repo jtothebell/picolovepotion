@@ -41,7 +41,7 @@ local api={}
 
 function api.flip()
 	flip_screen()
-	love.timer.sleep(frametime)
+	love.timer.sleep(1/pico8.fps)
 end
 
 function api.camera(x,y)
@@ -101,7 +101,7 @@ function api.print(str,x,y,col)
 		pico8.cursor[2] = flr(tonumber(y) or 0)
 	end
 	love.graphics.setShader(pico8.text_shader)
-	love.graphics.print(tostring(str),pico8.cursor[1],pico8.cursor[2])
+	love.graphics.print(tostring(str):gsub("[%z\1-\31\127-\255]", " "),pico8.cursor[1],pico8.cursor[2])
 	love.graphics.setShader(pico8.draw_shader)
 	if not x and not y then
 		pico8.cursor[1] = 0
@@ -291,33 +291,50 @@ function api.line(x0,y0,x1,y1,col)
 	end
 end
 
-local __palette_modified = true
 function api.pal(c0,c1,p)
 	if c0 == nil then
-		if __palette_modified == false then return end
+		local __palette_modified = false
+		local __alpha_modified = false
 		for i=0,15 do
-			pico8.draw_palette[i] = i
-			pico8.display_palette[i] = pico8.palette[i+1]
+			if pico8.draw_palette[i] ~= i then
+				pico8.draw_palette[i] = i
+				__palette_modified = true
+			end
+			if pico8.display_palette[i] ~= pico8.palette[i+1] then
+				pico8.display_palette[i] = pico8.palette[i+1]
+				__palette_modified = true
+			end
+			local alpha = i == 0 and 0 or 1
+			if pico8.pal_transparent[i] ~= alpha then
+				pico8.pal_transparent[i] = alpha
+				__alpha_modified = true
+			end
 		end
-		pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-		pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-		pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-		pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
-		__palette_modified = false
+		if __palette_modified then
+			pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+			pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+			pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+			pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
+		end
+		if __alpha_modified then
+			pico8.sprite_shader:send('transparent',shdr_unpack(pico8.pal_transparent))
+		end
 	elseif p == 1 and c1 ~= nil then
 		c0 = flr(c0)%16
 		c1 = flr(c1)%16
-		pico8.display_palette[c0] = pico8.palette[c1]
-		pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
-		__palette_modified = true
+		if pico8.draw_palette[c0] ~= pico8.palette[c1+1] then
+			pico8.display_palette[c0] = pico8.palette[c1+1]
+			pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
+		end
 	elseif c1 ~= nil then
 		c0 = flr(c0)%16
 		c1 = flr(c1)%16
-		pico8.draw_palette[c0] = c1
-		pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-		pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-		pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-		__palette_modified = true
+		if pico8.draw_palette[c0] ~= c1 then
+			pico8.draw_palette[c0] = c1
+			pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+			pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+			pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+		end
 	end
 end
 

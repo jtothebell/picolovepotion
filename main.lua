@@ -309,7 +309,7 @@ function restore_camera()
 	love.graphics.translate(-pico8.camera_x,-pico8.camera_y)
 end
 
-local function flip_screen()
+function flip_screen()
 	love.graphics.setShader(pico8.display_shader)
 	pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
 	love.graphics.setCanvas()
