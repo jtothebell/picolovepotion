@@ -312,9 +312,9 @@ function api.pal(c0,c1,p)
 			end
 		end
 		if __palette_modified then
-			pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-			pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-			pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+			pico8.draw_shader:send('palette',shdr_unpack(pico8.draw_palette))
+			pico8.sprite_shader:send('palette',shdr_unpack(pico8.draw_palette))
+			pico8.text_shader:send('palette',shdr_unpack(pico8.draw_palette))
 			pico8.display_shader:send('palette',shdr_unpack(pico8.display_palette))
 		end
 		if __alpha_modified then
@@ -332,9 +332,9 @@ function api.pal(c0,c1,p)
 		c1 = flr(c1)%16
 		if pico8.draw_palette[c0] ~= c1 then
 			pico8.draw_palette[c0] = c1
-			pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-			pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
-			pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+			pico8.draw_shader:send('palette',shdr_unpack(pico8.draw_palette))
+			pico8.sprite_shader:send('palette',shdr_unpack(pico8.draw_palette))
+			pico8.text_shader:send('palette',shdr_unpack(pico8.draw_palette))
 		end
 	end
 end

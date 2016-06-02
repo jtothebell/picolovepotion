@@ -235,34 +235,34 @@ function love.load(argv)
 	end
 
 	pico8.draw_shader = love.graphics.newShader([[
-extern int palette[16];
+extern float palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	int index = int(color.r*255.0);
 	return vec4(palette[index]/255.0,0.0,0.0,1.0);
 }]])
-	pico8.draw_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+	pico8.draw_shader:send('palette',shdr_unpack(pico8.draw_palette))
 
 	pico8.sprite_shader = love.graphics.newShader([[
-extern int palette[16];
+extern float palette[16];
 extern float transparent[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	int index = int(Texel(texture, texture_coords).r*255.0);
 	return vec4(palette[index]/255.0,0.0,0.0,transparent[index]);
 }]])
-	pico8.sprite_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+	pico8.sprite_shader:send('palette',shdr_unpack(pico8.draw_palette))
 	pico8.sprite_shader:send('transparent',shdr_unpack(pico8.pal_transparent))
 
 	pico8.text_shader = love.graphics.newShader([[
-extern int palette[16];
+extern float palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	vec4 texcolor = Texel(texture, texture_coords);
 	int index = int(color.r*255.0);
 	return vec4(palette[index]/255.0,0.0,0.0,texcolor.a);
 }]])
-	pico8.text_shader:sendInt('palette',shdr_unpack(pico8.draw_palette))
+	pico8.text_shader:send('palette',shdr_unpack(pico8.draw_palette))
 
 	pico8.display_shader = love.graphics.newShader([[
 extern vec4 palette[16];
