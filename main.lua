@@ -136,7 +136,7 @@ end
 function love.load(argv)
 	love_args = argv
 	if love.system.getOS() == "Android" then
-		love.resize(love.window.getDimensions())
+		love.resize(love.graphics.getDimensions())
 	else
 		love.window.setMode(pico8.resolution[1]*scale+xpadding*scale*2,pico8.resolution[2]*scale+ypadding*scale*2)
 	end
@@ -238,7 +238,7 @@ function love.load(argv)
 extern float palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
-	int index = int(color.r*255.0);
+	int index = int(color.r*255.0+0.5);
 	return vec4(palette[index]/255.0,0.0,0.0,1.0);
 }]])
 	pico8.draw_shader:send('palette',shdr_unpack(pico8.draw_palette))
@@ -248,7 +248,7 @@ extern float palette[16];
 extern float transparent[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
-	int index = int(Texel(texture, texture_coords).r*255.0);
+	int index = int(Texel(texture, texture_coords).r*255.0+0.5);
 	return vec4(palette[index]/255.0,0.0,0.0,transparent[index]);
 }]])
 	pico8.sprite_shader:send('palette',shdr_unpack(pico8.draw_palette))
@@ -259,7 +259,7 @@ extern float palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	vec4 texcolor = Texel(texture, texture_coords);
-	int index = int(color.r*255.0);
+	int index = int(color.r*255.0+0.5);
 	return vec4(palette[index]/255.0,0.0,0.0,texcolor.a);
 }]])
 	pico8.text_shader:send('palette',shdr_unpack(pico8.draw_palette))
@@ -268,7 +268,7 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 extern vec4 palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
-	int index = int(Texel(texture, texture_coords).r*255.0);
+	int index = int(Texel(texture, texture_coords).r*255.0+0.5);
 	// lookup the colour in the palette by index
 	return palette[index]/255.0;
 }]])
