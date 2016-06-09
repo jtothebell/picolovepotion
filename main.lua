@@ -75,19 +75,20 @@ local love_args = nil
 local scale = 4
 local xpadding = 8.5
 local ypadding = 3.5
-local __accum = 0
-local __audio_buffer_size = 1024
-
+local tobase = nil
+local topad = nil
 local video_frames = nil
 local osc
 local host_time = 0
 local retro_mode = false
-local __audio_channels
+local paused = false
+local api, cart
+
+local __buffer_count = 8
+local __buffer_size = 1024
 local __sample_rate = 22050
 local channels = 1
 local bits = 16
-local paused = false
-local api, cart
 
 log = print
 --log = function() end
@@ -127,10 +128,12 @@ function love.resize(w,h)
 	else
 		scale = w/(pico8.resolution[1]+xpadding*2)
 	end
+	tobase=math.min(w,h)/9
+	topad=tobase/8
 end
 
 local function note_to_hz(note)
-	return 440*math.pow(2,(note-33)/12)
+	return 440*2^((note-33)/12)
 end
 
 function love.load(argv)
@@ -145,12 +148,12 @@ function love.load(argv)
 	-- tri
 	osc[0] = function(x)
 		local t = x%1
-		return (abs(t*2-1)*2-1) * 2/3
+		return (abs(t * 2 - 1) * 2 - 1) * 0.7
 	end
 	-- uneven tri
 	osc[1] = function(x)
 		local t = x%1
-		return (((t < 0.875) and (t * 16 / 7) or ((1-t)*16)) -1) * 0.6
+		return (((t < 0.875) and (t * 16 / 7) or ((1-t)*16)) -1) * 0.7
 	end
 	-- saw
 	osc[2] = function(x)
@@ -180,28 +183,24 @@ function love.load(argv)
 			lsample = sample
 			sample = (lsample+scale*(love.math.random()*2-1))/(1+scale)
 			lastx = x
-			return math.min(math.max((lsample+sample)*4/3*(1.75-scale),-1),1)
+			return math.min(math.max((lsample+sample)*4/3*(1.75-scale),-1),1)*0.7
 		end
 	end
 	-- detuned tri
 	osc[7] = function(x)
 		x = x * 2
-		return (abs((x%2)-1)-0.5 + (abs(((x*0.97)%2)-1)-0.5)/2) * 2/3
+		return (abs((x%2)-1)-0.5 + (abs(((x*127/128)%2)-1)-0.5)/2) - 1/4
 	end
 	-- saw from 0 to 1, used for arppregiator
 	osc["saw_lfo"] = function(x)
 		return x%1
 	end
 
-	__audio_channels = {
-		[0]=QueueableSource:new(8),
-		QueueableSource:new(8),
-		QueueableSource:new(8),
-		QueueableSource:new(8)
-	}
+	pico8.audio_source = QueueableSource:new(__buffer_count)
+	pico8.audio_source:play()
+	pico8.audio_buffer = love.sound.newSoundData(__buffer_size,__sample_rate,bits,channels)
 
 	for i=0,3 do
-		__audio_channels[i]:play()
 		pico8.audio_channels[i].noise = osc[6]()
 	end
 
@@ -289,6 +288,7 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 end
 
 function love.update(dt)
+	pico8.audio_source:step()
 	for p=0,1 do
 		for i=0,#pico8.keymap[p] do
 			for _,key in pairs(pico8.keymap[p][i]) do
@@ -301,6 +301,7 @@ function love.update(dt)
 			end
 		end
 	end
+
 	if pico8.cart._update then pico8.cart._update() end
 end
 
@@ -327,14 +328,31 @@ function flip_screen()
 		love.graphics.draw(pico8.screen,xpadding*scale,screen_h/2-64*scale,0,scale,scale)
 	end
 
-	love.graphics.present()
-
 	if video_frames then
 		local tmp = love.graphics.newCanvas(pico8.resolution[1],pico8.resolution[2])
 		love.graphics.setCanvas(tmp)
 		love.graphics.draw(pico8.screen,0,0)
 		table.insert(video_frames,tmp:newImageData())
 	end
+
+	-- draw touchscreen overlay
+	if love.system.getOS() == "Android" then
+		local col=(love.graphics.getColor())
+		love.graphics.setColor(255,255,255,255)
+		love.graphics.setShader()
+
+		local keys=pico8.keypressed[0]
+		love.graphics.rectangle(keys[0] and "fill" or "line",topad,screen_h-tobase*3-topad,tobase,tobase,topad,topad)
+		love.graphics.rectangle(keys[3] and "fill" or "line",tobase+topad*2,screen_h-tobase*2,tobase,tobase,topad,topad)
+		love.graphics.rectangle(keys[2] and "fill" or "line",tobase+topad*2,screen_h-tobase*4-topad*2,tobase,tobase,topad,topad)
+		love.graphics.rectangle(keys[1] and "fill" or "line",tobase*2+topad*3,screen_h-tobase*3-topad,tobase,tobase,topad,topad)
+		love.graphics.circle(keys[4] and "fill" or "line",screen_w-tobase*8/3,screen_h-tobase*3/2,tobase/2)
+		love.graphics.circle(keys[5] and "fill" or "line",screen_w-tobase,screen_h-tobase*3/2,tobase/2)
+		love.graphics.setColor(col,0,0,255)
+	end
+
+	love.graphics.present()
+
 	-- get ready for next time
 	love.graphics.setShader(pico8.draw_shader)
 	love.graphics.setCanvas(pico8.screen)
@@ -382,13 +400,12 @@ local function lerp(a,b,t)
 	return (b-a)*t+a
 end
 
-function update_audio(time)
+function update_audio(buffer)
 	-- check what sfx should be playing
-	local samples = flr(time*__sample_rate)
 
-	for i=0,samples-1 do
+	for bufferpos=0,__buffer_size-1 do
 		if pico8.current_music then
-			pico8.current_music.offset = pico8.current_music.offset + 1/(48*15.25)*(1/pico8.current_music.speed*4)
+			pico8.current_music.offset = pico8.current_music.offset + 359856000/(2986579*pico8.current_music.speed*__sample_rate)
 			if pico8.current_music.offset >= 32 then
 				local next_track = pico8.current_music.music
 				if pico8.music[next_track].loop == 2 then
@@ -411,20 +428,15 @@ function update_audio(time)
 		end
 		local music = pico8.current_music and pico8.music[pico8.current_music.music] or nil
 
+		local sample=0
 		for channel=0,3 do
 			local ch = pico8.audio_channels[channel]
-			local tick = 0
-			local tickrate = 60*16
 			local note,instr,vol,fx
 			local freq
 
-			if ch.bufferpos == 0 or ch.bufferpos == nil then
-				ch.buffer = love.sound.newSoundData(__audio_buffer_size,__sample_rate,bits,channels)
-				ch.bufferpos = 0
-			end
 			if ch.sfx and pico8.sfx[ch.sfx] then
 				local sfx = pico8.sfx[ch.sfx]
-				ch.offset = ch.offset + 1/(48*15.25)*(1/sfx.speed*4)
+				ch.offset = ch.offset + 359856000/(2986579*sfx.speed*__sample_rate)
 				if sfx.loop_end ~= 0 and ch.offset >= sfx.loop_end then
 					if ch.loop then
 						ch.last_step = -1
@@ -494,23 +506,17 @@ function update_audio(time)
 					end
 					ch.sample = ch.osc(ch.oscpos) * vol/7
 					ch.oscpos = ch.oscpos + ch.freq/__sample_rate
-					ch.buffer:setSample(ch.bufferpos,ch.sample)
+					sample = sample + ch.sample
 				else
-					ch.buffer:setSample(ch.bufferpos,lerp(ch.sample or 0,0,0.1))
+					sample = sample + lerp(ch.sample or 0,0,0.1)
 					ch.sample = 0
 				end
 			else
-				ch.buffer:setSample(ch.bufferpos,lerp(ch.sample or 0,0,0.1))
+				sample = sample + lerp(ch.sample or 0,0,0.1)
 				ch.sample = 0
 			end
-			ch.bufferpos = ch.bufferpos + 1
-			if ch.bufferpos == __audio_buffer_size then
-				-- queue buffer and reset
-				__audio_channels[channel]:queue(ch.buffer)
-				__audio_channels[channel]:play()
-				ch.bufferpos = 0
-			end
 		end
+		buffer:setSample(bufferpos,math.min(math.max(sample,-1),1))
 	end
 end
 
@@ -523,9 +529,6 @@ function love.draw()
 
 	-- run the cart's draw function
 	if pico8.cart._draw then pico8.cart._draw() end
-
-	-- draw the contents of pico screen to our screen
-	flip_screen()
 end
 
 function _reload()
@@ -588,6 +591,37 @@ function love.keyreleased(key)
 			end
 		end
 	end
+end
+
+local id_positions={}
+
+local function inside(x, y, x0, y0)
+	return (x>=x0 and x<x0+tobase and y>=y0 and y<y0+tobase)
+end
+
+function love.touchpressed(id,x,y,dx,dy,pressure)
+	local screen_w,screen_h = love.graphics.getDimensions()
+	if not pico8.keypressed[0][0] and inside(x,y,topad,screen_h-tobase*3-topad) then pico8.keypressed[0][0] = -1 end
+	if not pico8.keypressed[0][1] and inside(x,y,tobase*2+topad*3,screen_h-tobase*3-topad) then pico8.keypressed[0][1] = -1 end
+	if not pico8.keypressed[0][2] and inside(x,y,tobase+topad*2,screen_h-tobase*4-topad*2) then pico8.keypressed[0][2] = -1 end
+	if not pico8.keypressed[0][3] and inside(x,y,tobase+topad*2,screen_h-tobase*2) then pico8.keypressed[0][3] = -1 end
+
+	if not pico8.keypressed[0][4] and (screen_w-tobase*8/3-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2 then pico8.keypressed[0][4] = -1 end
+	if not pico8.keypressed[0][5] and (screen_w-tobase-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2 then pico8.keypressed[0][5] = -1 end
+	id_positions[id]={x,y}
+end
+
+function love.touchreleased(id,x,y,dx,dy,pressure)
+	x,y=unpack(id_positions[id])
+	local screen_w,screen_h = love.graphics.getDimensions()
+	if pico8.keypressed[0][0] and inside(x,y,topad,screen_h-tobase*3-topad) then pico8.keypressed[0][0] = nil end
+	if pico8.keypressed[0][1] and inside(x,y,tobase*2+topad*3,screen_h-tobase*3-topad) then pico8.keypressed[0][1] = nil end
+	if pico8.keypressed[0][2] and inside(x,y,tobase+topad*2,screen_h-tobase*4-topad*2) then pico8.keypressed[0][2] = nil end
+	if pico8.keypressed[0][3] and inside(x,y,tobase+topad*2,screen_h-tobase*2) then pico8.keypressed[0][3] = nil end
+
+	if pico8.keypressed[0][4] and (screen_w-tobase*8/3-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2 then pico8.keypressed[0][4] = nil end
+	if pico8.keypressed[0][5] and (screen_w-tobase-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2 then pico8.keypressed[0][5] = nil end
+	id_positions[id]=nil
 end
 
 function love.textinput(text)
@@ -656,7 +690,6 @@ function love.run()
 			if paused then
 			else
 				if love.update then love.update(frametime) end -- will pass 0 if love.timer is disabled
-				update_audio(frametime)
 			end
 			dt = dt - frametime
 			render = true
@@ -667,10 +700,17 @@ function love.run()
 			if paused then
 				api.rectfill(64-4*4,60,64+4*4-2,64+4+4,1)
 				api.print("paused",64 - 3*4,64,(host_time*20)%8<4 and 7 or 13)
-				flip_screen()
 			else
 				if love.draw then love.draw() end
 			end
+			-- draw the contents of pico screen to our screen
+			flip_screen()
+		end
+
+		for i=1,pico8.audio_source:getFreeBufferCount() do
+			update_audio(pico8.audio_buffer)
+			pico8.audio_source:queue(pico8.audio_buffer)
+			pico8.audio_source:play()
 		end
 
 		if love.timer then love.timer.sleep(0.001) end

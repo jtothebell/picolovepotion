@@ -107,6 +107,8 @@ function api.print(str,x,y,col)
 	end
 end
 
+api.printh = print
+
 function api.cursor(x,y)
 	pico8.cursor = {x or 0,y or 0}
 end
@@ -461,19 +463,23 @@ function api.music(n,fade_len,channel_mask)
 		return
 	end
 	local m = pico8.music[n]
-	local slowest_speed = nil
-	local slowest_channel = nil
+	local music_speed = nil
+	local music_channel = nil
 	for i=0,3 do
 		if m[i] < 64 then
 			local sfx = pico8.sfx[m[i]]
-			if slowest_speed == nil or slowest_speed > sfx.speed then
-				slowest_speed = sfx.speed
-				slowest_channel = i
+			if sfx.loop_start >= sfx.loop_end then
+				music_speed = sfx.speed
+				music_channel = i
+				break
+			elseif music_speed == nil or music_speed > sfx.speed then
+				music_speed = sfx.speed
+				music_channel = i
 			end
 		end
 	end
-	pico8.audio_channels[slowest_channel].loop = false
-	pico8.current_music = {music=n,offset=0,channel_mask=channel_mask or 15,speed=slowest_speed}
+	pico8.audio_channels[music_channel].loop = false
+	pico8.current_music = {music=n,offset=0,channel_mask=channel_mask or 15,speed=music_speed}
 	for i=0,3 do
 		if pico8.music[n][i] < 64 then
 			pico8.audio_channels[i].sfx = pico8.music[n][i]
