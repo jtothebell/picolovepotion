@@ -41,8 +41,8 @@ function gif:frame(data)
 			end
 		end
 		if y0 == nil then
-			self.file:write("\44\0\0\0\0\0\0\0\0\0\4\2\48\2\0")
-			return
+			-- TODO: Output longer delay instead of bogus frame
+			x0, y0, x1, y1=0, 0, 0, 0
 		end
 		for x=x0, x1 do
 			local kill=false
@@ -108,17 +108,27 @@ function gif:frame(data)
 			else
 				stream[#stream+1]=codetbl[buffer]
 				last=last+1
-				codetbl[temp]=last
+				if last < 4095 then
+					codetbl[temp]=last
+				else
+					stream[#stream+1]=16
+					codetbl={}
+					for i=0, 15 do
+						codetbl[string.char(i)]=i
+					end
+					last=17
+				end
 				buffer=tostring(index)
 			end
 		end
 	end
 	stream[#stream+1]=codetbl[buffer]
-	stream[#stream+1]=18
+	stream[#stream+1]=17
 	local output={}
 	local size=5
 	local bits=0
 	local pack=0
+	local base=-16
 	for i=1, #stream do
 		pack=pack+bit.lshift(stream[i], bits)
 		bits=bits+size
@@ -127,8 +137,12 @@ function gif:frame(data)
 			output[#output+1]=string.char(bit.band(pack, 0xFF))
 			pack=bit.rshift(pack, 8)
 		end
-		if i+16>=2^size then
+		if i-base>=2^size then
 			size=size+1
+		end
+		if stream[i]==16 then
+			base=i-17
+			size=5
 		end
 	end
 	while bits>0 do
