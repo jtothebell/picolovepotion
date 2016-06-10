@@ -34,7 +34,8 @@ pico8 = {
 	cartdata = {},
 	keypressed = {
 		[0] = {},
-		[1] = {}
+		[1] = {},
+		counter = 0
 	},
 	keymap = {
 		[0] = {
@@ -83,6 +84,7 @@ local osc
 local host_time = 0
 local retro_mode = false
 local paused = false
+local android = false
 local api, cart, gif
 
 local __buffer_count = 8
@@ -139,7 +141,8 @@ end
 
 function love.load(argv)
 	love_args = argv
-	if love.system.getOS() == "Android" then
+	android = (love.system.getOS() == "Android")
+	if android then
 		love.resize(love.graphics.getDimensions())
 	else
 		love.window.setMode(pico8.resolution[1]*scale+xpadding*scale*2,pico8.resolution[2]*scale+ypadding*scale*2)
@@ -289,20 +292,67 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 	api.run()
 end
 
-function love.update(dt)
-	pico8.audio_source:step()
+local function inside(x, y, x0, y0, w, h)
+	love.graphics.rectangle("fill", x0, y0, w, h)
+	return (x>=x0 and x<x0+w and y>=y0 and y<y0+h)
+end
+
+local function touchcheck(i,x,y)
+	local screen_w,screen_h = love.graphics.getDimensions()
+	local ytop = screen_h-tobase*4-topad*2
+	local length = tobase*3+topad*2
+
+	if i == 0 then
+		return inside(x,y,topad,ytop,tobase,length)
+	elseif i == 1 then
+		return inside(x,y,tobase*2+topad*3,ytop,tobase,length)
+	elseif i == 2 then
+		return inside(x,y,topad,ytop,length,tobase)
+	elseif i == 3 then
+		return inside(x,y,topad,screen_h-tobase*2,length,tobase)
+	elseif i == 4 then
+		return (screen_w-tobase*8/3-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2
+	elseif i == 5 then
+		return (screen_w-tobase-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2
+	end
+end
+
+local function update_buttons()
+	local touches
+	if android then
+		touches = love.touch.getTouches()
+	end
 	for p=0,1 do
-		for i=0,#pico8.keymap[p] do
-			for _,key in pairs(pico8.keymap[p][i]) do
-				local v = pico8.keypressed[p][i]
-				if v then
-					v = v + 1
-					pico8.keypressed[p][i] = v
+		local keymap=pico8.keymap[p]
+		local keypressed=pico8.keypressed[p]
+		for i=0,5 do
+			local btn = false
+			for _,testkey in pairs(keymap[i]) do
+				if love.keyboard.isDown(testkey) then
+					btn = true
 					break
 				end
 			end
+			if not btn and android and p == 0 then
+				for _,id in pairs(touches) do
+					btn = touchcheck(i,love.touch.getPosition(id))
+					if btn then break end
+				end
+			end
+			if not btn then
+				keypressed[i] = false
+			elseif not keypressed[i] then
+				pico8.keypressed.counter = 0
+				keypressed[i] = true
+			end
 		end
 	end
+end
+
+function love.update(dt)
+	pico8.audio_source:step()
+	pico8.keypressed.counter = pico8.keypressed.counter + 1
+	update_buttons()
 
 	if pico8.cart._update then pico8.cart._update() end
 end
@@ -338,7 +388,7 @@ function flip_screen()
 	end
 
 	-- draw touchscreen overlay
-	if love.system.getOS() == "Android" then
+	if android then
 		local col=(love.graphics.getColor())
 		love.graphics.setColor(255,255,255,255)
 		love.graphics.setShader()
@@ -576,17 +626,6 @@ function love.keypressed(key)
 		else
 			log('no active recording')
 		end
-	else
-		for p=0,1 do
-			for i=0,#pico8.keymap[p] do
-				for _,testkey in pairs(pico8.keymap[p][i]) do
-					if key == testkey then
-						pico8.keypressed[p][i] = -1 -- becomes 0 on the next frame
-						break
-					end
-				end
-			end
-		end
 	end
 end
 
@@ -594,47 +633,6 @@ function love.keyreleased(key)
 	if cart and pico8.cart._keyup then
 		return pico8.cart._keyup(key)
 	end
-	for p=0,1 do
-		for i=0,#pico8.keymap[p] do
-			for _,testkey in pairs(pico8.keymap[p][i]) do
-				if key == testkey then
-					pico8.keypressed[p][i] = nil
-					break
-				end
-			end
-		end
-	end
-end
-
-local id_positions={}
-
-local function inside(x, y, x0, y0)
-	return (x>=x0 and x<x0+tobase and y>=y0 and y<y0+tobase)
-end
-
-function love.touchpressed(id,x,y,dx,dy,pressure)
-	local screen_w,screen_h = love.graphics.getDimensions()
-	if not pico8.keypressed[0][0] and inside(x,y,topad,screen_h-tobase*3-topad) then pico8.keypressed[0][0] = -1 end
-	if not pico8.keypressed[0][1] and inside(x,y,tobase*2+topad*3,screen_h-tobase*3-topad) then pico8.keypressed[0][1] = -1 end
-	if not pico8.keypressed[0][2] and inside(x,y,tobase+topad*2,screen_h-tobase*4-topad*2) then pico8.keypressed[0][2] = -1 end
-	if not pico8.keypressed[0][3] and inside(x,y,tobase+topad*2,screen_h-tobase*2) then pico8.keypressed[0][3] = -1 end
-
-	if not pico8.keypressed[0][4] and (screen_w-tobase*8/3-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2 then pico8.keypressed[0][4] = -1 end
-	if not pico8.keypressed[0][5] and (screen_w-tobase-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2 then pico8.keypressed[0][5] = -1 end
-	id_positions[id]={x,y}
-end
-
-function love.touchreleased(id,x,y,dx,dy,pressure)
-	x,y=unpack(id_positions[id])
-	local screen_w,screen_h = love.graphics.getDimensions()
-	if pico8.keypressed[0][0] and inside(x,y,topad,screen_h-tobase*3-topad) then pico8.keypressed[0][0] = nil end
-	if pico8.keypressed[0][1] and inside(x,y,tobase*2+topad*3,screen_h-tobase*3-topad) then pico8.keypressed[0][1] = nil end
-	if pico8.keypressed[0][2] and inside(x,y,tobase+topad*2,screen_h-tobase*4-topad*2) then pico8.keypressed[0][2] = nil end
-	if pico8.keypressed[0][3] and inside(x,y,tobase+topad*2,screen_h-tobase*2) then pico8.keypressed[0][3] = nil end
-
-	if pico8.keypressed[0][4] and (screen_w-tobase*8/3-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2 then pico8.keypressed[0][4] = nil end
-	if pico8.keypressed[0][5] and (screen_w-tobase-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2 then pico8.keypressed[0][5] = nil end
-	id_positions[id]=nil
 end
 
 function love.textinput(text)

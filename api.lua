@@ -749,10 +749,7 @@ function api.btn(i,p)
 		if p < 0 or p > 1 then
 			return false
 		end
-		if pico8.keymap[p][i] then
-			return pico8.keypressed[p][i] ~= nil
-		end
-		return false
+		return not not pico8.keypressed[p][i]
 	else
 		local bits = 0
 		for i=0,5 do
@@ -769,20 +766,18 @@ function api.btnp(i,p)
 		if p < 0 or p > 1 then
 			return false
 		end
-		if pico8.keymap[p][i] then
-			local v = pico8.keypressed[p][i]
-			if v and (v == 0 or (v >= 12 and v % 4 == 0)) then
-				return true
-			end
+		local v = pico8.keypressed.counter
+		if pico8.keypressed[p][i] and (v == 0 or (v >= 12 and v % 4 == 0)) then
+			return true
 		end
 		return false
 	else
+		local v = pico8.keypressed.counter
+		v = (v == 0 or (v >= 12 and v % 4 == 0))
 		local bits = 0
 		for i=0,5 do
-			local v = pico8.keypressed[0][i]
-			bits = bits + ((v and (v == 0 or (v >= 12 and v % 4 == 0))) and 2^i or 0)
-			local v = pico8.keypressed[i][i]
-			bits = bits + ((v and (v == 0 or (v >= 12 and v % 4 == 0))) and 2^(i+8) or 0)
+			bits = bits + ((pico8.keypressed[0][i] and v) and 2^i or 0)
+			bits = bits + ((pico8.keypressed[i][i] and v) and 2^(i+8) or 0)
 		end
 		return bits
 	end
