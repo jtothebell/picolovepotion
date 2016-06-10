@@ -77,12 +77,13 @@ local xpadding = 8.5
 local ypadding = 3.5
 local tobase = nil
 local topad = nil
-local video_frames = nil
+local gif_recording = nil
+local gif_canvas = love.graphics.newCanvas(pico8.resolution[1]*2,pico8.resolution[2]*2)
 local osc
 local host_time = 0
 local retro_mode = false
 local paused = false
-local api, cart
+local api, cart, gif
 
 local __buffer_count = 8
 local __buffer_size = 1024
@@ -275,6 +276,7 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 
 	api=require("api")
 	cart=require("cart")
+	gif=require("gif")
 
 	-- load the cart
 	api.clip()
@@ -328,11 +330,11 @@ function flip_screen()
 		love.graphics.draw(pico8.screen,xpadding*scale,screen_h/2-64*scale,0,scale,scale)
 	end
 
-	if video_frames then
-		local tmp = love.graphics.newCanvas(pico8.resolution[1],pico8.resolution[2])
-		love.graphics.setCanvas(tmp)
-		love.graphics.draw(pico8.screen,0,0)
-		table.insert(video_frames,tmp:newImageData())
+	if gif_recording then
+		love.graphics.setCanvas(gif_canvas)
+		love.graphics.draw(pico8.screen,0,0,0,2,2)
+		gif_recording:frame(gif_canvas:newImageData())
+		love.graphics.setCanvas()
 	end
 
 	-- draw touchscreen overlay
@@ -546,23 +548,34 @@ function love.keypressed(key)
 		love.event.quit()
 	elseif key == 'pause' then
 		paused = not paused
-	elseif key == 'f6' then
+	elseif key == 'f1' or key == 'f6' then
 		-- screenshot
 		local screenshot = love.graphics.newScreenshot(false)
 		local filename = cartname..'-'..os.time()..'.png'
 		screenshot:encode(filename)
 		log('saved screenshot to',filename)
-	elseif key == 'f8' then
+	elseif key == 'f3' or key == 'f8' then
 		-- start recording
-		video_frames = {}
-	elseif key == 'f9' then
-		-- stop recording and save
-		local basename = cartname..'-'..os.time()..'-'
-		for i,v in ipairs(video_frames) do
-			v:encode(string.format("%s%04d.png",basename,i))
+		if gif_recording == nil then
+			local err
+			gif_recording,err = gif.new(cartname..'-'..os.time()..'.gif')
+			if not gif_recording then
+				log('failed to start recording: '..err)
+			else
+				log('starting record ...')
+			end
+		else
+			log('recording already in progress')
 		end
-		video_frames = nil
-		log('saved video to',basename)
+	elseif key == 'f4' or key == 'f9' then
+		-- stop recording and save
+		if gif_recording ~= nil then
+			gif_recording:close()
+			log('saved recording to '..gif_recording.filename)
+			gif_recording = nil
+		else
+			log('no active recording')
+		end
 	else
 		for p=0,1 do
 			for i=0,#pico8.keymap[p] do
