@@ -18,70 +18,76 @@ end
 local gif={}
 
 function gif:frame(data)
+	self.file:write("\33\249\4\4\3\0\0\0")
 	local last=self.last
 	local x0, y0, x1, y1=0, nil, pico8.resolution[1]*2-1, pico8.resolution[2]*2-1
-	for y=0, y1 do
-		local kill=false
+	if self.first then
+		y0=0
+		self.first=nil
+	else
+		for y=0, y1 do
+			local kill=false
+			for x=x0, x1 do
+				local r1, g1, b1=last:getPixel(x, y)
+				local r2, g2, b2=data:getPixel(x, y)
+				if r1~=r2 or g1~=g2 or b1~=b2 then
+					y0=y
+					kill=true
+					break
+				end
+			end
+			if kill then
+				break
+			end
+		end
+		if y0 == nil then
+			self.file:write("\44\0\0\0\0\0\0\0\0\0\4\2\48\2\0")
+			return
+		end
 		for x=x0, x1 do
-			local r1, g1, b1=last:getPixel(x, y)
-			local r2, g2, b2=data:getPixel(x, y)
-			if r1~=r2 or g1~=g2 or b1~=b2 then
-				y0=y
-				kill=true
+			local kill=false
+			for y=y0, y1 do
+				local r1, g1, b1=last:getPixel(x, y)
+				local r2, g2, b2=data:getPixel(x, y)
+				if r1~=r2 or g1~=g2 or b1~=b2 then
+					x0=x
+					kill=true
+					break
+				end
+			end
+			if kill then
 				break
 			end
 		end
-		if kill then
-			break
-		end
-	end
-	if y0 == nil then
-		self.file:write("\44\0\0\0\0\0\0\0\0\0\4\2\48\2\0")
-		return
-	end
-	for x=x0, x1 do
-		local kill=false
-		for y=y0, y1 do
-			local r1, g1, b1=last:getPixel(x, y)
-			local r2, g2, b2=data:getPixel(x, y)
-			if r1~=r2 or g1~=g2 or b1~=b2 then
-				x0=x
-				kill=true
+		for y=y1, y0, -1 do
+			local kill=false
+			for x=x0, x1 do
+				local r1, g1, b1=last:getPixel(x, y)
+				local r2, g2, b2=data:getPixel(x, y)
+				if r1~=r2 or g1~=g2 or b1~=b2 then
+					y1=y
+					kill=true
+					break
+				end
+			end
+			if kill then
 				break
 			end
 		end
-		if kill then
-			break
-		end
-	end
-	for y=y1, y0, -1 do
-		local kill=false
-		for x=x0, x1 do
-			local r1, g1, b1=last:getPixel(x, y)
-			local r2, g2, b2=data:getPixel(x, y)
-			if r1~=r2 or g1~=g2 or b1~=b2 then
-				y1=y
-				kill=true
+		for x=x1, x0, -1 do
+			local kill=false
+			for y=y0, y1 do
+				local r1, g1, b1=last:getPixel(x, y)
+				local r2, g2, b2=data:getPixel(x, y)
+				if r1~=r2 or g1~=g2 or b1~=b2 then
+					x1=x
+					kill=true
+					break
+				end
+			end
+			if kill then
 				break
 			end
-		end
-		if kill then
-			break
-		end
-	end
-	for x=x1, x0, -1 do
-		local kill=false
-		for y=y0, y1 do
-			local r1, g1, b1=last:getPixel(x, y)
-			local r2, g2, b2=data:getPixel(x, y)
-			if r1~=r2 or g1~=g2 or b1~=b2 then
-				x1=x
-				kill=true
-				break
-			end
-		end
-		if kill then
-			break
 		end
 	end
 	self.file:write("\44"..num2str(x0)..num2str(y0)..num2str(x1-x0+1)..num2str(y1-y0+1).."\0\4")
@@ -165,9 +171,8 @@ function giflib.new(filename)
 		file:write(string.char(palette[1], palette[2], palette[3]))
 	end
 	file:write("\33\255\11NETSCAPE2.0\3\1\0\0\0")
-	file:write("\33\249\4\4\3\0\0\0")
 	local last=love.image.newImageData(pico8.resolution[1]*2, pico8.resolution[2]*2)
-	return setmetatable({filename=filename, file=file, last=last}, gifmt)
+	return setmetatable({filename=filename, file=file, last=last, first=true}, gifmt)
 end
 
 return giflib
