@@ -40,7 +40,7 @@ function gif:frame(data)
 				break
 			end
 		end
-		if y0 == nil then
+		if y0==nil then
 			-- TODO: Output longer delay instead of bogus frame
 			x0, y0, x1, y1=0, 0, 0, 0
 		end
@@ -108,7 +108,7 @@ function gif:frame(data)
 			else
 				stream[#stream+1]=codetbl[buffer]
 				last=last+1
-				if last < 4095 then
+				if last<4095 then
 					codetbl[temp]=last
 				else
 					stream[#stream+1]=16
