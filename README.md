@@ -1,29 +1,22 @@
 PICOLOVE
 --------
 
-A fork of the original PICOLOVE, an implementation of PICO-8's API in LÖVE
-
-Original is on github at: https://github.com/ftsf/picolove
-
+A fork of the original PICOLOVE, an implementation of PICO-8's API in LÖVE  
+Original is on github at: https://github.com/ftsf/picolove  
 Requires Love 0.10.x
 
-What it is:
+PICO-8: http://www.lexaloffle.com/pico-8.php  
+LÖVE: https://love2d.org/
+
+##### What it is:
 
  * An implementation of PICO-8's api in LÖVE
 
-What is PICO-8:
-
- * See http://www.lexaloffle.com/pico-8.php
-
-What is LÖVE:
-
- * See https://love2d.org/
-
-Why:
+##### Why:
 
  * For a fun challenge!
- * Allow standalone publishing of pico-8 games on other platforms
-  * should work on mobile devices
+ * Allow standalone publishing of PICO-8 games on other platforms
+  * Should work on mobile devices [*](#android-packaging)
  * Configurable controls
  * Extendable
  * No arbitrary cpu or memory limitations
@@ -31,7 +24,7 @@ Why:
  * Better debugging tools available
  * Open source
 
-What it isn't:
+##### What it isn't:
 
  * A replacement for PICO-8
  * A perfect replica
@@ -39,16 +32,13 @@ What it isn't:
  * No modifying or saving carts
  * Not memory compatible with PICO-8
 
-Not Yet Implemented:
-
- * Memory modification/reading
-
-Differences:
+##### Differences:
 
  * Uses floating point numbers not fixed point
- * Uses luajit not lua 5.2
+ * Uses LuaJIT not lua 5.2
+ * Memory layout is not complete
 
-Extra features:
+##### Extra features:
 
  * `ipairs()`, `pairs()` standard lua functions
  * `assert(expr,message)` if expr is not true then errors with message
@@ -56,3 +46,9 @@ Extra features:
  * `warning(message)` prints warning and stacktrace to console
  * `setfps(fps)` changes the consoles framerate
  * `_keyup`, `_keydown`, `_textinput` allow using direct keyboard input
+
+##### Android Packaging:
+
+Replace nocart.p8 with your game, since this is the default cartridge on boot. Text P8 or PNG P8.PNG is supported.  
+Follow the steps at [Android Game Packaging](https://bitbucket.org/MartinFelis/love-android-sdl2/wiki/Game_Packaging)  
+An additional step when editing AndroidManifest.xml is to remove ```android:screenOrientation="landscape"``` if you would like your game to support orientation rotation (Portrait and Landscape)

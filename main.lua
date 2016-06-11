@@ -311,9 +311,9 @@ local function touchcheck(i, x, y)
 	elseif i==3 then
 		return inside(x, y, topad, screen_h-tobase*2, length, tobase)
 	elseif i==4 then
-		return (screen_w-tobase*8/3-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2
+		return (screen_w-tobase*8/3-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/4*3)^2
 	elseif i==5 then
-		return (screen_w-tobase-x)^2+(screen_h-tobase*3/2-y)^2<=(tobase/2)^2
+		return (screen_w-tobase-x)^2+(screen_h-tobase*2-y)^2<=(tobase/4*3)^2
 	end
 end
 
@@ -376,6 +376,8 @@ function flip_screen()
 	local screen_w, screen_h=love.graphics.getDimensions()
 	if screen_w>screen_h then
 		love.graphics.draw(pico8.screen, screen_w/2-64*scale, ypadding*scale, 0, scale, scale)
+	elseif android then
+		love.graphics.draw(pico8.screen, xpadding*scale, xpadding*scale, 0, scale, scale)
 	else
 		love.graphics.draw(pico8.screen, xpadding*scale, screen_h/2-64*scale, 0, scale, scale)
 	end
@@ -399,7 +401,7 @@ function flip_screen()
 		love.graphics.rectangle(keys[2] and "fill" or "line", tobase+topad*2, screen_h-tobase*4-topad*2, tobase, tobase, topad, topad)
 		love.graphics.rectangle(keys[1] and "fill" or "line", tobase*2+topad*3, screen_h-tobase*3-topad, tobase, tobase, topad, topad)
 		love.graphics.circle(keys[4] and "fill" or "line", screen_w-tobase*8/3, screen_h-tobase*3/2, tobase/2)
-		love.graphics.circle(keys[5] and "fill" or "line", screen_w-tobase, screen_h-tobase*3/2, tobase/2)
+		love.graphics.circle(keys[5] and "fill" or "line", screen_w-tobase, screen_h-tobase*2, tobase/2)
 		love.graphics.setColor(col, 0, 0, 255)
 	end
 
