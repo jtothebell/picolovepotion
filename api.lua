@@ -532,9 +532,26 @@ function api.peek(addr)
 	elseif addr<0x3100 then
 		return pico8.spriteflags[addr-0x3000]
 	elseif addr<0x3200 then
-		-- FIXME: Music
+		local music=pico8.music[math.floor((addr-0x3100)/4)]
+		local channel=addr%4
+		return bit.lshift(bit.band(music.loop, bit.lshift(1, channel)), 7-channel) + music[channel]
 	elseif addr<0x4300 then
-		-- FIXME: SFX
+		local sfx=pico8.sfx[math.floor((addr-0x3200)/68)]
+		local step=(addr-0x3200)%68
+		if step<64 then
+			local note=sfx[(step-1)/2]
+			if addr%2==0 then
+				return bit.lshift(bit.band(note[2], 0x3), 6)+note[1]
+			else
+				return bit.lshift(note[4], 4)+bit.lshift(note[3], 1)+bit.rshift(bit.band(note[2], 0x4), 2)
+			end
+		elseif step==65 then
+			return sfx.speed
+		elseif step==66 then
+			return sfx.loop_start
+		elseif step==67 then
+			return sfx.loop_end
+		end
 	elseif addr<0x5f00 then
 		return pico8.usermemory[addr-0x4300]
 	elseif addr<0x5f80 then
@@ -573,9 +590,34 @@ function api.poke(addr, val)
 	elseif addr<0x3100 then
 		pico8.spriteflags[addr-0x3000]=val
 	elseif addr<0x3200 then
-		-- FIXME: Music
+		local music=pico8.music[math.floor((addr-0x3100)/4)]
+		music[addr%4]=bit.band(val, 0x7F)
+		local loop=bit.lshift(1, addr%4)
+		if bit.band(val, 0x80)~=0 then
+			music.loop=bit.bor(music.loop, loop)
+		else
+			music.loop=bit.band(music.loop, bit.bnot(loop))
+		end
 	elseif addr<0x4300 then
-		-- FIXME: SFX
+		local sfx=pico8.sfx[math.floor((addr-0x3200)/68)]
+		local step=(addr-0x3200)%68
+		if step<64 then
+			local note=sfx[math.floor(step/2)]
+			if addr%2==0 then
+				note[1]=bit.band(val, 0x3f)
+				note[2]=bit.rshift(bit.band(val, 0xc0), 6)+bit.band(note[2], 0x4)
+			else
+				note[2]=bit.lshift(bit.band(val, 0x1), 2)+bit.band(note[2], 0x3)
+				note[3]=bit.rshift(bit.band(note, 0xe), 1)
+				note[4]=bit.rshift(bit.band(note, 0x70), 4)
+			end
+		elseif step==65 then
+			sfx.speed=val
+		elseif step==66 then
+			sfx.loop_start=val
+		elseif step==67 then
+			sfx.loop_end=val
+		end
 	elseif addr<0x5f00 then
 		pico8.usermemory[addr-0x4300]=val
 	elseif addr<0x5f80 then
@@ -726,7 +768,7 @@ function api.shl(x, y)
 end
 
 function api.shr(x, y)
-	return bit.band(x*0x10000, y)/0x10000
+	return bit.arshift(x*0x10000, y)/0x10000
 end
 
 function api.run()
@@ -820,36 +862,43 @@ api.costatus=coroutine.status
 
 -- The functions below are normally attached to the program code, but are here for simplicity
 function api.all(a)
-	local i=0
-	local n=table.getn(a)
+	if a==nil or #a==0 then
+		return function() end
+	end
+	local i, li=1
 	return function()
-		i=i+1
-		if i<=n then return a[i] end
+		if (a[i]==li) then i=i+1 end
+		while(a[i]==nil and i<=#a) do i=i+1 end
+		li=a[i]
+		return a[i]
 	end
 end
 
 function api.foreach(a, f)
-	if not a then
-		warning("foreach got a nil value")
-		return
-	end
-	for i, v in ipairs(a) do
+	for v in api.all(a) do
 		f(v)
 	end
 end
 
 function api.count(a)
-	return #a
+	local count=0
+	for i=1, #a do
+		if a[i]~=nil then count=count+1 end
+	end
+	return count
 end
 
 function api.add(a, v)
-	table.insert(a, v)
+	if a==nil then return end
+	a[#a+1]=v
 end
 
 function api.del(a, dv)
-	for i, v in ipairs(a) do
-		if v==dv then
+	if a==nil then return end
+	for i=1, #a do
+		if a[i]==dv then
 			table.remove(a, i)
+			return
 		end
 	end
 end
