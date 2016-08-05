@@ -64,6 +64,7 @@ function api.clip(x, y, w, h)
 end
 
 function api.cls(c)
+	c = tonumber(c) or 0
 	if c == nil then
 		c = 0
 	end
