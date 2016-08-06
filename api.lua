@@ -20,9 +20,7 @@ local function warning(msg)
 end
 
 local function _horizontal_line(lines, x0, y, x1)
-	if y>=0 and y<pico8.resolution[2] then
-		table.insert(lines, {x0+0.5, y+0.5, x1+1.5, y+0.5})
-	end
+	table.insert(lines, {x0+0.5, y+0.5, x1+1.5, y+0.5})
 end
 
 local function _plot4points(lines, cx, cy, x, y)
