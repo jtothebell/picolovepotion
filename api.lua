@@ -271,37 +271,13 @@ function api.line(x0, y0, x1, y1, col)
 	x1=flr(x1)
 	y1=flr(y1)
 
-	local points={}
 	if x0==x1 or y0==y1 then
 		-- simple case draw a straight line
 		love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
 	else
-		local dv=math.max(math.abs(x1-x0), math.abs(y1-y0))
-		x1=x1-x0
-		y1=y1-y0
-		x0=x0+1.5
-		y0=y0+1.5
-		local cx0, cy0, cx1, cy1
-		if pico8.clip then
-			cx0=pico8.camera_x+pico8.clip[1]
-			cy0=pico8.camera_y+pico8.clip[2]
-			cx1=pico8.camera_x+pico8.clip[1]+pico8.clip[3]
-			cy1=pico8.camera_y+pico8.clip[2]+pico8.clip[4]
-		else
-			cx0=pico8.camera_x
-			cy0=pico8.camera_y
-			cx1=pico8.camera_x+pico8.resolution[1]
-			cy1=pico8.camera_y+pico8.resolution[2]
-		end
-		for i=0, dv do
-			local x, y=flr(x1*i/dv+x0), flr(y1*i/dv+y0)
-			if x>=cx0 and x<cx1 and y>=cy0 and y<cy1 then
-				table.insert(points, {flr(x1*i/dv+x0), flr(y1*i/dv+y0)})
-			end
-		end
-	end
-	if #points>0 then
-		love.graphics.points(points)
+		love.graphics.line(x0+0.5, y0+0.5, x1+0.5, y1+0.5)
+		-- Final pixel not being reached?
+		love.graphics.points(x1+0.5, y1+0.5)
 	end
 end
 
