@@ -167,7 +167,12 @@ function api.rect(x0, y0, x1, y1, col)
 	if col then
 		color(col)
 	end
-	love.graphics.rectangle("line", flr(x0)+1, flr(y0)+1, flr(x1-x0), flr(y1-y0))
+	local w, h=flr(x1-x0), flr(y1-y0)
+	if w==0 or h==0 then
+		love.graphics.rectangle("fill", flr(x0), flr(y0), w+1, h+1)
+	else
+		love.graphics.rectangle("line", flr(x0)+1, flr(y0)+1, w, h)
+	end
 end
 
 function api.rectfill(x0, y0, x1, y1, col)
