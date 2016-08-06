@@ -500,12 +500,14 @@ function cart.load_p8(filename)
 		cart_G[k]=v
 	end
 
-	local ok, f, e=pcall(load, lua, filename)
+	local ok, f, e=pcall(load, lua, "@"..filename)
 	if not ok or f==nil then
+		local ln=1
+		lua="1:"..lua:gsub("\n", function(a) ln=ln+1 return "\n"..ln..":" end)
 		log('=======8<========')
 		log(lua)
 		log('=======>8========')
-		error("Error loading lua: "..tostring(e))
+		error("Error loading lua: "..tostring(e),0)
 	else
 		local result
 		setfenv(f, cart_G)
