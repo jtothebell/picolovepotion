@@ -215,8 +215,11 @@ function love.load(argv)
 	pico8.screen:setFilter('linear', 'nearest')
 
 	local glyphs=""
-	for i=32, 126 do
+	for i=32, 127 do
 		glyphs=glyphs..string.char(i)
+	end
+	for i=128, 153 do
+		glyphs=glyphs..string.char(194, i)
 	end
 	local font=love.graphics.newImageFont("font.png", glyphs, 1)
 	love.graphics.setFont(font)

@@ -105,7 +105,7 @@ function api.print(str, x, y, col)
 		pico8.cursor[2]=flr(tonumber(y) or 0)
 	end
 	love.graphics.setShader(pico8.text_shader)
-	love.graphics.print(tostring(str):gsub("[%z\1-\31\127-\255]", " "), pico8.cursor[1], pico8.cursor[2])
+	love.graphics.print(tostring(str):gsub("[%z\1-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1"), pico8.cursor[1], pico8.cursor[2])
 	love.graphics.setShader(pico8.draw_shader)
 	if not x and not y then
 		pico8.cursor[1]=0
