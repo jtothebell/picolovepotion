@@ -273,7 +273,7 @@ function api.line(x0, y0, x1, y1, col)
 
 	if x0==x1 or y0==y1 then
 		-- simple case draw a straight line
-		love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
+		love.graphics.rectangle("fill", x0, y0, x1-x0+1, y1-y0+1)
 	else
 		love.graphics.line(x0+0.5, y0+0.5, x1+0.5, y1+0.5)
 		-- Final pixel not being reached?
