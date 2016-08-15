@@ -685,7 +685,7 @@ function api.rnd(x)
 end
 
 function api.srand(seed)
-	return math.random(flr(seed*0x10000))
+	math.randomseed(flr(seed*0x10000))
 end
 
 api.flr=math.floor
