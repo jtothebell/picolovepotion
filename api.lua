@@ -4,11 +4,6 @@ local flr=math.floor
 local scrblitMesh=love.graphics.newMesh(128, "points")
 scrblitMesh:setAttributeEnabled("VertexColor", true)
 
-local function __pico8_angle(a)
-	-- FIXME: why does this work?
-	return (((a-math.pi)/(math.pi*2))+0.25)%1.0
-end
-
 local function color(c)
 	c=flr(c or 0)%16
 	pico8.color=c
@@ -530,6 +525,8 @@ function api.peek(addr)
 			else
 				return bit.lshift(note[4], 4)+bit.lshift(note[3], 1)+bit.rshift(bit.band(note[2], 0x4), 2)
 			end
+		elseif step==64 then
+			return sfx.editor_mode
 		elseif step==65 then
 			return sfx.speed
 		elseif step==66 then
@@ -596,6 +593,8 @@ function api.poke(addr, val)
 				note[3]=bit.rshift(bit.band(note, 0xe), 1)
 				note[4]=bit.rshift(bit.band(note, 0x70), 4)
 			end
+		elseif step==64 then
+			sfx.editor_mode=val
 		elseif step==65 then
 			sfx.speed=val
 		elseif step==66 then
@@ -728,8 +727,8 @@ end
 
 api.sqrt=math.sqrt
 
-function api.atan2(y, x)
-	return __pico8_angle(math.atan2(y, x))
+function api.atan2(x, y)
+	return math.atan2(-y,x) / (math.pi * 2) % 1.0
 end
 
 function api.band(x, y)
