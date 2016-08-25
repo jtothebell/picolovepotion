@@ -525,6 +525,8 @@ function api.peek(addr)
 			else
 				return bit.lshift(note[4], 4)+bit.lshift(note[3], 1)+bit.rshift(bit.band(note[2], 0x4), 2)
 			end
+		elseif step==64 then
+			return sfx.editor_mode
 		elseif step==65 then
 			return sfx.speed
 		elseif step==66 then
@@ -591,6 +593,8 @@ function api.poke(addr, val)
 				note[3]=bit.rshift(bit.band(note, 0xe), 1)
 				note[4]=bit.rshift(bit.band(note, 0x70), 4)
 			end
+		elseif step==64 then
+			sfx.editor_mode=val
 		elseif step==65 then
 			sfx.speed=val
 		elseif step==66 then

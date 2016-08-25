@@ -123,6 +123,7 @@ function cart.load_p8(filename)
 	pico8.sfx={}
 	for i=0, 63 do
 		pico8.sfx[i]={
+			editor_mode=0,
 			speed=16,
 			loop_start=0,
 			loop_end=0
@@ -225,6 +226,8 @@ function cart.load_p8(filename)
 					if step<64 and inbyte%2==1 then
 						local note=bit.lshift(byte, 8)+lastbyte
 						pico8.sfx[_sfx][(step-1)/2]={bit.band(note, 0x3f), bit.rshift(bit.band(note, 0x1c0), 6), bit.rshift(bit.band(note, 0xe00), 9), bit.rshift(bit.band(note, 0x7000), 12)}
+					elseif step==64 then
+						pico8.sfx[_sfx].editor_mode=byte
 					elseif step==65 then
 						pico8.sfx[_sfx].speed=byte
 					elseif step==66 then
@@ -429,7 +432,7 @@ function cart.load_p8(filename)
 			if end_of_line==nil then break end
 			end_of_line=end_of_line-1
 			local line=sfxdata:sub(next_line, end_of_line)
-			local editor_mode=tonumber(line:sub(1, 2), 16)
+			pico8.sfx[_sfx].editor_mode=tonumber(line:sub(1, 2), 16)
 			pico8.sfx[_sfx].speed=tonumber(line:sub(3, 4), 16)
 			pico8.sfx[_sfx].loop_start=tonumber(line:sub(5, 6), 16)
 			pico8.sfx[_sfx].loop_end=tonumber(line:sub(7, 8), 16)
