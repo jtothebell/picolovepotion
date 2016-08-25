@@ -728,7 +728,7 @@ end
 api.sqrt=math.sqrt
 
 function api.atan2(x, y)
-	return math.atan2(-y,x) / (math.pi * 2) % 1.0
+	return (0.75 + math.atan2(x,y) / (math.pi * 2)) % 1.0
 end
 
 function api.band(x, y)
