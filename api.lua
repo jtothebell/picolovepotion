@@ -4,11 +4,6 @@ local flr=math.floor
 local scrblitMesh=love.graphics.newMesh(128, "points")
 scrblitMesh:setAttributeEnabled("VertexColor", true)
 
-local function __pico8_angle(a)
-	-- FIXME: why does this work?
-	return (((a-math.pi)/(math.pi*2))+0.25)%1.0
-end
-
 local function color(c)
 	c=flr(c or 0)%16
 	pico8.color=c
@@ -728,8 +723,8 @@ end
 
 api.sqrt=math.sqrt
 
-function api.atan2(y, x)
-	return __pico8_angle(math.atan2(y, x))
+function api.atan2(x, y)
+	return math.atan2(-y,x) / (math.pi * 2) % 1.0
 end
 
 function api.band(x, y)
