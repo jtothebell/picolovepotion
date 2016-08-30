@@ -512,14 +512,14 @@ function api.peek(addr)
 	elseif addr<0x3100 then
 		return pico8.spriteflags[addr-0x3000]
 	elseif addr<0x3200 then
-		local music=pico8.music[math.floor((addr-0x3100)/4)]
+		local music=pico8.music[flr((addr-0x3100)/4)]
 		local channel=addr%4
 		return bit.lshift(bit.band(music.loop, bit.lshift(1, channel)), 7-channel) + music[channel]
 	elseif addr<0x4300 then
-		local sfx=pico8.sfx[math.floor((addr-0x3200)/68)]
+		local sfx=pico8.sfx[flr((addr-0x3200)/68)]
 		local step=(addr-0x3200)%68
 		if step<64 then
-			local note=sfx[(step-1)/2]
+			local note=sfx[flr(step/2)]
 			if addr%2==0 then
 				return bit.lshift(bit.band(note[2], 0x3), 6)+note[1]
 			else
@@ -572,7 +572,7 @@ function api.poke(addr, val)
 	elseif addr<0x3100 then
 		pico8.spriteflags[addr-0x3000]=val
 	elseif addr<0x3200 then
-		local music=pico8.music[math.floor((addr-0x3100)/4)]
+		local music=pico8.music[flr((addr-0x3100)/4)]
 		music[addr%4]=bit.band(val, 0x7F)
 		local loop=bit.lshift(1, addr%4)
 		if bit.band(val, 0x80)~=0 then
@@ -581,10 +581,10 @@ function api.poke(addr, val)
 			music.loop=bit.band(music.loop, bit.bnot(loop))
 		end
 	elseif addr<0x4300 then
-		local sfx=pico8.sfx[math.floor((addr-0x3200)/68)]
+		local sfx=pico8.sfx[flr((addr-0x3200)/68)]
 		local step=(addr-0x3200)%68
 		if step<64 then
-			local note=sfx[math.floor(step/2)]
+			local note=sfx[flr(step/2)]
 			if addr%2==0 then
 				note[1]=bit.band(val, 0x3f)
 				note[2]=bit.rshift(bit.band(val, 0xc0), 6)+bit.band(note[2], 0x4)
@@ -831,6 +831,16 @@ function api.dset(index, value)
 end
 
 function api.stat(x)
+	if x >= 16 and x <= 23 then
+		local ch=pico8.audio_channels[x%4]
+		if not ch.sfx then
+			return -1
+		elseif x < 20 then
+			return ch.sfx
+		else
+			return flr(ch.offset)
+		end
+	end
 	return 0
 end
 
