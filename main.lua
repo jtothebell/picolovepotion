@@ -22,12 +22,7 @@ pico8={
 	},
 	clsc={0,  0,  0,  255},
 	spriteflags={},
-	audio_channels={
-		[0]={oscpos=0},
-		[1]={oscpos=0},
-		[2]={oscpos=0},
-		[3]={oscpos=0}
-	},
+	audio_channels={},
 	sfx={},
 	music={},
 	current_music=nil,
@@ -206,7 +201,11 @@ function love.load(argv)
 	pico8.audio_buffer=love.sound.newSoundData(__buffer_size, __sample_rate, bits, channels)
 
 	for i=0, 3 do
-		pico8.audio_channels[i].noise=osc[6]()
+		pico8.audio_channels[i]={
+			oscpos=0,
+			sample=0,
+			noise=osc[6](),
+		}
 	end
 
 	love.graphics.clear()
@@ -450,7 +449,7 @@ function update_audio(buffer)
 
 	for bufferpos=0, __buffer_size-1 do
 		if pico8.current_music then
-			pico8.current_music.offset=pico8.current_music.offset+359856000/(2986579*pico8.current_music.speed*__sample_rate)
+			pico8.current_music.offset=pico8.current_music.offset+7350/(61*pico8.current_music.speed*__sample_rate)
 			if pico8.current_music.offset>=32 then
 				local next_track=pico8.current_music.music
 				if pico8.music[next_track].loop==2 then
@@ -481,7 +480,7 @@ function update_audio(buffer)
 
 			if ch.sfx and pico8.sfx[ch.sfx] then
 				local sfx=pico8.sfx[ch.sfx]
-				ch.offset=ch.offset+359856000/(2986579*sfx.speed*__sample_rate)
+				ch.offset=ch.offset+7350/(61*sfx.speed*__sample_rate)
 				if sfx.loop_end~=0 and ch.offset>=sfx.loop_end then
 					if ch.loop then
 						ch.last_step=-1
@@ -549,7 +548,7 @@ function update_audio(buffer)
 						local note=sfx[flr(off)][1]
 						ch.freq=note_to_hz(note)
 					end
-					ch.sample=ch.osc(ch.oscpos)*vol/7
+					ch.sample=(ch.osc(ch.oscpos)*vol/7+ch.sample)/2
 					ch.oscpos=ch.oscpos+ch.freq/__sample_rate
 					sample=sample+ch.sample
 				else
