@@ -478,7 +478,7 @@ function cart.load_p8(filename)
 	end
 
 	-- patch the lua
-	lua=lua:gsub("!=", "~=")
+	lua=lua:gsub("!=", "~=").."\n"
 	-- rewrite shorthand if statements eg. if (not b) i=1 j=2
 	lua=lua:gsub("if%s*(%b())%s*([^\n]*)\n", function(a, b)
 		local nl=a:find('\n', nil, true)

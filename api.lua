@@ -93,16 +93,22 @@ function api.print(str, x, y, col)
 	if col then
 		color(col)
 	end
-	if x or y then
+	if x and y then
 		pico8.cursor[1]=flr(tonumber(x) or 0)
 		pico8.cursor[2]=flr(tonumber(y) or 0)
 	end
 	love.graphics.setShader(pico8.text_shader)
-	love.graphics.print(tostring(str):gsub("[%z\1-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1"), pico8.cursor[1], pico8.cursor[2])
+	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"
+	local size=0
+	for line in str:gmatch("(.-)\n") do
+		love.graphics.print(line, pico8.cursor[1], pico8.cursor[2]+size)
+		size=size+6
+	end
 	love.graphics.setShader(pico8.draw_shader)
 	if not x and not y then
 		pico8.cursor[1]=0
-		pico8.cursor[2]=pico8.cursor[2]+6
+		pico8.cursor[2]=pico8.cursor[2]+size
+		-- TODO: Scrolling
 	end
 end
 
@@ -590,8 +596,8 @@ function api.poke(addr, val)
 				note[2]=bit.rshift(bit.band(val, 0xc0), 6)+bit.band(note[2], 0x4)
 			else
 				note[2]=bit.lshift(bit.band(val, 0x1), 2)+bit.band(note[2], 0x3)
-				note[3]=bit.rshift(bit.band(note, 0xe), 1)
-				note[4]=bit.rshift(bit.band(note, 0x70), 4)
+				note[3]=bit.rshift(bit.band(val, 0xe), 1)
+				note[4]=bit.rshift(bit.band(val, 0x70), 4)
 			end
 		elseif step==64 then
 			sfx.editor_mode=val
