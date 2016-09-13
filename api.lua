@@ -767,6 +767,11 @@ function api.run()
 		pico8.cartdata[i]=0
 	end
 	if pico8.cart._init then pico8.cart._init() end
+	if pico8.cart._update60 then
+		setfps(60)
+	else
+		setfps(30)
+	end
 end
 
 function api.btn(i, p)
@@ -792,18 +797,22 @@ function api.btnp(i, p)
 		if p<0 or p>1 then
 			return false
 		end
+		local init=(pico8.fps/2-1)
 		local v=pico8.keypressed.counter
-		if pico8.keypressed[p][i] and (v==0 or (v>=12 and v%4==0)) then
+		if pico8.keypressed[p][i] and (v==init or v==1) then
 			return true
 		end
 		return false
 	else
+		local init=(pico8.fps/2-1)
 		local v=pico8.keypressed.counter
-		v=(v==0 or (v>=12 and v%4==0))
+		if not (v==init or v==1) then
+			return 0
+		end
 		local bits=0
 		for i=0, 5 do
-			bits=bits+((pico8.keypressed[0][i] and v) and 2^i or 0)
-			bits=bits+((pico8.keypressed[i][i] and v) and 2^(i+8) or 0)
+			bits=bits+(pico8.keypressed[0][i] and 2^i or 0)
+			bits=bits+(pico8.keypressed[1][i] and 2^(i+8) or 0)
 		end
 		return bits
 	end

@@ -321,6 +321,7 @@ local function touchcheck(i, x, y)
 end
 
 local function update_buttons()
+	local init, loop=pico8.fps/2, pico8.fps/7.5
 	local touches
 	if android then
 		touches=love.touch.getTouches()
@@ -345,19 +346,25 @@ local function update_buttons()
 			if not btn then
 				keypressed[i]=false
 			elseif not keypressed[i] then
-				pico8.keypressed.counter=0
+				pico8.keypressed.counter=init
 				keypressed[i]=true
 			end
 		end
+	end
+	pico8.keypressed.counter=pico8.keypressed.counter-1
+	if pico8.keypressed.counter<=0 then
+		pico8.keypressed.counter=loop
 	end
 end
 
 function love.update(dt)
 	pico8.audio_source:step()
-	pico8.keypressed.counter=pico8.keypressed.counter+1
 	update_buttons()
-
-	if pico8.cart._update then pico8.cart._update() end
+	if pico8.cart._update60 then
+		pico8.cart._update60()
+	elseif pico8.cart._update then
+		pico8.cart._update()
+	end
 end
 
 function restore_camera()
