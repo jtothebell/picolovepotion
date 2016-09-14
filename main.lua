@@ -20,7 +20,6 @@ pico8={
 		{255,119,168,255},
 		{255,204,170,255}
 	},
-	clsc={0,  0,  0,  255},
 	spriteflags={},
 	audio_channels={},
 	sfx={},
@@ -381,7 +380,7 @@ function flip_screen()
 	-- love.graphics.setColor(255, 255, 255, 255)
 	love.graphics.setScissor()
 
-	love.graphics.clear(pico8.clsc)
+	love.graphics.clear()
 
 	local screen_w, screen_h=love.graphics.getDimensions()
 	if screen_w>screen_h then

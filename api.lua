@@ -47,11 +47,11 @@ function api.camera(x, y)
 end
 
 function api.clip(x, y, w, h)
-	if x and x~="" then
+	if x and y and w and h then
 		love.graphics.setScissor(x, y, w, h)
 		pico8.clip={x, y, w, h}
 	else
-		love.graphics.setScissor(0, 0, pico8.resolution[1], pico8.resolution[2])
+		love.graphics.setScissor()
 		pico8.clip=nil
 	end
 end
@@ -62,8 +62,9 @@ function api.cls(c)
 		c = 0
 	end
 
-	pico8.clsc = pico8.palette[c+1]
-	love.graphics.clear(pico8.clsc)
+	pico8.clip=nil
+	love.graphics.setScissor()
+	love.graphics.clear(c, 0, 0, 255)
 	pico8.cursor={0, 0}
 end
 
