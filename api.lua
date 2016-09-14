@@ -104,12 +104,22 @@ function api.print(str, x, y, col)
 		love.graphics.print(line, pico8.cursor[1], pico8.cursor[2]+size)
 		size=size+6
 	end
-	love.graphics.setShader(pico8.draw_shader)
 	if not x and not y then
-		pico8.cursor[1]=0
-		pico8.cursor[2]=pico8.cursor[2]+size
-		-- TODO: Scrolling
+		if pico8.cursor[2]+size>122 then
+			love.graphics.setShader()
+			love.graphics.setColor(255, 255, 255, 255)
+			love.graphics.setCanvas(pico8.tmpscr)
+			love.graphics.draw(pico8.screen)
+			love.graphics.setCanvas(pico8.screen)
+			love.graphics.draw(pico8.tmpscr, 0, -size)
+			love.graphics.setColor(0, 0, 0, 255)
+			love.graphics.rectangle("fill", 0, pico8.resolution[2]-size, pico8.resolution[1], size)
+			love.graphics.setColor(pico8.color, 0, 0, 255)
+		else
+			pico8.cursor[2]=pico8.cursor[2]+size
+		end
 	end
+	love.graphics.setShader(pico8.draw_shader)
 end
 
 api.printh=print

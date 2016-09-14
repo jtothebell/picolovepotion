@@ -75,7 +75,7 @@ local ypadding=3.5
 local tobase=nil
 local topad=nil
 local gif_recording=nil
-local gif_canvas=love.graphics.newCanvas(pico8.resolution[1]*2, pico8.resolution[2]*2)
+local gif_canvas=nil
 local osc
 local host_time=0
 local retro_mode=false
@@ -211,7 +211,7 @@ function love.load(argv)
 	love.graphics.clear()
 	love.graphics.setDefaultFilter('nearest', 'nearest')
 	pico8.screen=love.graphics.newCanvas(pico8.resolution[1], pico8.resolution[2])
-	pico8.screen:setFilter('linear', 'nearest')
+	pico8.tmpscr=love.graphics.newCanvas(pico8.resolution[1], pico8.resolution[2])
 
 	local glyphs=""
 	for i=32, 127 do
@@ -611,6 +611,7 @@ function love.keypressed(key)
 			if not gif_recording then
 				log('failed to start recording: '..err)
 			else
+				gif_canvas=love.graphics.newCanvas(pico8.resolution[1]*2, pico8.resolution[2]*2)
 				log('starting record ...')
 			end
 		else
@@ -622,6 +623,7 @@ function love.keypressed(key)
 			gif_recording:close()
 			log('saved recording to '..gif_recording.filename)
 			gif_recording=nil
+			gif_canvas=nil
 		else
 			log('no active recording')
 		end
