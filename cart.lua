@@ -270,6 +270,8 @@ function cart.load_p8(filename)
 		if not data then
 			error("invalid cart")
 		end
+		-- strip carriage returns pico-8 style
+		data=data:gsub("\r.", "\n")
 		local header="pico-8 cartridge // http://www.pico-8.com\nversion "
 		local start=data:find("pico%-8 cartridge // http://www.pico%-8%.com\nversion ")
 		if start==nil then
