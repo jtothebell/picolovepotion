@@ -374,6 +374,7 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 	end
 	love.graphics.setShader(pico8.draw_shader)
 end
+api.mapdraw=api.map
 
 function api.mget(x, y)
 	x=flr(x or 0)
