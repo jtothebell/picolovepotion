@@ -773,23 +773,12 @@ function api.shr(x, y)
 	return bit.arshift(x*0x10000, y)/0x10000
 end
 
+function api.load(filename)
+	_load(filename)
+end
+
 function api.run()
-	love.graphics.setCanvas(pico8.screen)
-	love.graphics.setShader(pico8.draw_shader)
-	restore_clip()
-	love.graphics.origin()
-	for i=0, 0x1c00-1 do
-		pico8.usermemory[i]=0
-	end
-	for i=0, 63 do
-		pico8.cartdata[i]=0
-	end
-	if pico8.cart._init then pico8.cart._init() end
-	if pico8.cart._update60 then
-		setfps(60)
-	else
-		setfps(30)
-	end
+	_load()
 end
 
 function api.btn(i, p)

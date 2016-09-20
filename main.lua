@@ -104,18 +104,38 @@ function restore_clip()
 	if pico8.clip then
 		love.graphics.setScissor(unpack(pico8.clip))
 	else
-		love.graphics.setScissor(0, 0, pico8.resolution[1], pico8.resolution[2])
+		love.graphics.setScissor()
 	end
 end
 
-local function _load(_cartname)
-	love.graphics.setShader(pico8.draw_shader)
-	love.graphics.setCanvas(pico8.screen)
-	love.graphics.origin()
-	api.camera()
-	restore_clip()
+function _load(_cartname)
+	_cartname=_cartname or cartname
 	cartname=_cartname
+
+	pico8.camera_x=0
+	pico8.camera_y=0
+	love.graphics.origin()
+	pico8.clip=nil
+	love.graphics.setScissor()
+	api.pal()
+	pico8.color=6
+	love.graphics.setColor(6, 0, 0, 255)
+	love.graphics.setCanvas(pico8.screen)
+	love.graphics.setShader(pico8.draw_shader)
+
 	pico8.cart=cart.load_p8(_cartname)
+	for i=0, 0x1c00-1 do
+		pico8.usermemory[i]=0
+	end
+	for i=0, 63 do
+		pico8.cartdata[i]=0
+	end
+	if pico8.cart._init then pico8.cart._init() end
+	if pico8.cart._update60 then
+		setfps(60)
+	else
+		setfps(30)
+	end
 end
 
 function love.resize(w, h)
@@ -291,7 +311,6 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 	api.color(6)
 
 	_load(argv[2] or 'nocart.p8')
-	api.run()
 end
 
 local function inside(x, y, x0, y0, w, h)
@@ -581,17 +600,12 @@ function love.draw()
 	if pico8.cart._draw then pico8.cart._draw() end
 end
 
-function _reload()
-	_load(cartname)
-	run()
-end
-
 function love.keypressed(key)
 	if cart and pico8.cart._keydown then
 		return pico8.cart._keydown(key)
 	end
 	if key=='r' and (love.keyboard.isDown('lctrl') or love.keyboard.isDown('lgui')) then
-		_reload()
+		_load()
 	elseif key=='q' and (love.keyboard.isDown('lctrl') or love.keyboard.isDown('lgui')) then
 		love.event.quit()
 	elseif key=='pause' then
