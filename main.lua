@@ -259,44 +259,70 @@ function love.load(argv)
 		pico8.display_palette[i]=pico8.palette[i+1]
 	end
 
-	pico8.draw_shader=love.graphics.newShader([[
+	local name, version, vendor, device=love.graphics.getRendererInfo()
+	local pishaderfix
+	if name=="OpenGL ES" and not version:find(" Mesa ", nil, true) and vendor=="Broadcom" then
+		print("Using proprietary Broadcom video driver shader fixes")
+		pishaderfix=function(code)
+			return (code:gsub("ifblock(%b());", function(name)
+				name=name:sub(2, -2)
+				local kind, length=code:match("extern ([%a_][%w_]-) "..name.."%[(%d-)%]")
+				local code=kind.." _"..name..";"
+				for i=0, length-1 do
+					code=code.."\n\t"..(i==0 and "" or "else ").."if (index=="..i..")\n\t\t_"..name.."="..name.."["..i.."];"
+				end
+				return code
+			end):gsub("([%a_][%w_]-)%[index%]", "_%1"))
+		end
+	else
+		pishaderfix=function(code)
+			return (code:gsub("ifblock%b();", ""))
+		end
+	end
+
+	pico8.draw_shader=love.graphics.newShader(pishaderfix([[
 extern float palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	int index=int(color.r*255.0+0.5);
+	ifblock(palette);
 	return vec4(palette[index]/255.0, 0.0, 0.0, 1.0);
-}]])
+}]]))
 	pico8.draw_shader:send('palette', shdr_unpack(pico8.draw_palette))
 
-	pico8.sprite_shader=love.graphics.newShader([[
+	pico8.sprite_shader=love.graphics.newShader(pishaderfix([[
 extern float palette[16];
 extern float transparent[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	int index=int(Texel(texture, texture_coords).r*255.0+0.5);
+	ifblock(palette);
+	ifblock(transparent);
 	return vec4(palette[index]/255.0, 0.0, 0.0, transparent[index]);
-}]])
+}]]))
 	pico8.sprite_shader:send('palette', shdr_unpack(pico8.draw_palette))
 	pico8.sprite_shader:send('transparent', shdr_unpack(pico8.pal_transparent))
 
-	pico8.text_shader=love.graphics.newShader([[
+	pico8.text_shader=love.graphics.newShader(pishaderfix([[
 extern float palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	vec4 texcolor=Texel(texture, texture_coords);
 	int index=int(color.r*255.0+0.5);
+	ifblock(palette);
 	return vec4(palette[index]/255.0, 0.0, 0.0, texcolor.a);
-}]])
+}]]))
 	pico8.text_shader:send('palette', shdr_unpack(pico8.draw_palette))
 
-	pico8.display_shader=love.graphics.newShader([[
+	pico8.display_shader=love.graphics.newShader(pishaderfix([[
 extern vec4 palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	int index=int(Texel(texture, texture_coords).r*255.0+0.5);
+	ifblock(palette);
 	// lookup the colour in the palette by index
 	return palette[index]/255.0;
-}]])
+}]]))
 	pico8.display_shader:send('palette', shdr_unpack(pico8.display_palette))
 
 	api=require("api")
