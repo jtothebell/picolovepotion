@@ -68,9 +68,9 @@ local frametime=1/pico8.fps
 local cart=nil
 local cartname=nil
 local love_args=nil
-local scale=4
-local xpadding=8.5
-local ypadding=3.5
+local scale=nil
+local xpadding=nil
+local ypadding=nil
 local tobase=nil
 local topad=nil
 local gif_recording=nil
@@ -141,11 +141,16 @@ end
 function love.resize(w, h)
 	love.graphics.clear()
 	-- adjust stuff to fit the screen
-	if w>h then
-		scale=h/(pico8.resolution[2]+ypadding*2)
+	if w<h then
+		scale=math.max(w/pico8.resolution[1], 1)
 	else
-		scale=w/(pico8.resolution[1]+xpadding*2)
+		scale=math.max(h/pico8.resolution[2], 1)
 	end
+	if not android then
+		scale=math.floor(scale)
+	end
+	xpadding=(w-pico8.resolution[1]*scale)/2
+	ypadding=(h-pico8.resolution[2]*scale)/2
 	tobase=math.min(w, h)/9
 	topad=tobase/8
 end
@@ -157,11 +162,8 @@ end
 function love.load(argv)
 	love_args=argv
 	android=(love.system.getOS()=="Android")
-	if android then
-		love.resize(love.graphics.getDimensions())
-	else
-		love.window.setMode(pico8.resolution[1]*scale+xpadding*scale*2, pico8.resolution[2]*scale+ypadding*scale*2)
-	end
+
+	love.resize(love.graphics.getDimensions()) -- Setup initial scaling and padding
 
 	osc={}
 	-- tri
@@ -244,7 +246,6 @@ function love.load(argv)
 	font:setFilter('nearest', 'nearest')
 
 	love.mouse.setVisible(false)
-	love.window.setTitle("picolove")
 	love.graphics.setLineStyle('rough')
 	love.graphics.setPointSize(1)
 	love.graphics.setLineWidth(1)
@@ -428,12 +429,10 @@ function flip_screen()
 	love.graphics.clear()
 
 	local screen_w, screen_h=love.graphics.getDimensions()
-	if screen_w>screen_h then
-		love.graphics.draw(pico8.screen, screen_w/2-64*scale, ypadding*scale, 0, scale, scale)
-	elseif android then
-		love.graphics.draw(pico8.screen, xpadding*scale, xpadding*scale, 0, scale, scale)
+	if android then
+		love.graphics.draw(pico8.screen, xpadding, screen_w>screen_h and ypadding or xpadding, 0, scale, scale)
 	else
-		love.graphics.draw(pico8.screen, xpadding*scale, screen_h/2-64*scale, 0, scale, scale)
+		love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
 	end
 
 	if gif_recording then
