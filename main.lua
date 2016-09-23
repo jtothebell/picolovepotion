@@ -250,10 +250,6 @@ function love.load(argv)
 	love.graphics.setPointSize(1)
 	love.graphics.setLineWidth(1)
 
-	love.graphics.origin()
-	love.graphics.setCanvas(pico8.screen)
-	restore_clip()
-
 	for i=0, 15 do
 		pico8.draw_palette[i]=i
 		pico8.pal_transparent[i]=i==0 and 0 or 1
@@ -331,12 +327,6 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 	gif=require("gif")
 
 	-- load the cart
-	api.clip()
-	api.camera()
-	api.pal()
-	api.palt()
-	api.color(6)
-
 	_load(argv[2] or 'nocart.p8')
 end
 
@@ -412,6 +402,11 @@ function love.update(dt)
 	end
 end
 
+function love.draw()
+	-- run the cart's draw function
+	if pico8.cart._draw then pico8.cart._draw() end
+end
+
 function restore_camera()
 	love.graphics.origin()
 	love.graphics.translate(-pico8.camera_x, -pico8.camera_y)
@@ -419,11 +414,8 @@ end
 
 function flip_screen()
 	love.graphics.setShader(pico8.display_shader)
-	pico8.display_shader:send('palette', shdr_unpack(pico8.display_palette))
 	love.graphics.setCanvas()
 	love.graphics.origin()
-
-	-- love.graphics.setColor(255, 255, 255, 255)
 	love.graphics.setScissor()
 
 	love.graphics.clear()
@@ -612,17 +604,6 @@ function update_audio(buffer)
 		end
 		buffer:setSample(bufferpos, math.min(math.max(sample, -1), 1))
 	end
-end
-
-function love.draw()
-	love.graphics.setCanvas(pico8.screen)
-	restore_clip()
-	restore_camera()
-
-	love.graphics.setShader(pico8.draw_shader)
-
-	-- run the cart's draw function
-	if pico8.cart._draw then pico8.cart._draw() end
 end
 
 function love.keypressed(key)

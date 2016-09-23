@@ -294,6 +294,7 @@ end
 function api.pal(c0, c1, p)
 	if c0==nil then
 		local __palette_modified=false
+		local __display_modified=false
 		local __alpha_modified=false
 		for i=0, 15 do
 			if pico8.draw_palette[i]~=i then
@@ -302,7 +303,7 @@ function api.pal(c0, c1, p)
 			end
 			if pico8.display_palette[i]~=pico8.palette[i+1] then
 				pico8.display_palette[i]=pico8.palette[i+1]
-				__palette_modified=true
+				__display_modified=true
 			end
 			local alpha=i==0 and 0 or 1
 			if pico8.pal_transparent[i]~=alpha then
@@ -314,6 +315,8 @@ function api.pal(c0, c1, p)
 			pico8.draw_shader:send('palette', shdr_unpack(pico8.draw_palette))
 			pico8.sprite_shader:send('palette', shdr_unpack(pico8.draw_palette))
 			pico8.text_shader:send('palette', shdr_unpack(pico8.draw_palette))
+		end
+		if __display_modified then
 			pico8.display_shader:send('palette', shdr_unpack(pico8.display_palette))
 		end
 		if __alpha_modified then
