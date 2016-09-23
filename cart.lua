@@ -1,68 +1,9 @@
-local __compression_map={
-	'\n',
-	' ',
-	'0',
-	'1',
-	'2',
-	'3',
-	'4',
-	'5',
-	'6',
-	'7',
-	'8',
-	'9',
-	'a',
-	'b',
-	'c',
-	'd',
-	'e',
-	'f',
-	'g',
-	'h',
-	'i',
-	'j',
-	'k',
-	'l',
-	'm',
-	'n',
-	'o',
-	'p',
-	'q',
-	'r',
-	's',
-	't',
-	'u',
-	'v',
-	'w',
-	'x',
-	'y',
-	'z',
-	'!',
-	'#',
-	'%',
-	'(',
-	')',
-	'{',
-	'}',
-	'[',
-	']',
-	'<',
-	'>',
-	'+',
-	'=',
-	'/',
-	'*',
-	':',
-	';',
-	'.',
-	',',
-	'~',
-	'_',
-	'"',
-}
-
 local api=require("api")
 
+local compression_map={}
+for entry in ("\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_"):gmatch(".") do
+	table.insert(compression_map, entry)
+end
 local function decompress(code)
 	-- decompress code
 	local lua=""
@@ -93,7 +34,7 @@ local function decompress(code)
 				mode=1
 			elseif byte>=0x01 and byte<=0x3b then
 				-- output this byte from map
-				lua=lua..__compression_map[byte]
+				lua=lua..compression_map[byte]
 			elseif byte>=0x3c then
 				-- copy previous bytes
 				mode=2
