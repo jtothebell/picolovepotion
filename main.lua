@@ -186,7 +186,7 @@ function love.load(argv)
 	end
 	-- pulse
 	osc[4]=function(x)
-		return (x%1<0.3 and 1 or-1)*1/3
+		return (x%1<0.3125 and 1 or-1)*1/3
 	end
 	-- tri/2
 	osc[5]=function(x)
@@ -562,7 +562,7 @@ function update_audio(buffer)
 						ch.freq=lerp(note_to_hz(ch.lastnote or 0), note_to_hz(ch.note), ch.offset%1)
 					elseif ch.fx==2 then
 						-- vibrato one semitone?
-						ch.freq=lerp(note_to_hz(ch.note), note_to_hz(ch.note+0.5), ch.lfo(4))
+						ch.freq=lerp(note_to_hz(ch.note), note_to_hz(ch.note+0.5), ch.lfo(8))
 					elseif ch.fx==3 then
 						-- drop/bomb slide from note to c-0
 						local off=ch.offset%1
@@ -578,29 +578,27 @@ function update_audio(buffer)
 					elseif ch.fx==6 then
 						-- fast appreggio over 4 steps
 						local off=bit.band(flr(ch.offset), 0xfc)
-						local lfo=flr(ch.lfo(8)*4)
+						local lfo=flr(ch.lfo(sfx.speed <= 8 and 16 or 8)*4)
 						off=off+lfo
 						local note=sfx[flr(off)][1]
 						ch.freq=note_to_hz(note)
 					elseif ch.fx==7 then
 						-- slow appreggio over 4 steps
 						local off=bit.band(flr(ch.offset), 0xfc)
-						local lfo=flr(ch.lfo(4)*4)
+						local lfo=flr(ch.lfo(sfx.speed <= 8 and 8 or 4)*4)
 						off=off+lfo
 						local note=sfx[flr(off)][1]
 						ch.freq=note_to_hz(note)
 					end
 					ch.sample=(ch.osc(ch.oscpos)*vol/7+ch.sample)/2
 					ch.oscpos=ch.oscpos+ch.freq/__sample_rate
-					sample=sample+ch.sample
 				else
-					sample=sample+lerp(ch.sample or 0, 0, 0.1)
-					ch.sample=0
+					ch.sample=ch.sample/2
 				end
 			else
-				sample=sample+lerp(ch.sample or 0, 0, 0.1)
-				ch.sample=0
+				ch.sample=ch.sample/2
 			end
+			sample=sample+ch.sample
 		end
 		buffer:setSample(bufferpos, math.min(math.max(sample, -1), 1))
 	end

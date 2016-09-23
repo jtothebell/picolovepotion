@@ -506,6 +506,9 @@ function api.sfx(n, channel, offset)
 		for i=0, 3 do
 			if pico8.audio_channels[i].sfx==nil then
 				channel=i
+				break
+			elseif pico8.audio_channels[i].sfx==n then
+				channel=i
 			end
 		end
 	end
