@@ -141,11 +141,7 @@ end
 function love.resize(w, h)
 	love.graphics.clear()
 	-- adjust stuff to fit the screen
-	if w<h then
-		scale=math.max(w/pico8.resolution[1], 1)
-	else
-		scale=math.max(h/pico8.resolution[2], 1)
-	end
+	scale=math.max(math.min(w/pico8.resolution[1], h/pico8.resolution[2]), 1)
 	if not android then
 		scale=math.floor(scale)
 	end
