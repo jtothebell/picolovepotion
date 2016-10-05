@@ -108,9 +108,16 @@ function restore_clip()
 	end
 end
 
-function _load(_cartname)
-	_cartname=_cartname or cartname
-	cartname=_cartname
+local exts={"", ".p8", ".p8.png", ".png"}
+function _load(filename)
+	filename=filename or cartname
+	for i=1, #exts do
+		if love.filesystem.exists(filename..exts[i]) then
+			filename=filename..exts[i]
+			break
+		end
+	end
+	cartname=filename
 
 	pico8.camera_x=0
 	pico8.camera_y=0
@@ -123,7 +130,7 @@ function _load(_cartname)
 	love.graphics.setCanvas(pico8.screen)
 	love.graphics.setShader(pico8.draw_shader)
 
-	pico8.cart=cart.load_p8(_cartname)
+	pico8.cart=cart.load_p8(filename)
 	for i=0, 0x1c00-1 do
 		pico8.usermemory[i]=0
 	end

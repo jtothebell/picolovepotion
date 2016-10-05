@@ -1,46 +1,70 @@
 pico-8 cartridge // http://www.pico-8.com
 version 4
 __lua__
-function _init()
-	t=0
-	linebuffer = ""
-	line = 6
-	cls()
-	spr(32,1,5,6,1)
-	spr(38,45,1)
-	print("picolove-0.2",0,18,6)
-	print("a pico-8 clone made with love <3",0,24,6)
+local cmds={"load", "save", "run", "resume", "shutdown", "reboot", "install_demos", "install_games", "dir", "cd", "mkdir", "info", "cls", "folder", "ls", "help", "import", "export", "keyconfig", "splore", "login", "logout"}
+local t=0
+local linebuffer=""
+local line
+
+local function get_cmd(cmd)
+	if _ENV[cmd] then
+		return _ENV[cmd]
+	else
+		return function() color(6) print(cmd.." not implemented") end
+	end
 end
 
-function _update()
+function _init()
+	cls()
+	spr(32, 1, 5, 6, 1)
+	spr(38, 45, 1)
+	color(6)
+	cursor(0, 6*3)
+	print("welcome to picolove")
+	print("a pico-8 clone made with l0ve \135")
+	print("")
+	print("type help for help")
+	print("")
+	pset(104,22,6)
+	pset(106,22,6)
+	line=peek(0x5f27)
+end
+
+function _update60()
 	t+=1
 end
 
 function _keydown(key)
-	if key == 'backspace' then
-		linebuffer = sub(linebuffer,1,-2)
-	elseif key == 'return' then
-		if sub(linebuffer,1,5) == 'load ' then
-			load(sub(linebuffer,6))
-			run()
-			return
+	if key=="backspace" then
+		linebuffer=sub(linebuffer, 1, -2)
+	elseif key=="return" then
+		rectfill((#linebuffer+2)*4, line, (#linebuffer+2)*4+3, line+4, 0)
+		print("")
+		for i=1, #cmds do
+			local cmd=cmds[i]
+			if linebuffer==cmd then
+				get_cmd(cmd)()
+				break
+			elseif sub(linebuffer, 1, #cmd+1)==cmd.." " then
+				get_cmd(cmd)(sub(linebuffer, #cmd+2))
+				break
+			end
 		end
-		linebuffer = ''
-		line+=1
-		cursor(1,line*6)
+		linebuffer=""
+		line=peek(0x5f27)
 	end
 end
 
 function _textinput(text)
-	linebuffer = linebuffer .. text
+	linebuffer=linebuffer..text
 end
 
 function _draw()
-	rectfill(0,line*6,127,(line+1)*6,0)
+	rectfill(0, line, (#linebuffer+4)*4, line+5, 0)
 	color(7)
-	print("> "..linebuffer,0,line*6)
-	if t % 15 < 7 then
-		rectfill((#linebuffer+2)*4,line*6,(#linebuffer+2)*4+3,line*6+4,8)
+	print("> "..linebuffer, 0, line)
+	if t%30<15 then
+		rectfill((#linebuffer+2)*4, line, (#linebuffer+2)*4+3, line+4, 8)
 	end
 end
 

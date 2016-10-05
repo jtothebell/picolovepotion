@@ -441,10 +441,11 @@ function cart.load_p8(filename)
 	-- rewrite assignment operators
 	lua=lua:gsub("(%S+)%s*([%+-%*/%%])=", "%1 = %1 %2 ")
 
-	local cart_G={}
+	local cart_env={}
 	for k, v in pairs(api) do
-		cart_G[k]=v
+		cart_env[k]=v
 	end
+	cart_env._ENV=cart_env -- Lua 5.2 compatibility hack
 
 	local ok, f, e=pcall(load, lua, "@"..filename)
 	if not ok or f==nil then
@@ -456,7 +457,7 @@ function cart.load_p8(filename)
 		error("Error loading lua: "..tostring(e),0)
 	else
 		local result
-		setfenv(f, cart_G)
+		setfenv(f, cart_env)
 		love.graphics.setShader(pico8.draw_shader)
 		love.graphics.setCanvas(pico8.screen)
 		love.graphics.origin()
@@ -470,7 +471,7 @@ function cart.load_p8(filename)
 	end
 	log("finished loading cart", filename)
 
-	return cart_G
+	return cart_env
 end
 
 return cart
