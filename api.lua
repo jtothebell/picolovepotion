@@ -73,9 +73,7 @@ end
 
 function api.ls()
 end
-
-function api.dir()
-end
+api.dir=api.ls
 
 function api.cd()
 end
@@ -869,6 +867,7 @@ function api.help()
 end
 
 function api.time()
+	return pico8.frames/30
 end
 
 function api.login()
@@ -970,6 +969,7 @@ api.pairs=pairs
 api.type=type
 api.assert=assert
 api.setmetatable=setmetatable
+api.trace=debug.traceback
 api.cocreate=coroutine.create
 api.coresume=coroutine.resume
 api.yield=coroutine.yield

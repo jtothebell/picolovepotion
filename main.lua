@@ -1,5 +1,6 @@
 pico8={
 	fps=30,
+	frames=0,
 	pal_transparent={},
 	resolution={128, 128},
 	palette={
@@ -396,6 +397,7 @@ end
 
 function love.update(dt)
 	pico8.audio_source:step()
+	pico8.frames=pico8.frames+1
 	update_buttons()
 	if pico8.cart._update60 then
 		pico8.cart._update60()
