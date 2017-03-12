@@ -92,7 +92,7 @@ log=print
 --log=function() end
 
 function shdr_unpack(thing)
-	return unpack(thing, 0, 15)
+	return unpack(thing, 0, 16) -- change to 15 once love2d bug is fixed
 end
 
 local function get_bits(v, s, e)
