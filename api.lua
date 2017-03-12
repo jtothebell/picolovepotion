@@ -480,15 +480,22 @@ end
 
 function api.music(n, fade_len, channel_mask)
 	if n==-1 then
-		for i=0, 3 do
-			if pico8.music[pico8.current_music.music][i]<64 then
-				pico8.audio_channels[i].sfx=nil
-				pico8.audio_channels[i].offset=0
-				pico8.audio_channels[i].last_step=-1
+		if pico8.current_music then
+			for i=0, 3 do
+				if pico8.music[pico8.current_music.music][i]<64 then
+					pico8.audio_channels[i].sfx=nil
+					pico8.audio_channels[i].offset=0
+					pico8.audio_channels[i].last_step=-1
+				end
 			end
+			pico8.current_music=nil
 		end
-		pico8.current_music=nil
 		return
+	end
+	if n>63 then
+		n=64
+	elseif n<0 then
+		n=0
 	end
 	local m=pico8.music[n]
 	local music_speed=nil
@@ -506,6 +513,9 @@ function api.music(n, fade_len, channel_mask)
 			end
 		end
 	end
+	if not music_channel then
+		return api.music(-1)
+	end
 	pico8.audio_channels[music_channel].loop=false
 	pico8.current_music={music=n, offset=0, channel_mask=channel_mask or 15, speed=music_speed}
 	for i=0, 3 do
@@ -520,14 +530,25 @@ end
 function api.sfx(n, channel, offset)
 	-- n=-1 stop sound on channel
 	-- n=-2 to stop looping on channel
-	channel=channel or-1
-	if n==-1 and channel>=0 then
-		pico8.audio_channels[channel].sfx=nil
+	channel=channel or -1
+	if n==-1 then
+		if channel>=0 then pico8.audio_channels[channel].sfx=nil end
 		return
-	elseif n==-2 and channel>=0 then
-		pico8.audio_channels[channel].loop=false
+	elseif n==-2 then
+		if channel>=0 then pico8.audio_channels[channel].loop=false end
+		return
 	end
 	offset=offset or 0
+	if n>63 then
+		n=63
+	elseif n<0 then
+		n=0
+	end
+	if offset>31 then
+		offset=31
+	elseif offset<0 then
+		offset=0
+	end
 	if channel==-1 then
 		-- find a free channel
 		for i=0, 3 do
