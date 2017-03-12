@@ -79,7 +79,7 @@ local osc
 local host_time=0
 local retro_mode=false
 local paused=false
-local android=false
+local mobile=false
 local api, cart, gif
 
 local __buffer_count=8
@@ -149,7 +149,7 @@ function love.resize(w, h)
 	love.graphics.clear()
 	-- adjust stuff to fit the screen
 	scale=math.max(math.min(w/pico8.resolution[1], h/pico8.resolution[2]), 1)
-	if not android then
+	if not mobile then
 		scale=math.floor(scale)
 	end
 	xpadding=(w-pico8.resolution[1]*scale)/2
@@ -164,7 +164,7 @@ end
 
 function love.load(argv)
 	love_args=argv
-	android=(love.system.getOS()=="Android")
+	mobile=(love.system.getOS()=="Android" or love.system.getOS()=="iOS")
 
 	love.resize(love.graphics.getDimensions()) -- Setup initial scaling and padding
 
@@ -360,7 +360,7 @@ end
 local function update_buttons()
 	local init, loop=pico8.fps/2, pico8.fps/7.5
 	local touches
-	if android then
+	if mobile then
 		touches=love.touch.getTouches()
 	end
 	for p=0, 1 do
@@ -374,7 +374,7 @@ local function update_buttons()
 					break
 				end
 			end
-			if not btn and android and p==0 then
+			if not btn and mobile and p==0 then
 				for _, id in pairs(touches) do
 					btn=touchcheck(i, love.touch.getPosition(id))
 					if btn then break end
@@ -423,7 +423,7 @@ function flip_screen()
 	love.graphics.clear()
 
 	local screen_w, screen_h=love.graphics.getDimensions()
-	if android then
+	if mobile then
 		love.graphics.draw(pico8.screen, xpadding, screen_w>screen_h and ypadding or xpadding, 0, scale, scale)
 	else
 		love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
@@ -437,7 +437,7 @@ function flip_screen()
 	end
 
 	-- draw touchscreen overlay
-	if android then
+	if mobile then
 		local col=(love.graphics.getColor())
 		love.graphics.setColor(255, 255, 255, 255)
 		love.graphics.setShader()
