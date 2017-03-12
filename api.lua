@@ -68,6 +68,33 @@ function api.cls(c)
 	pico8.cursor={0, 0}
 end
 
+function api.folder()
+end
+
+function api.ls()
+end
+
+function api.dir()
+end
+
+function api.cd()
+end
+
+function api.mkdir()
+end
+
+function api.install_demos()
+end
+
+function api.install_games()
+end
+
+function api.keyconfig()
+end
+
+function api.splore()
+end
+
 function api.pset(x, y, c)
 	if c then
 		color(c)
@@ -788,8 +815,54 @@ function api.load(filename)
 	_load(filename)
 end
 
+function api.save()
+
+end
+
 function api.run()
 	_load()
+end
+
+function api.stop()
+end
+
+function api.reboot()
+end
+
+function api.shutdown()
+end
+
+function api.exit()
+end
+
+function api.info()
+end
+
+function api.export()
+end
+
+function api.import()
+end
+
+function api.help()
+end
+
+function api.time()
+end
+
+function api.login()
+end
+
+function api.logout()
+end
+
+function api.bbsreq()
+end
+
+function api.scoresub()
+end
+
+function api.extcmd()
 end
 
 function api.btn(i, p)
