@@ -334,7 +334,6 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 end
 
 local function inside(x, y, x0, y0, w, h)
-	love.graphics.rectangle("fill", x0, y0, w, h)
 	return (x>=x0 and x<x0+w and y>=y0 and y<y0+h)
 end
 
