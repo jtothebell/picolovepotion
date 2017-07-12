@@ -235,32 +235,21 @@ function cart.load_p8(filename)
 		local gfxdata=data:sub(gfx_start, gfx_end)
 
 		local row=0
-		local tile_row=32
-		local tile_col=0
-		local col=0
-		local sprite=0
-		local tiles=0
-		local shared=0
 
-		local next_line=1
-		while next_line do
-			local end_of_line=gfxdata:find("\n", next_line)
-			if end_of_line==nil then break end
-			end_of_line=end_of_line-1
-			local line=gfxdata:sub(next_line, end_of_line)
-			for i=1, #line do
-				local v=line:sub(i, i)
+		for line in gfxdata:gmatch("(.-)\n") do
+			local col=0
+			for v in line:gmatch(".") do
 				v=tonumber(v, 16)
 				pico8.spritesheet_data:setPixel(col, row, v, 0, 0, 255)
 
 				col=col+1
-				if col==128 then
-					col=0
-					row=row+1
-				end
+				if col==128 then break end
 			end
-			next_line=gfxdata:find("\n", end_of_line)+1
+			row=row+1
+			if row>=128 then break end
 		end
+
+		local shared=0
 
 		if version>3 then
 			local tx, ty=0, 32
@@ -284,12 +273,9 @@ function cart.load_p8(filename)
 
 		for y=0, 15 do
 			for x=0, 15 do
-				pico8.quads[sprite]=love.graphics.newQuad(8*x, 8*y, 8, 8, 128, 128)
-				sprite=sprite+1
+				pico8.quads[y*16+x]=love.graphics.newQuad(8*x, 8*y, 8, 8, 128, 128)
 			end
 		end
-
-		assert(sprite==256, sprite)
 
 		pico8.spritesheet=love.graphics.newImage(pico8.spritesheet_data)
 
@@ -301,28 +287,21 @@ function cart.load_p8(filename)
 
 		local sprite=0
 
-		local next_line=1
-		while next_line do
-			local end_of_line=gffdata:find("\n", next_line)
-			if end_of_line==nil then break end
-			end_of_line=end_of_line-1
-			local line=gffdata:sub(next_line, end_of_line)
+		for line in gffdata:gmatch("(.-)\n") do
 			if version<=2 then
 				for i=1, #line do
-					local v=line:sub(i)
+					local v=line:sub(i) -- this is wrong.
 					v=tonumber(v, 16)
 					pico8.spriteflags[sprite]=v
 					sprite=sprite+1
 				end
 			else
-				for i=1, #line, 2 do
-					local v=line:sub(i, i+1)
+				for v in line:gmatch("..") do
 					v=tonumber(v, 16)
 					pico8.spriteflags[sprite]=v
 					sprite=sprite+1
 				end
 			end
-			next_line=gfxdata:find("\n", end_of_line)+1
 		end
 
 		assert(sprite==256, "wrong number of spriteflags: "..sprite)
@@ -334,30 +313,19 @@ function cart.load_p8(filename)
 		local mapdata=data:sub(map_start, map_end)
 
 		local row=0
-		local col=0
+		local tiles=0
 
-		local next_line=1
-		while next_line do
-			local end_of_line=mapdata:find("\n", next_line)
-			if end_of_line==nil then
-				break
-			end
-			end_of_line=end_of_line-1
-			local line=mapdata:sub(next_line, end_of_line)
-			for i=1, #line, 2 do
-				local v=line:sub(i, i+1)
+		for line in mapdata:gmatch("(.-)\n") do
+			local col=0
+			for v in line:gmatch("..") do
 				v=tonumber(v, 16)
-				if col==0 then
-				end
 				pico8.map[row][col]=v
 				col=col+1
 				tiles=tiles+1
-				if col==128 then
-					col=0
-					row=row+1
-				end
+				if col==128 then break end
 			end
-			next_line=mapdata:find("\n", end_of_line)+1
+			row=row+1
+			if row==32 then break end
 		end
 		assert(tiles+shared==128*64, string.format("%d + %d != %d", tiles, shared, 128*64))
 
@@ -367,18 +335,13 @@ function cart.load_p8(filename)
 		local sfxdata=data:sub(sfx_start, sfx_end)
 
 		local _sfx=0
-		local step=0
 
-		local next_line=1
-		while next_line do
-			local end_of_line=sfxdata:find("\n", next_line)
-			if end_of_line==nil then break end
-			end_of_line=end_of_line-1
-			local line=sfxdata:sub(next_line, end_of_line)
+		for line in sfxdata:gmatch("(.-)\n") do
 			pico8.sfx[_sfx].editor_mode=tonumber(line:sub(1, 2), 16)
 			pico8.sfx[_sfx].speed=tonumber(line:sub(3, 4), 16)
 			pico8.sfx[_sfx].loop_start=tonumber(line:sub(5, 6), 16)
 			pico8.sfx[_sfx].loop_end=tonumber(line:sub(7, 8), 16)
+			local step=0
 			for i=9, #line, 5 do
 				local v=line:sub(i, i+4)
 				assert(#v==5)
@@ -390,25 +353,18 @@ function cart.load_p8(filename)
 				step=step+1
 			end
 			_sfx=_sfx+1
-			step=0
-			next_line=sfxdata:find("\n", end_of_line)+1
+			if _sfx==64 then break end
 		end
 
 		assert(_sfx==64)
 
 		-- load music
 		local music_start=data:find("__music__")+10
-		local music_end=#data-1
-		local musicdata=data:sub(music_start, music_end)
+		local musicdata=data:sub(music_start)
 
 		local _music=0
 
-		local next_line=1
-		while next_line do
-			local end_of_line=musicdata:find("\n", next_line)
-			if end_of_line==nil then break end
-			end_of_line=end_of_line-1
-			local line=musicdata:sub(next_line, end_of_line)
+		for line in musicdata:gmatch("(.-)\n") do
 			local music=pico8.music[_music]
 			music.loop=tonumber(line:sub(1, 2), 16)
 			music[0]=tonumber(line:sub(4, 5), 16)
@@ -416,7 +372,7 @@ function cart.load_p8(filename)
 			music[2]=tonumber(line:sub(8, 9), 16)
 			music[3]=tonumber(line:sub(10, 11), 16)
 			_music=_music+1
-			next_line=musicdata:find("\n", end_of_line)+1
+			if _music==64 then break end
 		end
 	end
 
