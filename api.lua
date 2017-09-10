@@ -20,7 +20,7 @@ end
 
 local function _plot4points(lines, cx, cy, x, y)
 	_horizontal_line(lines, cx-x, cy+y, cx+x)
-	if x~=0 and y~=0 then
+	if y~=0 then
 		_horizontal_line(lines, cx-x, cy-y, cx+x)
 	end
 end
