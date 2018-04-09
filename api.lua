@@ -154,6 +154,30 @@ function api.cursor(x, y)
 	pico8.cursor={x or 0, y or 0}
 end
 
+function api.tonum(val)
+	return tonumber(val) -- not a direct assignment to prevent usage of the radix argument
+end
+
+function api.tostr(val, hex)
+	local kind=type(val)
+	if kind == "string" then
+		return val
+	elseif kind == "number" then
+		if hex then
+			val=val*0x10000
+			local part1=bit.rshift(bit.band(val, 0xFFFF0000), 4)
+			local part2=bit.band(val, 0xFFFF)
+			return string.format("0x%04x.%04x", part1, part2)
+		else
+			return tostring(val)
+		end
+	elseif kind == "boolean" then
+		return tostring(val)
+	else
+		return "[" .. kind .. "]"
+	end
+end
+
 function api.spr(n, x, y, w, h, flip_x, flip_y)
 	love.graphics.setShader(pico8.sprite_shader)
 	n=flr(n)
@@ -376,6 +400,10 @@ function api.palt(c, t)
 		pico8.pal_transparent[c]=t and 0 or 1
 	end
 	pico8.sprite_shader:send('transparent', shdr_unpack(pico8.pal_transparent))
+end
+
+function api.fillp(p)
+	-- TODO: oh jeez
 end
 
 function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
@@ -702,6 +730,23 @@ function api.poke(addr, val)
 	end
 end
 
+function api.peek4(addr)
+	local val = 0
+	val = val + api.peek(addr+0)/0x10000
+	val = val + api.peek(addr+1)/0x100
+	val = val + api.peek(addr+2)
+	val = val + api.peek(addr+3)*0x100
+	return val
+end
+
+function api.poke4(addr, val)
+	val=val*0x10000
+	api.poke(addr+0, bit.rshift(bit.band(val, 0x000000FF),  0))
+	api.poke(addr+1, bit.rshift(bit.band(val, 0x0000FF00),  8))
+	api.poke(addr+2, bit.rshift(bit.band(val, 0x00FF0000), 16))
+	api.poke(addr+3, bit.rshift(bit.band(val, 0xFF000000), 24))
+end
+
 function api.memcpy(dest_addr, source_addr, len)
 	if len<1 or dest_addr==source_addr then
 		return
@@ -763,6 +808,7 @@ function api.srand(seed)
 end
 
 api.flr=math.floor
+api.ceil=math.ceil
 
 function api.sgn(x)
 	return x<0 and-1 or 1
@@ -830,6 +876,18 @@ function api.shr(x, y)
 	return bit.arshift(x*0x10000, y)/0x10000
 end
 
+function api.lshr(x, y)
+	return bit.rshift(x*0x10000, y)/0x10000
+end
+
+function api.rotl(x, y)
+	return bit.rol(x*0x10000, y)/0x10000
+end
+
+function api.rotr(x, y)
+	return bit.ror(x*0x10000, y)/0x10000
+end
+
 function api.load(filename)
 	_load(filename)
 end
@@ -869,20 +927,30 @@ end
 function api.time()
 	return pico8.frames/30
 end
+api.t=time
 
 function api.login()
+	return nil
 end
 
 function api.logout()
+	return nil
 end
 
 function api.bbsreq()
+	return nil
 end
 
 function api.scoresub()
+	return nil, 0
 end
 
-function api.extcmd()
+function api.extcmd(x)
+	-- TODO: Implement this?
+end
+
+function api.radio()
+	return nil, 0
 end
 
 function api.btn(i, p)
@@ -964,16 +1032,20 @@ function api.stat(x)
 	return 0
 end
 
+function api.holdframe()
+	-- TODO: Implement this
+end
+
 api.sub=string.sub
 api.pairs=pairs
 api.type=type
 api.assert=assert
 api.setmetatable=setmetatable
-api.trace=debug.traceback
 api.cocreate=coroutine.create
 api.coresume=coroutine.resume
 api.yield=coroutine.yield
 api.costatus=coroutine.status
+api.trace=debug.traceback
 
 -- The functions below are normally attached to the program code, but are here for simplicity
 function api.all(a)
