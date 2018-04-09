@@ -927,7 +927,7 @@ end
 function api.time()
 	return pico8.frames/30
 end
-api.t=time
+api.t=api.time
 
 function api.login()
 	return nil
