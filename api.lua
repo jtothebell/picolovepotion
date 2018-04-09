@@ -7,7 +7,7 @@ scrblitMesh:setAttributeEnabled("VertexColor", true)
 local function color(c)
 	c=flr(c or 0)%16
 	pico8.color=c
-	love.graphics.setColor(c, 0, 0, 255)
+	setColor(c)
 end
 
 local function warning(msg)
@@ -64,7 +64,7 @@ function api.cls(c)
 
 	pico8.clip=nil
 	love.graphics.setScissor()
-	love.graphics.clear(c, 0, 0, 255)
+	love.graphics.clear(c/15, 0, 0, 1)
 	pico8.cursor={0, 0}
 end
 
@@ -104,8 +104,10 @@ function api.pget(x, y)
 	x=x-pico8.camera_x
 	y=y-pico8.camera_y
 	if x>=0 and x<pico8.resolution[1] and y>=0 and y<pico8.resolution[2] then
-		local r, g, b, a=pico8.screen:newImageData():getPixel(flr(x), flr(y))
-		return r
+		love.graphics.setCanvas()
+		local c=pico8.screen:newImageData():getPixel(flr(x), flr(y))*15
+		love.graphics.setCanvas(pico8.screen)
+		return c
 	end
 	warning(string.format("pget out of screen %d, %d", x, y))
 	return 0
@@ -133,14 +135,14 @@ function api.print(str, x, y, col)
 	if not x and not y then
 		if pico8.cursor[2]+size>122 then
 			love.graphics.setShader()
-			love.graphics.setColor(255, 255, 255, 255)
+			love.graphics.setColor(1, 1, 1, 1)
 			love.graphics.setCanvas(pico8.tmpscr)
 			love.graphics.draw(pico8.screen)
 			love.graphics.setCanvas(pico8.screen)
 			love.graphics.draw(pico8.tmpscr, 0, -size)
-			love.graphics.setColor(0, 0, 0, 255)
+			love.graphics.setColor(0, 0, 0, 1)
 			love.graphics.rectangle("fill", 0, pico8.resolution[2]-size, pico8.resolution[1], size)
-			love.graphics.setColor(pico8.color, 0, 0, 255)
+			setColor(pico8.color)
 		else
 			pico8.cursor[2]=pico8.cursor[2]+size
 		end
@@ -488,8 +490,8 @@ function api.sget(x, y)
 	x=flr(x)
 	y=flr(y)
 	if x>=0 and x<128 and y>=0 and y<128 then
-		local r, g, b, a=pico8.spritesheet_data:getPixel(x, y)
-		return r
+		local c=pico8.spritesheet_data:getPixel(x, y)*15
+		return c
 	end
 	return 0
 end
@@ -499,7 +501,7 @@ function api.sset(x, y, c)
 	y=flr(y)
 	c=flr(c or 0)%16
 	if x>=0 and x<128 and y>=0 and y<128 then
-		pico8.spritesheet_data:setPixel(x, y, c, 0, 0, 255)
+		pico8.spritesheet_data:setPixel(x, y, c/15, 0, 0, 1)
 		pico8.spritesheet:refresh()
 	end
 end
@@ -601,8 +603,8 @@ function api.peek(addr)
 	if addr<0 then
 		return 0
 	elseif addr<0x2000 then
-		local lo=pico8.spritesheet_data:getPixel(addr*2%128, flr(addr/64))
-		local hi=pico8.spritesheet_data:getPixel(addr*2%128+1, flr(addr/64))
+		local lo=pico8.spritesheet_data:getPixel(addr*2%128, flr(addr/64))*15
+		local hi=pico8.spritesheet_data:getPixel(addr*2%128+1, flr(addr/64))*15
 		return hi*16+lo
 	elseif addr<0x3000 then
 		addr=addr-0x2000
@@ -647,8 +649,17 @@ function api.peek(addr)
 		-- FIXME: Unused but memory
 	elseif addr<0x8000 then
 		addr=addr-0x6000
-		local lo=(__scrimg or pico8.screen:newImageData()):getPixel(addr*2%128, flr(addr/64))
-		local hi=(__scrimg or pico8.screen:newImageData()):getPixel(addr*2%128+1, flr(addr/64))
+		local lo, hi
+		if __scrimg then
+			lo=__scrimg:getPixel(addr*2%128, flr(addr/64))*15
+			hi=__scrimg:getPixel(addr*2%128+1, flr(addr/64))*15
+		else
+			love.graphics.setCanvas()
+			local tmpscr = pico8.screen:newImageData()
+			lo=tmpscr:getPixel(addr*2%128, flr(addr/64))*15
+			hi=tmpscr:getPixel(addr*2%128+1, flr(addr/64))*15
+			love.graphics.setCanvas(pico8.screen)
+		end
 		return hi*16+lo
 	end
 	return 0
@@ -661,13 +672,13 @@ function api.poke(addr, val)
 	elseif addr<0x1000 then
 		local lo=val%16
 		local hi=flr(val/16)
-		pico8.spritesheet_data:setPixel(addr*2%128, flr(addr/64), lo, 0, 0, 255)
-		pico8.spritesheet_data:setPixel(addr*2%128+1, flr(addr/64), hi, 0, 0, 255)
+		pico8.spritesheet_data:setPixel(addr*2%128, flr(addr/64), lo/15, 0, 0, 1)
+		pico8.spritesheet_data:setPixel(addr*2%128+1, flr(addr/64), hi/15, 0, 0, 1)
 	elseif addr<0x2000 then
 		local lo=val%16
 		local hi=flr(val/16)
-		pico8.spritesheet_data:setPixel(addr*2%128, flr(addr/64), lo, 0, 0, 255)
-		pico8.spritesheet_data:setPixel(addr*2%128+1, flr(addr/64), hi, 0, 0, 255)
+		pico8.spritesheet_data:setPixel(addr*2%128, flr(addr/64), lo/15, 0, 0, 1)
+		pico8.spritesheet_data:setPixel(addr*2%128+1, flr(addr/64), hi/15, 0, 0, 1)
 		pico8.map[flr(addr/128)][addr%128]=val
 	elseif addr<0x3000 then
 		addr=addr-0x2000
@@ -718,14 +729,14 @@ function api.poke(addr, val)
 		local lo=val%16
 		local hi=flr(val/16)
 		if __scrblit then
-			table.insert(__scrblit, {addr*2%128, flr(addr/64), 0, 0, lo, 0, 0, 255})
-			table.insert(__scrblit, {addr*2%128+1, flr(addr/64), 0, 0, hi, 0, 0, 255})
+			table.insert(__scrblit, {addr*2%128, flr(addr/64), 0, 0, lo/15, 0, 0, 1})
+			table.insert(__scrblit, {addr*2%128+1, flr(addr/64), 0, 0, hi/15, 0, 0, 1})
 		else
-			love.graphics.setColor(lo, 0, 0, 255)
+			setColor(lo)
 			love.graphics.point(addr*2%128, flr(addr/64))
-			love.graphics.setColor(hi, 0, 0, 255)
+			setColor(hi)
 			love.graphics.point(addr*2%128+1, flr(addr/64))
-			love.graphics.setColor(pico8.color, 0, 0, 255)
+			setColor(pico8.color)
 		end
 	end
 end
@@ -754,6 +765,7 @@ function api.memcpy(dest_addr, source_addr, len)
 
 	-- Screen Hack
 	if source_addr+len-1>=0x6000 then
+		love.graphics.setCanvas()
 		__scrimg=pico8.screen:newImageData()
 	end
 	if dest_addr+len-1>=0x6000 then
@@ -774,12 +786,15 @@ function api.memcpy(dest_addr, source_addr, len)
 			api.poke(i, api.peek(i-offset))
 		end
 	end
+	if __scrimg then
+		love.graphics.setCanvas(pico8.screen)
+	end
 	if __scrblit then
 		scrblitMesh:setVertices(__scrblit)
 		scrblitMesh:setDrawRange(1, #__scrblit)
-		love.graphics.setColor(255, 255, 255, 255)
+		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.draw(scrblitMesh)
-		love.graphics.setColor(pico8.color, 0, 0, 255)
+		setColor(pico8.color)
 	end
 	__scrblit, __scrimg=nil
 end

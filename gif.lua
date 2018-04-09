@@ -101,6 +101,7 @@ function gif:frame(data)
 	for y=y0, y1 do
 		for x=x0, x1 do
 			local r, g, b=data:getPixel(x, y)
+			r, g, b=r*255, g*255, b*255
 			local index=string.char(palmap[bit.lshift(r, 16)+bit.lshift(g, 8)+b])
 			local temp=buffer..index
 			if codetbl[temp] then

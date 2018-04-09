@@ -1,6 +1,6 @@
 function love.conf(t)
 	t.identity="picolove"
-	t.version="0.10.1"
+	t.version="11.0"
 
 	t.window.title="picolove"
 	t.window.width=580

@@ -86,11 +86,10 @@ function cart.load_p8(filename)
 
 	local header=love.filesystem.read(filename, 8)
 	if header=="\137PNG\r\n\26\n" then
-		local img=love.graphics.newImage(filename)
-		if img:getWidth()~=160 or img:getHeight()~=205 then
+		local data=love.image.newImageData(filename)
+		if data:getWidth()~=160 or data:getHeight()~=205 then
 			error("Image is the wrong size")
 		end
-		local data=img:getData()
 
 		local outX=0
 		local outY=0
@@ -104,6 +103,7 @@ function cart.load_p8(filename)
 		for y=0, 204 do
 			for x=0, 159 do
 				local r, g, b, a=data:getPixel(x, y)
+				r, g, b, a=r*255, g*255, b*255, a*255
 				-- extract lowest bits
 				r=bit.band(r, 0x0003)
 				g=bit.band(g, 0x0003)
@@ -122,9 +122,9 @@ function cart.load_p8(filename)
 							mapY=mapY+1
 						end
 					end
-					pico8.spritesheet_data:setPixel(outX, outY, lo, 0, 0, 255)
+					pico8.spritesheet_data:setPixel(outX, outY, lo/15, 0, 0, 1)
 					outX=outX+1
-					pico8.spritesheet_data:setPixel(outX, outY, hi, 0, 0, 255)
+					pico8.spritesheet_data:setPixel(outX, outY, hi/15, 0, 0, 1)
 					outX=outX+1
 					if outX==128 then
 						outY=outY+1
@@ -240,7 +240,7 @@ function cart.load_p8(filename)
 			local col=0
 			for v in line:gmatch(".") do
 				v=tonumber(v, 16)
-				pico8.spritesheet_data:setPixel(col, row, v, 0, 0, 255)
+				pico8.spritesheet_data:setPixel(col, row, v/15, 0, 0, 1)
 
 				col=col+1
 				if col==128 then break end
@@ -256,8 +256,8 @@ function cart.load_p8(filename)
 			for sy=64, 127 do
 				for sx=0, 127, 2 do
 					-- get the two pixel values and merge them
-					local lo=pico8.spritesheet_data:getPixel(sx, sy)
-					local hi=pico8.spritesheet_data:getPixel(sx+1, sy)
+					local lo=pico8.spritesheet_data:getPixel(sx, sy)*15
+					local hi=pico8.spritesheet_data:getPixel(sx+1, sy)*15
 					local v=bit.bor(bit.lshift(hi, 4), lo)
 					pico8.map[ty][tx]=v
 					shared=shared+1

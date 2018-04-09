@@ -93,7 +93,7 @@ log=print
 --log=function() end
 
 function shdr_unpack(thing)
-	return unpack(thing, 0, 16) -- change to 15 once love2d bug is fixed
+	return unpack(thing, 0, 15)
 end
 
 local function get_bits(v, s, e)
@@ -109,11 +109,15 @@ function restore_clip()
 	end
 end
 
+function setColor(c)
+	love.graphics.setColor(c/15, 0, 0, 1)
+end
+
 local exts={"", ".p8", ".p8.png", ".png"}
 function _load(filename)
 	filename=filename or cartname
 	for i=1, #exts do
-		if love.filesystem.exists(filename..exts[i]) then
+		if love.filesystem.getInfo(filename..exts[i]) ~= nil then
 			filename=filename..exts[i]
 			break
 		end
@@ -127,7 +131,7 @@ function _load(filename)
 	love.graphics.setScissor()
 	api.pal()
 	pico8.color=6
-	love.graphics.setColor(6, 0, 0, 255)
+	setColor(pico8.color)
 	love.graphics.setCanvas(pico8.screen)
 	love.graphics.setShader(pico8.draw_shader)
 
@@ -285,9 +289,9 @@ function love.load(argv)
 extern float palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
-	int index=int(color.r*255.0+0.5);
+	int index=int(color.r*15.0+0.5);
 	ifblock(palette);
-	return vec4(palette[index]/255.0, 0.0, 0.0, 1.0);
+	return vec4(palette[index]/15.0, 0.0, 0.0, 1.0);
 }]]))
 	pico8.draw_shader:send('palette', shdr_unpack(pico8.draw_palette))
 
@@ -296,10 +300,10 @@ extern float palette[16];
 extern float transparent[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
-	int index=int(Texel(texture, texture_coords).r*255.0+0.5);
+	int index=int(Texel(texture, texture_coords).r*15.0+0.5);
 	ifblock(palette);
 	ifblock(transparent);
-	return vec4(palette[index]/255.0, 0.0, 0.0, transparent[index]);
+	return vec4(palette[index]/15.0, 0.0, 0.0, transparent[index]);
 }]]))
 	pico8.sprite_shader:send('palette', shdr_unpack(pico8.draw_palette))
 	pico8.sprite_shader:send('transparent', shdr_unpack(pico8.pal_transparent))
@@ -309,9 +313,9 @@ extern float palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
 	vec4 texcolor=Texel(texture, texture_coords);
-	int index=int(color.r*255.0+0.5);
+	int index=int(color.r*15.0+0.5);
 	ifblock(palette);
-	return vec4(palette[index]/255.0, 0.0, 0.0, texcolor.a);
+	return vec4(palette[index]/15.0, 0.0, 0.0, texcolor.a);
 }]]))
 	pico8.text_shader:send('palette', shdr_unpack(pico8.draw_palette))
 
@@ -319,7 +323,7 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 extern vec4 palette[16];
 
 vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
-	int index=int(Texel(texture, texture_coords).r*255.0+0.5);
+	int index=int(Texel(texture, texture_coords).r*15.0+0.5);
 	ifblock(palette);
 	// lookup the colour in the palette by index
 	return palette[index]/255.0;
@@ -331,7 +335,7 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) 
 	gif=require("gif")
 
 	-- load the cart
-	_load(argv[2] or 'nocart.p8')
+	_load(argv[1] or 'nocart.p8')
 end
 
 local function inside(x, y, x0, y0, w, h)
@@ -434,14 +438,14 @@ function flip_screen()
 	if gif_recording then
 		love.graphics.setCanvas(gif_canvas)
 		love.graphics.draw(pico8.screen, 0, 0, 0, 2, 2)
-		gif_recording:frame(gif_canvas:newImageData())
 		love.graphics.setCanvas()
+		gif_recording:frame(gif_canvas:newImageData())
 	end
 
 	-- draw touchscreen overlay
 	if mobile then
 		local col=(love.graphics.getColor())
-		love.graphics.setColor(255, 255, 255, 255)
+		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.setShader()
 
 		local keys=pico8.keypressed[0]
@@ -451,7 +455,7 @@ function flip_screen()
 		love.graphics.rectangle(keys[1] and "fill" or "line", tobase*2+topad*3, screen_h-tobase*3-topad, tobase, tobase, topad, topad)
 		love.graphics.circle(keys[4] and "fill" or "line", screen_w-tobase*8/3, screen_h-tobase*3/2, tobase/2)
 		love.graphics.circle(keys[5] and "fill" or "line", screen_w-tobase, screen_h-tobase*2, tobase/2)
-		love.graphics.setColor(col, 0, 0, 255)
+		love.graphics.setColor(col, 0, 0, 1)
 	end
 
 	love.graphics.present()
@@ -620,9 +624,8 @@ function love.keypressed(key)
 		paused=not paused
 	elseif key=='f1' or key=='f6' then
 		-- screenshot
-		local screenshot=love.graphics.newScreenshot(false)
 		local filename=cartname..'-'..os.time()..'.png'
-		screenshot:encode(filename)
+		love.graphics.captureScreenshot(filename)
 		log('saved screenshot to', filename)
 	elseif key=='f3' or key=='f8' then
 		-- start recording
@@ -681,11 +684,7 @@ function love.run()
 	math.randomseed(os.time())
 	for i=1, 3 do math.random() end
 
-	if love.event then
-		love.event.pump()
-	end
-
-	if love.load then love.load(arg) end
+	if love.load then love.load(love.arg.parseGameArguments(arg), arg) end
 
 	-- We don't want the first frame's dt to include time taken by love.load.
 	if love.timer then love.timer.step() end
@@ -693,28 +692,24 @@ function love.run()
 	local dt=0
 
 	-- Main loop time.
-	while true do
+	return function()
 		-- Process events.
 		if love.event then
+			love.graphics.setCanvas() -- TODO: Rework this
 			love.event.pump()
-			for e, a, b, c, d in love.event.poll() do
-				if e=="quit" then
+			love.graphics.setCanvas(pico8.screen) -- TODO: Rework this
+			for name, a, b, c, d, e, f in love.event.poll() do
+				if name == "quit" then
 					if not love.quit or not love.quit() then
-						if love.audio then
-							love.audio.stop()
-						end
-						return
+						return a or 0
 					end
 				end
-				love.handlers[e](a, b, c, d)
+				love.handlers[name](a, b, c, d, e, f)
 			end
 		end
 
 		-- Update dt, as we'll be passing it to update
-		if love.timer then
-			love.timer.step()
-			dt=dt+love.timer.getDelta()
-		end
+		if love.timer then dt=dt+love.timer.step() end
 
 		-- Call update and draw
 		local render=false
@@ -726,9 +721,10 @@ function love.run()
 			end
 			dt=dt-frametime
 			render=true
+
 		end
 
-		if render and love.window and love.graphics and love.window.isCreated() then
+		if render and love.graphics and love.graphics.isActive() then
 			love.graphics.origin()
 			if paused then
 				api.rectfill(64-4*4, 60, 64+4*4-2, 64+4+4, 1)
