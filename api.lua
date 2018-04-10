@@ -1033,8 +1033,17 @@ function api.dset(index, value)
 	pico8.cartdata[index]=value
 end
 
+local tfield={[0]="year", "month", "day", "hour", "min", "sec"}
 function api.stat(x)
-	if x >= 16 and x <= 23 then
+	if x == 4 then
+		return pico8.clipboard
+	elseif x == 7 then
+		return pico8.fps
+	elseif x == 8 then
+		return pico8.fps
+	elseif x == 9 then
+		return love.timer.getFPS()
+	elseif x >= 16 and x <= 23 then
 		local ch=pico8.audio_channels[x%4]
 		if not ch.sfx then
 			return -1
@@ -1043,6 +1052,34 @@ function api.stat(x)
 		else
 			return flr(ch.offset)
 		end
+	elseif x == 30 then
+		return #pico8.kbdbuffer ~= 0
+	elseif x == 31 then
+		return (table.remove(pico8.kbdbuffer, 1) or "")
+	elseif x == 32 then
+		return getMouseX()
+	elseif x == 33 then
+		return getMouseY()
+	elseif x == 34 then
+		local btns=0
+		for i=0, 2 do
+			if love.mouse.isDown(i+1) then
+				btns=bit.band(btns, bit.lshift(1, i))
+			end
+		end
+		return btns
+	elseif x == 36 then
+		return pico8.mwheel
+	elseif (x >= 80 and x <= 85) or (x >= 90 and x <= 95) then
+		local tinfo
+		if x < 90 then
+			tinfo = os.date("!*t")
+		else
+			tinfo = os.date("*t")
+		end
+		return tinfo[tfield[x%10]]
+	elseif x == 100 then
+		return nil -- TODO: breadcrumb not supported
 	end
 	return 0
 end

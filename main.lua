@@ -28,11 +28,13 @@ pico8={
 	current_music=nil,
 	usermemory={},
 	cartdata={},
+	clipboard="",
 	keypressed={
 		[0]={},
 		[1]={},
 		counter=0
 	},
+	kbdbuffer={},
 	keymap={
 		[0]={
 			[0]={'left'},
@@ -51,6 +53,7 @@ pico8={
 			[5]={'q', 'a'},
 		}
 	},
+	mwheel=0,
 	cursor={0, 0},
 	camera_x=0,
 	camera_y=0,
@@ -612,14 +615,20 @@ function update_audio(buffer)
 	end
 end
 
+local function isCtrlOrGuiDown()
+	return (love.keyboard.isDown('lctrl') or love.keyboard.isDown('lgui') or love.keyboard.isDown('rctrl') or love.keyboard.isDown('rgui'))
+end
+
 function love.keypressed(key)
 	if cart and pico8.cart._keydown then
 		return pico8.cart._keydown(key)
 	end
-	if key=='r' and (love.keyboard.isDown('lctrl') or love.keyboard.isDown('lgui')) then
+	if key=='r' and isCtrlOrGuiDown() then
 		_load()
-	elseif key=='q' and (love.keyboard.isDown('lctrl') or love.keyboard.isDown('lgui')) then
+	elseif key=='q' and isCtrlOrGuiDown() then
 		love.event.quit()
+	elseif key=='v' and isCtrlOrGuiDown() then
+		pico8.clipboard=love.system.getClipboardText()
 	elseif key=='pause' then
 		paused=not paused
 	elseif key=='f1' or key=='f6' then
@@ -661,7 +670,15 @@ function love.keyreleased(key)
 end
 
 function love.textinput(text)
+	table.insert(pico8.kbdbuffer, text)
+	while #pico8.kbdbuffer > 255 do
+		table.remove(pico8.kbdbuffer, 1)
+	end
 	if cart and pico8.cart._textinput then return pico8.cart._textinput(text) end
+end
+
+function love.wheelmoved(x, y)
+	pico8.mwheel=pico8.mwheel+y
 end
 
 function love.graphics.point(x, y)
@@ -674,6 +691,14 @@ function setfps(fps)
 		pico8.fps=30
 	end
 	frametime=1/pico8.fps
+end
+
+function getMouseX()
+	return math.floor((love.mouse.getX()-xpadding)/scale)
+end
+
+function getMouseY()
+	return math.floor((love.mouse.getY()-ypadding)/scale)
 end
 
 function love.run()
@@ -721,7 +746,6 @@ function love.run()
 			end
 			dt=dt-frametime
 			render=true
-
 		end
 
 		if render and love.graphics and love.graphics.isActive() then
@@ -734,6 +758,8 @@ function love.run()
 			end
 			-- draw the contents of pico screen to our screen
 			flip_screen()
+			-- reset mouse wheel
+			pico8.mwheel=0
 		end
 
 		for i=1, pico8.audio_source:getFreeBufferCount() do
