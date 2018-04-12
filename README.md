@@ -2,7 +2,7 @@ PICOLOVE
 --------
 
 A fork of the original PICOLOVE, an implementation of PICO-8's API in LÖVE  
-Original is on github at: https://github.com/ftsf/picolove  
+Original is on github at: https://github.com/picolove/picolove  
 Requires LÖVE 11.x
 
 PICO-8: http://www.lexaloffle.com/pico-8.php  

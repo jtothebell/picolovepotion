@@ -51,9 +51,10 @@ function cart.load_p8(filename)
 	log("Loading", filename)
 
 	local lua=""
-	pico8.map={}
 	pico8.quads={}
 	pico8.spritesheet_data=love.image.newImageData(128, 128)
+	pico8.spritesheet_data:mapPixel(function() return 0, 0, 0, 1 end)
+	pico8.map={}
 	for y=0, 63 do
 		pico8.map[y]={}
 		for x=0, 127 do
@@ -61,6 +62,9 @@ function cart.load_p8(filename)
 		end
 	end
 	pico8.spriteflags={}
+	for i=0, 255 do
+		pico8.spriteflags[i]=0
+	end
 	pico8.sfx={}
 	for i=0, 63 do
 		pico8.sfx[i]={
@@ -77,10 +81,10 @@ function cart.load_p8(filename)
 	for i=0, 63 do
 		pico8.music[i]={
 			loop=0,
-			[0]=64,
-			[1]=64,
-			[2]=64,
-			[3]=64
+			[0]=65,
+			[1]=66,
+			[2]=67,
+			[3]=68
 		}
 	end
 
@@ -211,8 +215,16 @@ function cart.load_p8(filename)
 		if not data then
 			error("invalid cart")
 		end
+
 		-- strip carriage returns pico-8 style
 		data=data:gsub("\r.", "\n")
+		-- tack on a fake header
+		if data:sub(-1) ~= "\n" then
+			data=data.."\n"
+		end
+		data=data.."__eof__\n"
+
+		-- check for header and vesion
 		local header="pico-8 cartridge // http://www.pico-8.com\nversion "
 		local start=data:find("pico%-8 cartridge // http://www.pico%-8%.com\nversion ")
 		if start==nil then
@@ -222,31 +234,29 @@ function cart.load_p8(filename)
 		local version_str=data:sub(start+#header, next_line-1)
 		local version=tonumber(version_str)
 		log("version", version)
-		-- extract the lua
-		local lua_start=data:find("__lua__")+8
-		local lua_end=data:find("__gfx__")-1
 
-		lua=data:sub(lua_start, lua_end)
+		-- extract the lua
+		lua=data:match("\n__lua__.-\n(.-)\n__") or ""
 
 		-- load the sprites into an imagedata
 		-- generate a quad for each sprite index
-		local gfx_start=data:find("__gfx__")+8
-		local gfx_end=data:find("__gff__")-1
-		local gfxdata=data:sub(gfx_start, gfx_end)
+		local gfxdata=data:match("\n__gfx__.-\n(.-\n)\n-__")
 
-		local row=0
+		if gfxdata then
+			local row=0
 
-		for line in gfxdata:gmatch("(.-)\n") do
-			local col=0
-			for v in line:gmatch(".") do
-				v=tonumber(v, 16)
-				pico8.spritesheet_data:setPixel(col, row, v/15, 0, 0, 1)
+			for line in gfxdata:gmatch("(.-)\n") do
+				local col=0
+				for v in line:gmatch(".") do
+					v=tonumber(v, 16)
+					pico8.spritesheet_data:setPixel(col, row, v/15, 0, 0, 1)
 
-				col=col+1
-				if col==128 then break end
+					col=col+1
+					if col==128 then break end
+				end
+				row=row+1
+				if row==128 then break end
 			end
-			row=row+1
-			if row>=128 then break end
 		end
 
 		local shared=0
@@ -268,7 +278,6 @@ function cart.load_p8(filename)
 					end
 				end
 			end
-			assert(shared==128*32, shared)
 		end
 
 		for y=0, 15 do
@@ -280,99 +289,93 @@ function cart.load_p8(filename)
 		pico8.spritesheet=love.graphics.newImage(pico8.spritesheet_data)
 
 		-- load the sprite flags
+		local gffdata=data:match("\n__gff__.-\n(.-\n)\n-__")
 
-		local gff_start=data:find("__gff__")+8
-		local gff_end=data:find("__map__")-1
-		local gffdata=data:sub(gff_start, gff_end)
+		if gffdata then
+			local sprite=0
+			local gffpat=(version<=2 and "." or "..")
 
-		local sprite=0
+			for line in gffdata:gmatch("(.-)\n") do
+				local col=0
 
-		for line in gffdata:gmatch("(.-)\n") do
-			if version<=2 then
-				for i=1, #line do
-					local v=line:sub(i) -- this is wrong.
+				for v in line:gmatch(gffpat) do
 					v=tonumber(v, 16)
-					pico8.spriteflags[sprite]=v
-					sprite=sprite+1
+					pico8.spriteflags[sprite+col]=v
+					col=col+1
+					if col==128 then break end
 				end
-			else
-				for v in line:gmatch("..") do
-					v=tonumber(v, 16)
-					pico8.spriteflags[sprite]=v
-					sprite=sprite+1
-				end
+
+				sprite=sprite+128
+				if sprite==256 then break end
 			end
 		end
-
-		assert(sprite==256, "wrong number of spriteflags: "..sprite)
 
 		-- convert the tile data to a table
+		local mapdata=data:match("\n__map__.-\n(.-\n)\n-__")
 
-		local map_start=data:find("__map__")+8
-		local map_end=data:find("__sfx__")-1
-		local mapdata=data:sub(map_start, map_end)
+		if mapdata then
+			local row=0
+			local tiles=0
 
-		local row=0
-		local tiles=0
-
-		for line in mapdata:gmatch("(.-)\n") do
-			local col=0
-			for v in line:gmatch("..") do
-				v=tonumber(v, 16)
-				pico8.map[row][col]=v
-				col=col+1
-				tiles=tiles+1
-				if col==128 then break end
+			for line in mapdata:gmatch("(.-)\n") do
+				local col=0
+				for v in line:gmatch("..") do
+					v=tonumber(v, 16)
+					pico8.map[row][col]=v
+					col=col+1
+					tiles=tiles+1
+					if col==128 then break end
+				end
+				row=row+1
+				if row==32 then break end
 			end
-			row=row+1
-			if row==32 then break end
+			assert(tiles+shared==128*64, string.format("%d + %d != %d", tiles, shared, 128*64))
 		end
-		assert(tiles+shared==128*64, string.format("%d + %d != %d", tiles, shared, 128*64))
 
 		-- load sfx
-		local sfx_start=data:find("__sfx__")+8
-		local sfx_end=data:find("__music__")-1
-		local sfxdata=data:sub(sfx_start, sfx_end)
+		local sfxdata=data:match("\n__sfx__.-\n(.-\n)\n-__")
 
-		local _sfx=0
+		if sfxdata then
+			local _sfx=0
 
-		for line in sfxdata:gmatch("(.-)\n") do
-			pico8.sfx[_sfx].editor_mode=tonumber(line:sub(1, 2), 16)
-			pico8.sfx[_sfx].speed=tonumber(line:sub(3, 4), 16)
-			pico8.sfx[_sfx].loop_start=tonumber(line:sub(5, 6), 16)
-			pico8.sfx[_sfx].loop_end=tonumber(line:sub(7, 8), 16)
-			local step=0
-			for i=9, #line, 5 do
-				local v=line:sub(i, i+4)
-				assert(#v==5)
-				local note =tonumber(line:sub(i, i+1), 16)
-				local instr=tonumber(line:sub(i+2, i+2), 16)
-				local vol  =tonumber(line:sub(i+3, i+3), 16)
-				local fx   =tonumber(line:sub(i+4, i+4), 16)
-				pico8.sfx[_sfx][step]={note, instr, vol, fx}
-				step=step+1
+			for line in sfxdata:gmatch("(.-)\n") do
+				pico8.sfx[_sfx].editor_mode=tonumber(line:sub(1, 2), 16)
+				pico8.sfx[_sfx].speed=tonumber(line:sub(3, 4), 16)
+				pico8.sfx[_sfx].loop_start=tonumber(line:sub(5, 6), 16)
+				pico8.sfx[_sfx].loop_end=tonumber(line:sub(7, 8), 16)
+				local step=0
+				for i=9, #line, 5 do
+					local v=line:sub(i, i+4)
+					assert(#v==5)
+					local note =tonumber(line:sub(i,   i+1), 16)
+					local instr=tonumber(line:sub(i+2, i+2), 16)
+					local vol  =tonumber(line:sub(i+3, i+3), 16)
+					local fx   =tonumber(line:sub(i+4, i+4), 16)
+					pico8.sfx[_sfx][step]={note, instr, vol, fx}
+					step=step+1
+					if step==32 then break end
+				end
+				_sfx=_sfx+1
+				if _sfx==64 then break end
 			end
-			_sfx=_sfx+1
-			if _sfx==64 then break end
 		end
 
-		assert(_sfx==64)
-
 		-- load music
-		local music_start=data:find("__music__")+10
-		local musicdata=data:sub(music_start)
+		local musicdata=data:match("\n__music__.-\n(.-\n)\n-__")
 
-		local _music=0
+		if musicdata then
+			local _music=0
 
-		for line in musicdata:gmatch("(.-)\n") do
-			local music=pico8.music[_music]
-			music.loop=tonumber(line:sub(1, 2), 16)
-			music[0]=tonumber(line:sub(4, 5), 16)
-			music[1]=tonumber(line:sub(6, 7), 16)
-			music[2]=tonumber(line:sub(8, 9), 16)
-			music[3]=tonumber(line:sub(10, 11), 16)
-			_music=_music+1
-			if _music==64 then break end
+			for line in musicdata:gmatch("(.-)\n") do
+				local music=pico8.music[_music]
+				music.loop=tonumber(line:sub(1, 2), 16)
+				music[0]=tonumber(line:sub(4, 5), 16)
+				music[1]=tonumber(line:sub(6, 7), 16)
+				music[2]=tonumber(line:sub(8, 9), 16)
+				music[3]=tonumber(line:sub(10, 11), 16)
+				_music=_music+1
+				if _music==64 then break end
+			end
 		end
 	end
 
