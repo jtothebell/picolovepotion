@@ -1093,6 +1093,7 @@ api.pairs=pairs
 api.type=type
 api.assert=assert
 api.setmetatable=setmetatable
+api.getmetatable=getmetatable
 api.cocreate=coroutine.create
 api.coresume=coroutine.resume
 api.yield=coroutine.yield
