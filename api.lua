@@ -634,8 +634,12 @@ function api.peek(addr)
 		elseif step==67 then
 			return sfx.loop_end
 		end
-	elseif addr<0x5f00 then
+	elseif addr<0x5e00 then
 		return pico8.usermemory[addr-0x4300]
+	elseif addr<0x5f00 then
+		local val=pico8.cartdata[math.floor((addr-0x5e00)/4)]*0x10000
+		local shift=(addr%4)*8
+		return bit.rshift(bit.band(val, bit.lshift(0xFF, shift)), shift)
 	elseif addr<0x5f80 then
 		-- TODO: Hardware state
 		if addr==0x5f26 then
@@ -716,8 +720,13 @@ function api.poke(addr, val)
 		elseif step==67 then
 			sfx.loop_end=val
 		end
-	elseif addr<0x5f00 then
+	elseif addr<0x5e00 then
 		pico8.usermemory[addr-0x4300]=val
+	elseif addr<0x5f00 then
+		local ind=math.floor((addr-0x5e00)/4)
+		local oval=pico8.cartdata[ind]*0x10000
+		local shift=(addr%4)*8
+		pico8.cartdata[ind]=bit.bor(bit.band(oval, bit.bnot(bit.lshift(0xFF, shift))), bit.lshift(val, shift))/0x10000
 	elseif addr<0x5f80 then
 		-- FIXME: Draw state
 	elseif addr<0x5fc0 then
