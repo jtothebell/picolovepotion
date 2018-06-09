@@ -167,7 +167,7 @@ function api.tostr(val, hex)
 	elseif kind == "number" then
 		if hex then
 			val=val*0x10000
-			local part1=bit.rshift(bit.band(val, 0xFFFF0000), 4)
+			local part1=bit.rshift(bit.band(val, 0xFFFF0000), 16)
 			local part2=bit.band(val, 0xFFFF)
 			return string.format("0x%04x.%04x", part1, part2)
 		else
@@ -1073,7 +1073,7 @@ function api.stat(x)
 		local btns=0
 		for i=0, 2 do
 			if love.mouse.isDown(i+1) then
-				btns=bit.band(btns, bit.lshift(1, i))
+				btns=bit.bor(btns, bit.lshift(1, i))
 			end
 		end
 		return btns
