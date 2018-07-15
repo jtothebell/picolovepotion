@@ -180,48 +180,47 @@ function love.load(argv)
 	-- tri
 	osc[0]=function(x)
 		local t=x%1
-		return (abs(t*2-1)*2-1)*0.7
+		return (abs(t*2-1)*2-1)*0.5
 	end
 	-- uneven tri
 	osc[1]=function(x)
 		local t=x%1
-		return (((t<0.875) and (t*16/7) or ((1-t)*16))-1)*0.7
+		return (((t<0.875) and (t*16/7) or ((1-t)*16))-1)*0.5
 	end
 	-- saw
 	osc[2]=function(x)
-		return (x%1-0.5)*0.9
+		return (x%1-0.5)*2/3
 	end
 	-- sqr
 	osc[3]=function(x)
-		return (x%1<0.5 and 1 or-1)*1/3
+		return (x%1<0.5 and 1 or-1)*0.25
 	end
 	-- pulse
 	osc[4]=function(x)
-		return (x%1<0.3125 and 1 or-1)*1/3
+		return (x%1<0.3125 and 1 or-1)*0.25
 	end
-	-- tri/2
+	-- organ
 	osc[5]=function(x)
 		x=x*4
-		return (abs((x%2)-1)-0.5+(abs(((x*0.5)%2)-1)-0.5)/2-0.1)*0.7
+		return (abs((x%2)-1)-0.5+(abs(((x*0.5)%2)-1)-0.5)/2-0.1)*0.5
 	end
 	osc[6]=function()
 		-- noise FIXME: (zep said this is brown noise)
 		local lastx=0
-		local sample=0
 		local lsample=0
 		local tscale=note_to_hz(63)/__sample_rate
 		return function(x)
-			local scale=(x-lastx)/tscale
-			lsample=sample
-			sample=(lsample+scale*(love.math.random()*2-1))/(1+scale)
+			local scale=((x-lastx)/tscale)/2+0.2
 			lastx=x
-			return math.min(math.max((lsample+sample)*4/3*(1.75-scale), -1), 1)*0.7
+			local sample=(lsample+scale*(love.math.random()*2-1))/(1+scale)
+			lsample=sample
+			return sample*(scale*2.6641424914468)+0.17178154814501
 		end
 	end
 	-- detuned tri
 	osc[7]=function(x)
 		x=x*2
-		return (abs((x%2)-1)-0.5+(abs(((x*127/128)%2)-1)-0.5)/2)-1/4
+		return (abs(((x*127/128)%2)-1)/2+abs((x%2)-1)-1)*2/3
 	end
 	-- saw from 0 to 1, used for arppregiator
 	osc["saw_lfo"]=function(x)
@@ -601,17 +600,18 @@ function update_audio(buffer)
 						local note=sfx[flr(off)][1]
 						ch.freq=note_to_hz(note)
 					end
-					ch.sample=(ch.osc(ch.oscpos)*vol/7+ch.sample)/2
+					ch.sample=ch.osc(ch.oscpos)*vol/7
 					ch.oscpos=ch.oscpos+ch.freq/__sample_rate
 				else
-					ch.sample=ch.sample/2
+					ch.sample=0
 				end
 			else
-				ch.sample=ch.sample/2
+				ch.sample=0
 			end
 			sample=sample+ch.sample
 		end
-		buffer:setSample(bufferpos, math.min(math.max(sample, -1), 1))
+		-- PICO-8 limits max volume to 80%, but since picolove is quieter anyway we opt for increasing the volume
+		buffer:setSample(bufferpos, math.min(math.max(sample*1.25, -1), 1))
 	end
 end
 
