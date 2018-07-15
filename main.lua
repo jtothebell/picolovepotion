@@ -214,7 +214,7 @@ function love.load(argv)
 			lastx=x
 			local sample=(lsample+scale*(love.math.random()*2-1))/(1+scale)
 			lsample=sample
-			return sample*(scale*2.6641424914468)+0.17178154814501
+			return sample*(scale*2.6641424914468+0.17178154814501)
 		end
 	end
 	-- detuned tri
