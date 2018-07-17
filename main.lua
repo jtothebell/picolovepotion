@@ -205,16 +205,25 @@ function love.load(argv)
 		return (abs((x%2)-1)-0.5+(abs(((x*0.5)%2)-1)-0.5)/2-0.1)*0.5
 	end
 	osc[6]=function()
-		-- noise FIXME: (zep said this is brown noise)
 		local lastx=0
-		local lsample=0
-		local tscale=note_to_hz(63)/__sample_rate
+		local sample=0
+		local update=false
+		local hz48=note_to_hz(48)
 		return function(x)
-			local scale=((x-lastx)/tscale)/2+0.2
+			local hz=((x-lastx)%1)*__sample_rate
 			lastx=x
-			local sample=(lsample+scale*(love.math.random()*2-1))/(1+scale)
-			lsample=sample
-			return sample*(scale*2.6641424914468+0.17178154814501)
+			local scale=hz*(131072/343042875)+(16/889)
+
+			update=not update
+			if update then
+				sample=sample+scale*(love.math.random()*2-1)
+			end
+			local output=sample*(45/32)
+			if hz > hz48 then
+				output=output*(1.1659377442658412e+000-2.3350687035974510e-004*hz+8.3385655344351036e-008*hz^2-1.1509506025078735e-011*hz^3) -- approximate
+			end
+			sample=math.max(math.min(sample, (6143/31115)), -(6143/31115))
+			return output
 		end
 	end
 	-- detuned tri
