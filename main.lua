@@ -64,7 +64,6 @@ pico8={
 
 require("strict")
 local bit=require("bit")
-local QueueableSource=require("QueueableSource")
 
 local flr, abs=math.floor, math.abs
 
@@ -236,7 +235,7 @@ function love.load(argv)
 		return x%1
 	end
 
-	pico8.audio_source=QueueableSource:new(__buffer_count)
+	pico8.audio_source=love.audio.newQueueableSource(__sample_rate, bits, channels, __buffer_count)
 	pico8.audio_source:play()
 	pico8.audio_buffer=love.sound.newSoundData(__buffer_size, __sample_rate, bits, channels)
 
@@ -411,7 +410,6 @@ local function update_buttons()
 end
 
 function love.update(dt)
-	pico8.audio_source:step()
 	pico8.frames=pico8.frames+1
 	update_buttons()
 	if pico8.cart._update60 then
