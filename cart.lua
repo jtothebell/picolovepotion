@@ -329,7 +329,6 @@ function cart.load_p8(filename)
 				row=row+1
 				if row==32 then break end
 			end
-			assert(tiles+shared==128*64, string.format("%d + %d != %d", tiles, shared, 128*64))
 		end
 
 		-- load sfx
