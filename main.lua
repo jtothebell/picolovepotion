@@ -63,9 +63,9 @@ pico8={
 }
 
 --require("strict")
-local bit=require("bit")
+--local bit=require("bit")
 
-local flr, abs=math.floor, math.abs
+--local flr, abs=math.floor, math.abs
 
 local frametime=1/pico8.fps
 local cart=nil
@@ -95,25 +95,9 @@ local __sample_rate=22050
 local channels=1
 local bits=16
 
-log=print
+--log=print
 --log=function() end
 
-function shdr_unpack(thing)
-	return unpack(thing, 0, 15)
-end
-
-local function get_bits(v, s, e)
-	local mask=bit.lshift(bit.lshift(1, s)-1, e)
-	return bit.rshift(bit.band(mask, v))
-end
-
-function restore_clip()
-	if pico8.clip then
-		love.graphics.setScissor(unpack(pico8.clip))
-	else
-		love.graphics.setScissor()
-	end
-end
 
 function setColor(c)
 	love.graphics.setColor(c/15, 0, 0, 1)
@@ -130,6 +114,7 @@ function _load(filename)
 	end
 	cartname=filename
 
+	--[[
 	pico8.camera_x=0
 	pico8.camera_y=0
 	love.graphics.origin()
@@ -154,6 +139,7 @@ function _load(filename)
 	else
 		setfps(30)
 	end
+	]]
 end
 
 function love.resize(w, h)
@@ -172,10 +158,6 @@ function love.resize(w, h)
 	]]
 end
 
-local function note_to_hz(note)
-	return 440*2^((note-33)/12)
-end
-
 function love.load(argv)
 	love_args=argv
 
@@ -186,6 +168,7 @@ function love.load(argv)
 	pico8.screen=love.graphics.newCanvas(pico8.resolution[1], pico8.resolution[2])
 	pico8.tmpscr=love.graphics.newCanvas(pico8.resolution[1], pico8.resolution[2])
 
+	--[[
 	local glyphs=""
 	for i=32, 127 do
 		glyphs=glyphs..string.char(i)
@@ -206,13 +189,13 @@ function love.load(argv)
 		pico8.pal_transparent[i]=i==0 and 0 or 1
 		pico8.display_palette[i]=pico8.palette[i+1]
 	end
+	]]
 
 	api=require("api")
 	cart=require("cart")
-	gif=require("gif")
 
 	-- load the cart
-	_load(argv[1] or 'nocart.p8')
+	_load(argv[1] or 'xwing.p8')
 end
 
 local function inside(x, y, x0, y0, w, h)
@@ -292,13 +275,7 @@ local function lerp(a, b, t)
 end
 
 function update_audio(buffer)
-	-- check what sfx should be playing
 
-	
-end
-
-local function isCtrlOrGuiDown()
-	return (love.keyboard.isDown('lctrl') or love.keyboard.isDown('lgui') or love.keyboard.isDown('rctrl') or love.keyboard.isDown('rgui'))
 end
 
 function love.keypressed(key)
@@ -313,13 +290,6 @@ function love.keyreleased(key)
 	end
 end
 
-function love.textinput(text)
-	table.insert(pico8.kbdbuffer, text)
-	while #pico8.kbdbuffer > 255 do
-		table.remove(pico8.kbdbuffer, 1)
-	end
-	if cart and pico8.cart._textinput then return pico8.cart._textinput(text) end
-end
 
 function love.graphics.point(x, y)
 	love.graphics.rectangle('fill', x, y, 1, 1)
@@ -343,6 +313,7 @@ function love.run()
 
 	if love.load then love.load(love.arg.parseGameArguments(arg), arg) end
 
+	--[[
 	-- We don't want the first frame's dt to include time taken by love.load.
 	if love.timer then love.timer.step() end
 
@@ -396,4 +367,5 @@ function love.run()
 
 		if love.timer then love.timer.sleep(0.001) end
 	end
+	]]
 end
