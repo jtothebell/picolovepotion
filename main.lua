@@ -140,7 +140,6 @@ end
 
 local exts={'', '.p8'}
 function _load(filename)
-	--[[
 	filename=filename or cartname
 	for i=1, #exts do
 		if love.filesystem.getInfo(filename..exts[i]) ~= nil then
@@ -149,20 +148,22 @@ function _load(filename)
 		end
 	end
 	cartname=filename
-	]]
+	updateStatus('loading cart ' .. cartname)
 
-	--[[
 	pico8.camera_x=0
 	pico8.camera_y=0
 	love.graphics.origin()
-	pico8.clip=nil
-	love.graphics.setScissor()
-	api.pal()
-	pico8.color=6
-	setColor(pico8.color)
-	love.graphics.setCanvas(pico8.screen)
-	love.graphics.setShader(pico8.draw_shader)
+	--pico8.clip=nil
+	--love.graphics.setScissor()
+	--api.pal()
+	--pico8.color=6
+	--setColor(pico8.color)
+	--love.graphics.setCanvas(pico8.screen)
+	
+	--not implemented
+	--love.graphics.setShader(pico8.draw_shader)
 
+	--[[
 	pico8.cart=cart.load_p8(filename)
 	for i=0, 0x1c00-1 do
 		pico8.usermemory[i]=0
@@ -177,6 +178,15 @@ function _load(filename)
 		setfps(30)
 	end
 	]]
+end
+
+
+function setfps(fps)
+	pico8.fps=flr(fps)
+	if pico8.fps<=0 then
+		pico8.fps=30
+	end
+	frametime=1/pico8.fps
 end
 
 
