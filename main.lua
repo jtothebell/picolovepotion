@@ -139,6 +139,45 @@ function setColor(c)
 end
 
 local exts={'', '.p8'}
+function _load(filename)
+	--[[
+	filename=filename or cartname
+	for i=1, #exts do
+		if love.filesystem.getInfo(filename..exts[i]) ~= nil then
+			filename=filename..exts[i]
+			break
+		end
+	end
+	cartname=filename
+	]]
+
+	--[[
+	pico8.camera_x=0
+	pico8.camera_y=0
+	love.graphics.origin()
+	pico8.clip=nil
+	love.graphics.setScissor()
+	api.pal()
+	pico8.color=6
+	setColor(pico8.color)
+	love.graphics.setCanvas(pico8.screen)
+	love.graphics.setShader(pico8.draw_shader)
+
+	pico8.cart=cart.load_p8(filename)
+	for i=0, 0x1c00-1 do
+		pico8.usermemory[i]=0
+	end
+	for i=0, 63 do
+		pico8.cartdata[i]=0
+	end
+	if pico8.cart._init then pico8.cart._init() end
+	if pico8.cart._update60 then
+		setfps(60)
+	else
+		setfps(30)
+	end
+	]]
+end
 
 
 function love.load()
@@ -165,6 +204,28 @@ function love.load()
 	love.graphics.setDefaultFilter('nearest', 'nearest')
 	pico8.screen=love.graphics.newCanvas(pico8.resolution[1], pico8.resolution[2])
 	pico8.tmpscr=love.graphics.newCanvas(pico8.resolution[1], pico8.resolution[2])
+
+	--this runs initially, but font is not working... come back to this
+	--local font=love.graphics.newFont("PICO-8 mono.fnt", 1)
+	--love.graphics.setFont(font)
+
+	--not implemented
+	--font:setFilter('nearest', 'nearest')
+	--love.graphics.setLineStyle('rough')
+	--love.graphics.setPointSize(1)
+	--love.graphics.setLineWidth(1)
+
+	for i=0, 15 do
+		pico8.draw_palette[i]=i
+		pico8.pal_transparent[i]=i==0 and 0 or 1
+		pico8.display_palette[i]=pico8.palette[i+1]
+	end
+
+	api=require("api")
+	cart=require("cart")
+
+	-- load the cart
+	_load('xwing.p8')
 end
 
 function love.update(dt)
