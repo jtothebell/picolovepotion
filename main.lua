@@ -135,7 +135,7 @@ function updateStatus(newPart)
 end
 
 function setColor(c)
-	love.graphics.setColor(c/15, 0, 0, 1)
+	--love.graphics.setColor(c/15, 0, 0, 1)
 end
 
 local exts={'', '.p8'}
@@ -153,11 +153,11 @@ function _load(filename)
 	pico8.camera_x=0
 	pico8.camera_y=0
 	love.graphics.origin()
-	--pico8.clip=nil
-	--love.graphics.setScissor()
-	--api.pal()
-	--pico8.color=6
-	--setColor(pico8.color)
+	pico8.clip=nil
+	love.graphics.setScissor()
+	api.pal()
+	pico8.color=6
+	setColor(pico8.color)
 	--love.graphics.setCanvas(pico8.screen)
 	
 	--not implemented
