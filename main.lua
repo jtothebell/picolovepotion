@@ -158,8 +158,15 @@ function love.resize(w, h)
 	]]
 end
 
-function love.load(argv)
-	love_args=argv
+function love.load()
+	print("start of load")
+
+	currentButton =
+    {
+        pressed = "None",
+        released = "None"
+    }
+	currentButtonDown = {}
 
 	--love.resize(love.graphics.getDimensions()) -- Setup initial scaling and padding
 
@@ -195,7 +202,7 @@ function love.load(argv)
 	cart=require("cart")
 
 	-- load the cart
-	_load(argv[1] or 'xwing.p8')
+	_load('xwing.p8')
 end
 
 local function inside(x, y, x0, y0, w, h)
@@ -304,6 +311,7 @@ function setfps(fps)
 end
 
 function love.run()
+	print("start of run")
 	if love.math then
 		love.math.setRandomSeed(os.time())
 		for i=1, 3 do love.math.random() end
@@ -311,7 +319,7 @@ function love.run()
 	math.randomseed(os.time())
 	for i=1, 3 do math.random() end
 
-	if love.load then love.load(love.arg.parseGameArguments(arg), arg) end
+	if love.load then love.load() end
 
 	--[[
 	-- We don't want the first frame's dt to include time taken by love.load.
@@ -368,4 +376,18 @@ function love.run()
 		if love.timer then love.timer.sleep(0.001) end
 	end
 	]]
+end
+
+function love.gamepadpressed(joy, button)
+    if button == "plus" then
+        love.event.quit()
+    else
+        currentButton.pressed = button
+		add(currentButtonDown, button)
+    end
+end
+
+function love.gamepadreleased(joy, button)
+    currentButton.released = button
+	del(currentButtonDown, button)
 end
