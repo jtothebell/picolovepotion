@@ -214,12 +214,6 @@ function love.load()
     }
 	currentButtonDown = {}
 
-	testCanvas = love.graphics.newCanvas() -- Make a new canvas. This is basically just a blank image that you can draw on. 
-	love.graphics.setCanvas(testCanvas) -- make the canvas active; so that any love.graphics call will draw to the newly created blank image instead of to the screen
-	love.graphics.setColor(1,0,0)  -- set the drawing color
-	love.graphics.rectangle('fill',0,0,100,100)-- draw a rectangle. because we've activated the canvas, this draw call is now made to the canvas, so instead of a blank image it now contains a colorful rectangle; it's part of the example
-	love.graphics.setCanvas()
-
     local down, OS = "plus", {love.system.getOS()}
     if OS[2] == "3DS" then
         down = "start"
@@ -281,9 +275,6 @@ function love.draw()
 		love.graphics.rectangle('fill', 0, i*30, 30, 30)
 		i = i + 1
 	end
-
-	love.graphics.setColor(1,1,1) -- set the drawing color back to white
-    love.graphics.draw(testCanvas, 200,100, 0, 1, 1)
 
 	love.graphics.setColor(1, 1, 1, 1)
 
