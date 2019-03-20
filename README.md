@@ -1,9 +1,10 @@
 PICOLOVEPOTION
 --------
 
-A fork of the gamax92's fork of PICOLOVE, an implementation of PICO-8's API for the Löve Potion implementation of the LÖVE2D game engine 
-Original is on github at: https://github.com/picolove/picolove  
-Base of this fork is on github at: https://github.com/gamax92/picolove  
+A fork of the gamax92's fork of PICOLOVE, an implementation of PICO-8's API for the Löve Potion implementation of the LÖVE2D game engine
+
+Original PICOLOVE is on github at: https://github.com/picolove/picolove  
+gamax92's fork is on github at: https://github.com/gamax92/picolove  
 Requires a homebrew cabaple Nintendo Switch
 
 PICO-8: http://www.lexaloffle.com/pico-8.php  
