@@ -135,7 +135,7 @@ function updateStatus(newPart)
 end
 
 function setColor(c)
-	--love.graphics.setColor(c/15, 0, 0, 1)
+	love.graphics.setColor(pico8.palette[c][1] / 255, pico8.palette[c][2] / 255, pico8.palette[c][3] / 255, 1)
 end
 
 local exts={'', '.p8'}
@@ -148,7 +148,8 @@ function _load(filename)
 		end
 	end
 	cartname=filename
-	updateStatus('loading cart ' .. cartname)
+
+	updateStatus('Setting up before load')
 
 	pico8.camera_x=0
 	pico8.camera_y=0
@@ -158,13 +159,15 @@ function _load(filename)
 	api.pal()
 	pico8.color=6
 	setColor(pico8.color)
+	--don't set this yet, because we aren't drawing to it yet
 	--love.graphics.setCanvas(pico8.screen)
 	
 	--not implemented
 	--love.graphics.setShader(pico8.draw_shader)
 
-	--[[
+	updateStatus('calling load_p8 on ' .. filename)
 	pico8.cart=cart.load_p8(filename)
+	--[[
 	for i=0, 0x1c00-1 do
 		pico8.usermemory[i]=0
 	end
@@ -201,6 +204,12 @@ function love.load()
     }
 	currentButtonDown = {}
 
+	testCanvas = love.graphics.newCanvas() -- Make a new canvas. This is basically just a blank image that you can draw on. 
+	love.graphics.setCanvas(testCanvas) -- make the canvas active; so that any love.graphics call will draw to the newly created blank image instead of to the screen
+	love.graphics.setColor(1,0,0)  -- set the drawing color
+	love.graphics.rectangle('fill',0,0,100,100)-- draw a rectangle. because we've activated the canvas, this draw call is now made to the canvas, so instead of a blank image it now contains a colorful rectangle; it's part of the example
+	love.graphics.setCanvas()
+
     local down, OS = "plus", {love.system.getOS()}
     if OS[2] == "3DS" then
         down = "start"
@@ -235,10 +244,11 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('xwing.p8')
+	_load('game/xwing.p8')
 end
 
 function love.update(dt)
+	require("lovebird").update()
 	pico8.frames=pico8.frames+1
 	update_buttons()
 end
@@ -252,7 +262,27 @@ function love.draw()
         i = i + 1
 	end
 	
+	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.print(status, 500, 10)
+
+	i = 0
+	for k, v in pairs(pico8.palette) do
+		love.graphics.setColor(v[1] / 255, v[2] / 255, v[3] / 255, v[4] / 255)
+		love.graphics.rectangle('fill', 0, i*30, 30, 30)
+		i = i + 1
+	end
+
+	love.graphics.setColor(1,1,1) -- set the drawing color back to white
+    love.graphics.draw(testCanvas, 200,100, 0, 1, 1)
+
+	love.graphics.setColor(1, 1, 1, 1)
+
+	--[[
+	if pico8.spritesheet_data then
+		love.graphics.draw(pico8.spritesheet_data, 0, 600, 0, 2, 2)
+	end
+	]]
+
 end
 
 function love.gamepadpressed(joy, button)
