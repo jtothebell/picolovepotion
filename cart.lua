@@ -12,7 +12,7 @@ function cart.load_p8(filename)
 
 	local lua=""
 	pico8.quads={}
-	pico8.spritesheet_data=love.graphics.newCanvas()
+	pico8.spritesheet_data=love.graphics.newCanvas(128, 128)
 	--turn it all black
 	--pico8.spritesheet_data:mapPixel(function() return 0, 0, 0, 1 end)
 	pico8.map={}
@@ -89,26 +89,20 @@ function cart.load_p8(filename)
 	-- generate a quad for each sprite index
 	local gfxdata=data:match("\n__gfx__.-\n(.-\n)\n-__")
 
-	testChar = 'notyet'
-	testNum = 0
-
 	if gfxdata then
 		local row=0
-		--love.graphics.setCanvas(pico8.spritesheet_data)
+		love.graphics.setCanvas(pico8.spritesheet_data)
 
 		for line in gfxdata:gmatch("(.-)\n") do
 			updateStatus(line)
 			local col=0
 			for v in line:gmatch(".") do
-				testChar = v
 				v=tonumber(v, 16)
-				testNum = v
-				--updateStatus(v)
-				
-				--local color = pico8.palette[v]
+				local colorIndex = v + 1
+				local color = pico8.palette[colorIndex]
 				--setColor(v)
-				--love.graphics.setColor(color[1] / 255, color[2] / 255, color[3] / 255, 1)
-				--love.graphics.points(col, row)
+				love.graphics.setColor(color[1] / 255, color[2] / 255, color[3] / 255, 1)
+				love.graphics.points(col, row)
 
 				--we can use this if imageData is implemented
 				--pico8.spritesheet_data:setPixel(col, row, v/15, 0, 0, 1)

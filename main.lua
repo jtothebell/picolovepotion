@@ -197,6 +197,16 @@ function love.load()
 	status = 'start of load'
 	updateStatus('updated')
 
+	testHexDigitStr = '2'
+	testHexDigitNum = tonumber(testHexDigitStr, 16)
+
+	updateStatus(testHexDigitStr .. testHexDigitNum)
+
+	testHexCharStr = 'b'
+	testHexCharNum = tonumber(testHexCharStr, 16)
+
+	updateStatus(testHexCharStr .. testHexCharNum)
+
 	currentButton =
     {
         pressed = 'None',
@@ -277,11 +287,9 @@ function love.draw()
 
 	love.graphics.setColor(1, 1, 1, 1)
 
-	--[[
 	if pico8.spritesheet_data then
 		love.graphics.draw(pico8.spritesheet_data, 0, 600, 0, 2, 2)
 	end
-	]]
 
 end
 
