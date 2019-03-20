@@ -1,10 +1,10 @@
 PICOLOVEPOTION
 --------
 
-A fork of the gamax92's fork of PICOLOVE, an implementation of PICO-8's API for the Löve Potion implementation of the LÖVE 
+A fork of the gamax92's fork of PICOLOVE, an implementation of PICO-8's API for the Löve Potion implementation of the LÖVE2D game engine 
 Original is on github at: https://github.com/picolove/picolove  
 Base of this fork is on github at: https://github.com/gamax92/picolove  
-Requires LÖVE 11.x
+Requires a homebrew cabaple Nintendo Switch
 
 PICO-8: http://www.lexaloffle.com/pico-8.php  
 Löve Potion: https://github.com/TurtleP/LovePotion
@@ -36,6 +36,7 @@ LÖVE: https://love2d.org/
 
 ##### What it isn't:
 
+ * Working
  * A replacement for PICO-8
  * A perfect replica
  * No dev tools, no image editor, map editor, sfx editor, music editor
@@ -45,15 +46,4 @@ LÖVE: https://love2d.org/
 
 ##### Differences:
 
- * Uses floating point numbers not fixed point
- * Uses LuaJIT not lua 5.2
- * Memory layout is not complete
-
-##### Extra features:
-
- * `ipairs()`, `pairs()` standard lua functions
- * `assert(expr,message)` if expr is not true then errors with message
- * `error(message)` bluescreens with an error message
- * `warning(message)` prints warning and stacktrace to console
- * `setfps(fps)` changes the consoles framerate
- * `_keyup`, `_keydown`, `_textinput` allow using direct keyboard input
+ * (Currently) doesn't work ;)
