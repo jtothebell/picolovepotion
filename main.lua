@@ -231,6 +231,23 @@ function love.load()
 	--this runs initially, but font is not working... come back to this
 	--local font=love.graphics.newFont("PICO-8 mono.fnt", 1)
 	--love.graphics.setFont(font)
+	
+	--[[
+	fontImg = love.graphics.newImage("game/font.png")
+
+	local glyphs=""
+	for i=32, 127 do
+		glyphs=glyphs..string.char(i)
+	end
+	for i=128, 153 do
+		glyphs=glyphs..string.char(194, i)
+	end
+	fontQuads = {}
+
+    for i = 1, #glyphs do
+        fontQuads[string.sub(glyphs, i, i)] = love.graphics.newQuad((i-1)*4+1, 0, 3, 5, 593, 5)
+	end
+	]]
 
 	--not implemented
 	--font:setFilter('nearest', 'nearest')
@@ -251,6 +268,17 @@ function love.load()
 	_load('game/xwing.p8')
 end
 
+--[[
+function switchPrint(s, x, y, scale)
+    scale = scale or 1
+    local xAdd = 0
+    for i = 1, #tostring(s) do
+        love.graphics.draw(fontImg, fontQuads[string.sub(s, i, i)], x+xAdd, y, 0, scale, scale)
+        xAdd = xAdd + 4*scale
+    end
+end
+]]
+
 function love.update(dt)
 	require("lovebird").update()
 	pico8.frames=pico8.frames+1
@@ -258,8 +286,6 @@ function love.update(dt)
 end
 
 function love.draw()
-	love.graphics.print("Hello World!!", 310, 10)
-	
 	local i = 0
     for k, v in pairs(currentButton) do
         love.graphics.print(k .. ": " .. v, 400, 100 + (i * 18))
@@ -282,6 +308,7 @@ function love.draw()
 		love.graphics.draw(pico8.spritesheet_data, 0, 600, 0, 2, 2)
 	end
 
+	--switchPrint("HELLO PICO FONT", 10, 10)
 end
 
 function love.gamepadpressed(joy, button)
