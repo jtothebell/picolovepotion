@@ -62,6 +62,11 @@ pico8={
 	pal_transparent={},
 }
 
+function rnd(x)
+	return math.random()*(x or 1)
+end
+
+
 function add(a, v)
 	if a==nil then return end
 	a[#a+1]=v
@@ -97,7 +102,7 @@ end
 --require("strict")
 --local bit=require("bit")
 
---local flr, abs=math.floor, math.abs
+local flr, abs=math.floor, math.abs
 
 local frametime=1/pico8.fps
 local cart=nil
@@ -167,7 +172,7 @@ function _load(filename)
 
 	updateStatus('calling load_p8 on ' .. filename)
 	pico8.cart=cart.load_p8(filename)
-	--[[
+	
 	for i=0, 0x1c00-1 do
 		pico8.usermemory[i]=0
 	end
@@ -180,7 +185,6 @@ function _load(filename)
 	else
 		setfps(30)
 	end
-	]]
 end
 
 

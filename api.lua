@@ -233,7 +233,7 @@ function api.cstore(dest_addr, source_addr, len)
 end
 
 function api.rnd(x)
-	--return math.random()*(x or 1)
+	return math.random()*(x or 1)
 end
 
 function api.srand(seed)
