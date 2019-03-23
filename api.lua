@@ -1,4 +1,10 @@
+local flr=math.floor
 
+local function color(c)
+	c=flr(c or 0)%16
+	pico8.color=c
+	setColor(c)
+end
 --------------------------------------------------------------------------------
 -- PICO-8 API
 
@@ -17,6 +23,18 @@ function api.clip(x, y, w, h)
 end
 
 function api.cls(c)
+	c = tonumber(c) or 0
+	if c == nil then
+		c = 0
+	end
+
+	pico8.clip=nil
+	love.graphics.setScissor()
+	--TODO clear the color passed
+	--local color = pico8.palette[c]
+	--love.graphics.clear(color[1] / 255, color[2] / 255, color[3] / 255, 1)
+	love.graphics.clear(0, 0, 0, 1)
+	pico8.cursor={0, 0}
 
 end
 
@@ -46,7 +64,10 @@ function api.splore()
 end
 
 function api.pset(x, y, c)
-
+	if c then
+		color(c)
+	end
+	love.graphics.points(flr(x), flr(y))
 end
 
 function api.pget(x, y)
@@ -76,7 +97,6 @@ function api.tostr(val, hex)
 end
 
 function api.spr(n, x, y, w, h, flip_x, flip_y)
-	--[[
 	--love.graphics.setShader(pico8.sprite_shader)
 	n=flr(n)
 	w=w or 1
@@ -85,7 +105,7 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 	if w==1 and h==1 then
 		q=pico8.quads[n]
 		if not q then
-			log('warning: sprite '..n..' is missing')
+			updateStatus('warning: sprite '..n..' is missing')
 			return
 		end
 	else
@@ -98,14 +118,12 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 		end
 	end
 	if not q then
-		log('missing quad', n)
+		updateStatus('missing quad', n)
 	end
-	love.graphics.draw(pico8.spritesheet, q,
+	love.graphics.draw(pico8.spritesheet_data, q,
 		flr(x)+(w*8*(flip_x and 1 or 0)),
 		flr(y)+(h*8*(flip_y and 1 or 0)),
 		0, flip_x and-1 or 1, flip_y and-1 or 1)
-	--love.graphics.setShader(pico8.draw_shader)
-	]]
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
@@ -240,8 +258,8 @@ function api.srand(seed)
 	--math.randomseed(flr(seed*0x10000))
 end
 
---api.flr=math.floor
---api.ceil=math.ceil
+api.flr=math.floor
+api.ceil=math.ceil
 
 function api.sgn(x)
 	return x<0 and-1 or 1

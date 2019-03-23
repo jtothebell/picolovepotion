@@ -62,11 +62,6 @@ pico8={
 	pal_transparent={},
 }
 
-function rnd(x)
-	return math.random()*(x or 1)
-end
-
-
 function add(a, v)
 	if a==nil then return end
 	a[#a+1]=v
@@ -172,7 +167,7 @@ function _load(filename)
 
 	updateStatus('calling load_p8 on ' .. filename)
 	pico8.cart=cart.load_p8(filename)
-	
+
 	for i=0, 0x1c00-1 do
 		pico8.usermemory[i]=0
 	end
@@ -235,23 +230,6 @@ function love.load()
 	--this runs initially, but font is not working... come back to this
 	--local font=love.graphics.newFont("PICO-8 mono.fnt", 1)
 	--love.graphics.setFont(font)
-	
-	--[[
-	fontImg = love.graphics.newImage("game/font.png")
-
-	local glyphs=""
-	for i=32, 127 do
-		glyphs=glyphs..string.char(i)
-	end
-	for i=128, 153 do
-		glyphs=glyphs..string.char(194, i)
-	end
-	fontQuads = {}
-
-    for i = 1, #glyphs do
-        fontQuads[string.sub(glyphs, i, i)] = love.graphics.newQuad((i-1)*4+1, 0, 3, 5, 593, 5)
-	end
-	]]
 
 	--not implemented
 	--font:setFilter('nearest', 'nearest')
@@ -272,17 +250,6 @@ function love.load()
 	_load('game/xwing.p8')
 end
 
---[[
-function switchPrint(s, x, y, scale)
-    scale = scale or 1
-    local xAdd = 0
-    for i = 1, #tostring(s) do
-        love.graphics.draw(fontImg, fontQuads[string.sub(s, i, i)], x+xAdd, y, 0, scale, scale)
-        xAdd = xAdd + 4*scale
-    end
-end
-]]
-
 function love.update(dt)
 	require("lovebird").update()
 	pico8.frames=pico8.frames+1
@@ -299,20 +266,13 @@ function love.draw()
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.print(status, 500, 10)
 
-	i = 0
-	for k, v in pairs(pico8.palette) do
-		love.graphics.setColor(v[1] / 255, v[2] / 255, v[3] / 255, v[4] / 255)
-		love.graphics.rectangle('fill', 0, i*30, 30, 30)
-		i = i + 1
-	end
-
-	love.graphics.setColor(1, 1, 1, 1)
-
 	if pico8.spritesheet_data then
 		love.graphics.draw(pico8.spritesheet_data, 0, 600, 0, 2, 2)
 	end
 
-	--switchPrint("HELLO PICO FONT", 10, 10)
+	--if pico8.cart._draw then pico8.cart._draw() end
+
+
 end
 
 function love.gamepadpressed(joy, button)

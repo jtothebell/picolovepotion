@@ -117,6 +117,12 @@ function cart.load_p8(filename)
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setCanvas()
 
+	for y=0, 15 do
+		for x=0, 15 do
+			pico8.quads[y*16+x]=love.graphics.newQuad(8*x, 8*y, 8, 8, 128, 128)
+		end
+	end
+
 	-- patch the lua
 	lua=lua:gsub("!=", "~=").."\n"
 	-- rewrite shorthand if statements eg. if (not b) i=1 j=2
