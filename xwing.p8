@@ -108,13 +108,14 @@ end
 
 function _draw()
 	cls()
+	
 	for st in all(stars) do
 		pset(st.x,st.y,6)
 	end
 
 
 	spr(ship.sp, ship.x, ship.y)
-
+	--[[
 	for ex in all(explosions) do
 		circfill(ex.x,ex.y,ex.t/2,8+ex.t%3)
 	end
@@ -126,14 +127,17 @@ function _draw()
 	for e in all(enemies) do
 		spr(e.sp, e.x, e.y)
 	end
+	]]
 end
 
 function _update()
 	t=t+1
 
+--[[
 	if t % 15 == 0 then
 		add(enemies, rndmenemy())
 	end
+	]]
 
 
 	for st in all(stars) do
@@ -143,13 +147,14 @@ function _update()
 			st.x=rnd(128)
 		end
 	end
-
+--[[
 	for ex in all(explosions) do
 		ex.t+=1
 		if ex.t == 13 then
 			del(explosions, ex)
 		end
 	end
+	
 
 	for e in all(enemies) do
   		e.x = e.x + e.dx
@@ -196,12 +201,13 @@ function _update()
 			explode(ship.x,ship.y)
 		end
 	end
+	]]
 
-	if btn(0) then ship.x -=2 end
-	if btn(1) then ship.x +=2 end
-	if btn(2) then ship.y -=2 end
-	if btn(3) then ship.y +=2 end
-	if btnp(4) then fire(ship) end
+	--if btn(0) then ship.x -=2 end
+	--if btn(1) then ship.x +=2 end
+	--if btn(2) then ship.y -=2 end
+	--if btn(3) then ship.y +=2 end
+	--if btnp(4) then fire(ship) end
 end
 __gfx__
 e0000000000000000000000000000000000000000000000000000000000660005000000500000000000000000000000000000000000000000000000000000000

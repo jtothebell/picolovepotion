@@ -134,7 +134,16 @@ function updateStatus(newPart)
 	status = status .. '\n' .. newPart
 end
 
+function restore_clip()
+	if pico8.clip then
+		love.graphics.setScissor(unpack(pico8.clip))
+	else
+		love.graphics.setScissor()
+	end
+end
+
 function setColor(c)
+	c = c + 1
 	love.graphics.setColor(pico8.palette[c][1] / 255, pico8.palette[c][2] / 255, pico8.palette[c][3] / 255, 1)
 end
 
@@ -160,7 +169,7 @@ function _load(filename)
 	pico8.color=6
 	setColor(pico8.color)
 	--don't set this yet, because we aren't drawing to it yet
-	--love.graphics.setCanvas(pico8.screen)
+	love.graphics.setCanvas(pico8.screen)
 	
 	--not implemented
 	--love.graphics.setShader(pico8.draw_shader)
@@ -252,27 +261,42 @@ end
 
 function love.update(dt)
 	require("lovebird").update()
+
 	pico8.frames=pico8.frames+1
+
 	update_buttons()
+
+	if pico8.cart._update then pico8.cart._update() end
 end
 
 function love.draw()
+	love.graphics.setCanvas()
+	love.graphics.setColor(1, 1, 1, 1)
+
 	local i = 0
     for k, v in pairs(currentButton) do
-        love.graphics.print(k .. ": " .. v, 400, 100 + (i * 18))
+        love.graphics.print(k .. ": " .. v, 900, 100 + (i * 18))
         i = i + 1
 	end
 	
-	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.print(status, 500, 10)
 
+	--[[
 	if pico8.spritesheet_data then
-		love.graphics.draw(pico8.spritesheet_data, 0, 600, 0, 2, 2)
+		testquad = love.graphics.newQuad(8, 0, 16, 16, 128, 128)
+		love.graphics.draw(pico8.spritesheet_data, testquad, 0, 600, 0, 4, 4)
 	end
+	]]
 
-	--if pico8.cart._draw then pico8.cart._draw() end
 
+	if pico8.screen then
+		love.graphics.setCanvas(pico8.screen)
+		if pico8.cart._draw then pico8.cart._draw() end
 
+		love.graphics.setCanvas()
+	
+		love.graphics.draw(pico8.screen, 0, 0, 0, 4, 4)
+	end
 end
 
 function love.gamepadpressed(joy, button)

@@ -29,11 +29,13 @@ function api.cls(c)
 	end
 
 	pico8.clip=nil
+	--size of pico 8 screen
 	love.graphics.setScissor()
 	--TODO clear the color passed
-	--local color = pico8.palette[c]
+	local color = pico8.palette[c + 1]
 	--love.graphics.clear(color[1] / 255, color[2] / 255, color[3] / 255, 1)
-	love.graphics.clear(0, 0, 0, 1)
+	love.graphics.setBackgroundColor(color[1] / 255, color[2] / 255, color[3] / 255)
+	love.graphics.clear()
 	pico8.cursor={0, 0}
 
 end

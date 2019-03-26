@@ -170,8 +170,8 @@ function cart.load_p8(filename)
 	if not ok or f==nil then
 		local ln=1
 		lua="1:"..lua:gsub("\n", function(a) ln=ln+1 return "\n"..ln..":" end)
-		--updateStatus('=======8<========')
-		--updateStatus(lua)
+		updateStatus('=======8<========')
+		updateStatus(lua)
 		updateStatus('=======>8========')
 		updateStatus("Error loading lua: "..tostring(e),0)
 	else
@@ -179,8 +179,8 @@ function cart.load_p8(filename)
 		updateStatus('pcalling patched lua')
 		setfenv(f, cart_env)
 		--love.graphics.setShader(pico8.draw_shader)
-		--love.graphics.setCanvas(pico8.screen)
-		--love.graphics.origin()
+		love.graphics.setCanvas(pico8.screen)
+		love.graphics.origin()
 		--restore_clip()
 		ok, result=pcall(f)
 		if not ok then
