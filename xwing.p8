@@ -119,9 +119,6 @@ function _draw()
 
 	spr(ship.sp, ship.x, ship.y)
 
-	--test drawing two sprites at same time
-	--spr(8, ship.x + 10, ship.y)
-
 	--[[
 	for ex in all(explosions) do
 		circfill(ex.x,ex.y,ex.t/2,8+ex.t%3)
@@ -141,11 +138,9 @@ end
 function _update()
 	t=t+1
 
---[[
 	if t % 15 == 0 then
 		add(enemies, rndmenemy())
 	end
-	]]
 
 
 	for st in all(stars) do
