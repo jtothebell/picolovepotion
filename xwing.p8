@@ -15,10 +15,12 @@ function _init()
 
 	lasers = {}
 
+--[[
 	enemies = {}
 	add(enemies, rndmenemy())
-
+]]
 	explosions = {}
+	
  	
 	stars = {}
  	for i=1,32 do
@@ -30,6 +32,7 @@ function _init()
 	end 
 end
 
+--[[
 function rndmenemy()
 	local e = {
 		sp=8,
@@ -45,6 +48,7 @@ function rndmenemy()
 	}
 	return e
 end
+]]
 
 function abs_box(s)
 	local box = {}
@@ -119,15 +123,18 @@ function _draw()
 	for ex in all(explosions) do
 		circfill(ex.x,ex.y,ex.t/2,8+ex.t%3)
 	end
-
+]]
 	for l in all(lasers) do
 		spr(l.sp, l.x, l.y, l.spw, l.sph)
 	end
 	
+	--this crashes-- not sure why
+	--[[
 	for e in all(enemies) do
 		spr(e.sp, e.x, e.y)
 	end
 	]]
+	
 end
 
 function _update()
@@ -176,38 +183,39 @@ function _update()
 			e.countdown = rnd(30) + 10
 		end
  	end
+	 ]]
 
 	for l in all(lasers) do
 		l.x += l.dx
 		l.y += l.dy
 
-		if l.x < 0 or l.x > 128 or
-		l.y < 0 or l.y > 128 then
-			
-		end
-
-		local hit = false
-		for e in all (enemies) do
-			if coll(l, e) then
-				del(enemies, e)
-				del(lasers, l)
-				explode(e.x,e.y)
-				hit = true
-			end
-		end
-
-		if hit == false and coll(l, ship) then
+		if l.x < 0 or l.x > 128 or l.y < 0 or l.y > 128 then
 			del(lasers, l)
-			explode(ship.x,ship.y)
+		else
+		--[[
+			local hit = false
+			for e in all (enemies) do
+				if coll(l, e) then
+					del(enemies, e)
+					del(lasers, l)
+					explode(e.x,e.y)
+					hit = true
+				end
+			end
+
+			if hit == false and coll(l, ship) then
+				del(lasers, l)
+				explode(ship.x,ship.y)
+			end
+			]]
 		end
 	end
-	]]
 
 	if btn(0) then ship.x -=2 end
 	if btn(1) then ship.x +=2 end
 	if btn(2) then ship.y -=2 end
 	if btn(3) then ship.y +=2 end
-	--if btnp(4) then fire(ship) end
+	if btnp(4) then fire(ship) end
 end
 __gfx__
 e0000000000000000000000000000000000000000000000000000000000660005000000500000000000000000000000000000000000000000000000000000000
