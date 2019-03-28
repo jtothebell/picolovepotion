@@ -15,10 +15,10 @@ function _init()
 
 	lasers = {}
 
---[[
+
 	enemies = {}
 	add(enemies, rndmenemy())
-]]
+
 	explosions = {}
 	
  	
@@ -32,7 +32,6 @@ function _init()
 	end 
 end
 
---[[
 function rndmenemy()
 	local e = {
 		sp=8,
@@ -48,7 +47,7 @@ function rndmenemy()
 	}
 	return e
 end
-]]
+
 
 function abs_box(s)
 	local box = {}
@@ -119,6 +118,10 @@ function _draw()
 
 
 	spr(ship.sp, ship.x, ship.y)
+
+	--test drawing two sprites at same time
+	--spr(8, ship.x + 10, ship.y)
+
 	--[[
 	for ex in all(explosions) do
 		circfill(ex.x,ex.y,ex.t/2,8+ex.t%3)
@@ -129,11 +132,9 @@ function _draw()
 	end
 	
 	--this crashes-- not sure why
-	--[[
 	for e in all(enemies) do
 		spr(e.sp, e.x, e.y)
 	end
-	]]
 	
 end
 
@@ -161,7 +162,7 @@ function _update()
 			del(explosions, ex)
 		end
 	end
-	
+	]]
 
 	for e in all(enemies) do
   		e.x = e.x + e.dx
@@ -183,7 +184,6 @@ function _update()
 			e.countdown = rnd(30) + 10
 		end
  	end
-	 ]]
 
 	for l in all(lasers) do
 		l.x += l.dx
