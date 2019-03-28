@@ -5,6 +5,17 @@ local function color(c)
 	pico8.color=c
 	setColor(c)
 end
+
+local function _horizontal_line(lines, x0, y, x1)
+	table.insert(lines, {x0+0.5, y+0.5, x1+1.5, y+0.5})
+end
+
+local function _plot4points(lines, cx, cy, x, y)
+	_horizontal_line(lines, cx-x, cy+y, cx+x)
+	if y~=0 then
+		_horizontal_line(lines, cx-x, cy-y, cx+x)
+	end
+end
 --------------------------------------------------------------------------------
 -- PICO-8 API
 
@@ -166,7 +177,36 @@ function api.circ(ox, oy, r, col)
 end
 
 function api.circfill(cx, cy, r, col)
+	if col then
+		color(col)
+	end
+	cx=flr(cx)
+	cy=flr(cy)
+	r=flr(r)
+	local x=r
+	local y=0
+	local err=1-r
 
+	local lines={}
+
+	while y<=x do
+		_plot4points(lines, cx, cy, x, y)
+		if err<0 then
+			err=err+2*y+3
+		else
+			if x~=y then
+				_plot4points(lines, cx, cy, y, x)
+			end
+			x=x-1
+			err=err+2*(y-x)+3
+		end
+		y=y+1
+	end
+	if #lines>0 then
+		for i=1, #lines do
+			love.graphics.line(lines[i])
+		end
+	end
 end
 
 function api.line(x0, y0, x1, y1, col)
