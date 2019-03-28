@@ -128,7 +128,6 @@ function _draw()
 		spr(l.sp, l.x, l.y, l.spw, l.sph)
 	end
 	
-	--this crashes-- not sure why
 	for e in all(enemies) do
 		spr(e.sp, e.x, e.y)
 	end
@@ -186,7 +185,6 @@ function _update()
 		if l.x < 0 or l.x > 128 or l.y < 0 or l.y > 128 then
 			del(lasers, l)
 		else
-		--[[
 			local hit = false
 			for e in all (enemies) do
 				if coll(l, e) then
@@ -201,7 +199,6 @@ function _update()
 				del(lasers, l)
 				explode(ship.x,ship.y)
 			end
-			]]
 		end
 	end
 
