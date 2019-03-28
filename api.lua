@@ -177,6 +177,7 @@ function api.circ(ox, oy, r, col)
 end
 
 function api.circfill(cx, cy, r, col)
+	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -206,6 +207,10 @@ function api.circfill(cx, cy, r, col)
 		for i=1, #lines do
 			love.graphics.line(lines[i])
 		end
+	end
+
+	if prevCol then
+		color(prevCol)
 	end
 end
 
