@@ -203,10 +203,10 @@ function _update()
 	end
 	]]
 
-	--if btn(0) then ship.x -=2 end
-	--if btn(1) then ship.x +=2 end
-	--if btn(2) then ship.y -=2 end
-	--if btn(3) then ship.y +=2 end
+	if btn(0) then ship.x -=2 end
+	if btn(1) then ship.x +=2 end
+	if btn(2) then ship.y -=2 end
+	if btn(3) then ship.y +=2 end
 	--if btnp(4) then fire(ship) end
 end
 __gfx__
