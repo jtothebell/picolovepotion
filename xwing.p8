@@ -148,14 +148,13 @@ function _update()
 			st.x=rnd(128)
 		end
 	end
---[[
+
 	for ex in all(explosions) do
 		ex.t+=1
 		if ex.t == 13 then
 			del(explosions, ex)
 		end
 	end
-	]]
 
 	for e in all(enemies) do
   		e.x = e.x + e.dx
