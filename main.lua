@@ -126,6 +126,7 @@ local __buffer_size=1024
 local __sample_rate=22050
 local channels=1
 local bits=16
+local loveFrames = 0
 
 --log=print
 --log=function() end
@@ -262,11 +263,15 @@ end
 function love.update(dt)
 	require("lovebird").update()
 
-	pico8.frames=pico8.frames+1
+	--hack to force 30 fps. TODO: support 30 or 60
+	if (loveFrames % 2 == 0) then
+		pico8.frames=pico8.frames+1
 
-	update_buttons()
+		update_buttons()
 
-	if pico8.cart._update then pico8.cart._update() end
+		if pico8.cart._update then pico8.cart._update() end
+	end
+	loveFrames = loveFrames + 1
 end
 
 function love.draw()

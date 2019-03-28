@@ -142,7 +142,6 @@ function _update()
 		add(enemies, rndmenemy())
 	end
 
-
 	for st in all(stars) do
 		st.y += st.s
 		if st.y >= 128 then
