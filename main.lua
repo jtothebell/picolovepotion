@@ -279,7 +279,7 @@ function love.draw()
         i = i + 1
 	end
 	
-	love.graphics.print(status, 500, 10)
+	love.graphics.print(status, 600, 10)
 
 	--[[
 	if pico8.spritesheet_data then
