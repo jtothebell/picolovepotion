@@ -203,18 +203,6 @@ end
 
 
 function love.load()
-	status = 'start of load'
-	updateStatus('updated')
-
-	testHexDigitStr = '2'
-	testHexDigitNum = tonumber(testHexDigitStr, 16)
-
-	updateStatus(testHexDigitStr .. testHexDigitNum)
-
-	testHexCharStr = 'b'
-	testHexCharNum = tonumber(testHexCharStr, 16)
-
-	updateStatus(testHexCharStr .. testHexCharNum)
 
 	currentButton =
     {
