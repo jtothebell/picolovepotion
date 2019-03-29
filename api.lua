@@ -45,6 +45,7 @@ function api.cls(c)
 	--TODO clear the color passed
 	local color = pico8.palette[c + 1]
 	--love.graphics.clear(color[1] / 255, color[2] / 255, color[3] / 255, 1)
+	--pico love uses the background color for clear. This doesn't match love behavior
 	love.graphics.setBackgroundColor(color[1] / 255, color[2] / 255, color[3] / 255)
 	love.graphics.clear()
 	pico8.cursor={0, 0}

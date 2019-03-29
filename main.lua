@@ -169,7 +169,6 @@ function _load(filename)
 	api.pal()
 	pico8.color=6
 	setColor(pico8.color)
-	--don't set this yet, because we aren't drawing to it yet
 	love.graphics.setCanvas(pico8.screen)
 	
 	--not implemented
