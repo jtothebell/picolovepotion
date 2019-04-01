@@ -6,7 +6,7 @@ function _init()
 	ship = {
 		x=60,
 		y=100,
-		sp=7,
+		sp=2,
 		llaserx=-1,
 		rlaserx=6,
 		leftshot=true,
@@ -117,7 +117,7 @@ function _draw()
 	end
 
 
-	spr(ship.sp, ship.x, ship.y)
+	sspr(8,0,16,16, ship.x, ship.y)
 
 	for ex in all(explosions) do
 		rect(ex.x, ex.y, ex.x + ex.t/2, ex.y + ex.t/2, 8+ex.t%3)

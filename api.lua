@@ -141,6 +141,16 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+	dw=dw or sw
+	dh=dh or sh
+	-- FIXME: cache this quad
+	local q=love.graphics.newQuad(sx, sy, sw, sh, pico8.spritesheet_data:getDimensions())
+	--love.graphics.setShader(pico8.sprite_shader)
+	love.graphics.draw(pico8.spritesheet_data, q,
+		flr(dx)+(flip_x and dw or 0),
+		flr(dy)+(flip_y and dh or 0),
+		0, dw/sw*(flip_x and-1 or 1), dh/sh*(flip_y and-1 or 1))
+	--love.graphics.setShader(pico8.draw_shader)
 
 end
 
