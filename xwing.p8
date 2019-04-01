@@ -120,7 +120,7 @@ function _draw()
 	spr(ship.sp, ship.x, ship.y)
 
 	for ex in all(explosions) do
-		circfill(ex.x,ex.y,ex.t/2,8+ex.t%3)
+		circ(ex.x,ex.y,ex.t/2,8+ex.t%3)
 	end
 	
 	for l in all(lasers) do
