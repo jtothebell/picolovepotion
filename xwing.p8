@@ -120,7 +120,7 @@ function _draw()
 	spr(ship.sp, ship.x, ship.y)
 
 	for ex in all(explosions) do
-		rectfill(ex.x, ex.y, ex.x + ex.t/2, ex.y + ex.t/2, 8+ex.t%3)
+		rect(ex.x, ex.y, ex.x + ex.t/2, ex.y + ex.t/2, 8+ex.t%3)
 	end
 	
 	for l in all(lasers) do

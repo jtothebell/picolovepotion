@@ -145,7 +145,7 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 end
 
 function api.rect(x0, y0, x1, y1, col)
-	--[[
+	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -155,7 +155,10 @@ function api.rect(x0, y0, x1, y1, col)
 	else
 		love.graphics.rectangle("line", flr(x0)+0.5, flr(y0)+0.5, w, h)
 	end
-	]]
+
+	if prevCol then
+		color(prevCol)
+	end
 end
 
 function api.rectfill(x0, y0, x1, y1, col)
