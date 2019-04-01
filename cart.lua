@@ -98,9 +98,15 @@ function cart.load_p8(filename)
 			for v in line:gmatch(".") do
 				v=tonumber(v, 16)
 				local colorIndex = v + 1
+				local alpha = 1
+				--by default black (color index 1) is rendered as transparent
+				--this can be changed using api.palt(), but that isn't implemented yet
+				if colorIndex == 1 then
+					alpha = 0
+				end
 				local color = pico8.palette[colorIndex]
 				--setColor(v)
-				love.graphics.setColor(color[1] / 255, color[2] / 255, color[3] / 255, 1)
+				love.graphics.setColor(color[1] / 255, color[2] / 255, color[3] / 255, alpha)
 				love.graphics.points(col, row)
 
 				--we can use this if imageData is implemented
