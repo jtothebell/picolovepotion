@@ -120,12 +120,79 @@ function cart.load_p8(filename)
 
 		--pico8.spritesheet_image = love.graphics.newImage(pico8.spritesheet_data:getImageData())
 	end
+
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setCanvas()
+
+	local shared=0
+
+	--[[ TODO: re-implement this without getPixel()
+	if version>3 then
+		local tx, ty=0, 32
+		for sy=64, 127 do
+			for sx=0, 127, 2 do
+				-- get the two pixel values and merge them
+				local lo=pico8.spritesheet_data:getPixel(sx, sy)*15
+				local hi=pico8.spritesheet_data:getPixel(sx+1, sy)*15
+				local v=bit.bor(bit.lshift(hi, 4), lo)
+				pico8.map[ty][tx]=v
+				shared=shared+1
+				tx=tx+1
+				if tx==128 then
+					tx=0
+					ty=ty+1
+				end
+			end
+		end
+	end
+	]]
 
 	for y=0, 15 do
 		for x=0, 15 do
 			pico8.quads[y*16+x]=love.graphics.newQuad(8*x, 8*y, 8, 8, 128, 128)
+		end
+	end
+
+	-- load the sprite flags
+	local gffdata=data:match("\n__gff__.-\n(.-\n)\n-__")
+
+	if gffdata then
+		local sprite=0
+		local gffpat=(version<=2 and "." or "..")
+
+		for line in gffdata:gmatch("(.-)\n") do
+			local col=0
+
+			for v in line:gmatch(gffpat) do
+				v=tonumber(v, 16)
+				pico8.spriteflags[sprite+col]=v
+				col=col+1
+				if col==128 then break end
+			end
+
+			sprite=sprite+128
+			if sprite==256 then break end
+		end
+	end
+
+	-- convert the tile data to a table
+	local mapdata=data:match("\n__map__.-\n(.-\n)\n-__")
+
+	if mapdata then
+		local row=0
+		local tiles=0
+
+		for line in mapdata:gmatch("(.-)\n") do
+			local col=0
+			for v in line:gmatch("..") do
+				v=tonumber(v, 16)
+				pico8.map[row][col]=v
+				col=col+1
+				tiles=tiles+1
+				if col==128 then break end
+			end
+			row=row+1
+			if row==32 then break end
 		end
 	end
 

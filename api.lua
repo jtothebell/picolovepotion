@@ -319,7 +319,7 @@ end
 function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 
 end
---api.mapdraw=api.map
+api.mapdraw=api.map
 
 function api.mget(x, y)
 
