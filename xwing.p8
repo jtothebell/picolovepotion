@@ -118,6 +118,9 @@ function _draw()
 
 
 	sspr(8,0,16,16, ship.x, ship.y)
+	line(ship.x, ship.y -1, ship.x + 16, ship.y -1, 14)
+
+	line(ship.x, ship.y, ship.x + 16, ship.y +16, 15)
 
 	for ex in all(explosions) do
 		rect(ex.x, ex.y, ex.x + ex.t/2, ex.y + ex.t/2, 8+ex.t%3)

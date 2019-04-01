@@ -6,6 +6,10 @@ local function color(c)
 	setColor(c)
 end
 
+local function warning(msg)
+	updateStatus("WARNING: "..msg)
+end
+
 local function _horizontal_line(lines, x0, y, x1)
 	table.insert(lines, {x0+0.5, y+0.5, x1+1.5, y+0.5})
 end
@@ -268,7 +272,36 @@ function api.circfill(cx, cy, r, col)
 end
 
 function api.line(x0, y0, x1, y1, col)
+	local prevCol = pico8.color
 
+	if col then
+		color(col)
+	end
+
+	if x0~=x0 or y0~=y0 or x1~=x1 or y1~=y1 then
+		warning("line has NaN value")
+		return
+	end
+
+	x0=flr(x0)
+	y0=flr(y0)
+	x1=flr(x1)
+	y1=flr(y1)
+
+	if x0==x1 or y0==y1 then
+		-- simple case draw a straight line
+		love.graphics.rectangle("fill", x0, y0, x1-x0+1, y1-y0+1)
+	else
+		--this line is too fat, but it will do for now
+		--TODO: redraw using points that isn't fat
+		love.graphics.line(x0+0.5, y0+0.5, x1+0.5, y1+0.5)
+		-- Final pixel not being reached?
+		--love.graphics.points(x1+0.5, y1+0.5)
+	end
+
+	if prevCol then
+		color(prevCol)
+	end
 end
 
 function api.pal(c0, c1, p)
