@@ -159,7 +159,7 @@ function api.rect(x0, y0, x1, y1, col)
 end
 
 function api.rectfill(x0, y0, x1, y1, col)
-	--[[
+	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -170,7 +170,10 @@ function api.rectfill(x0, y0, x1, y1, col)
 		y0, y1=y1, y0
 	end
 	love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
-	]]
+
+	if prevCol then
+		color(prevCol)
+	end
 end
 
 function api.circ(ox, oy, r, col)
