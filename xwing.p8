@@ -112,6 +112,8 @@ end
 function _draw()
 	cls()
 	
+	mapdraw(0, 0, 41, 37, 3, 5)
+	
 	for st in all(stars) do
 		pset(st.x,st.y,6)
 	end
