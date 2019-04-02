@@ -341,19 +341,54 @@ end
 api.mapdraw=api.map
 
 function api.mget(x, y)
-
+	x=flr(x or 0)
+	y=flr(y or 0)
+	if x>=0 and x<128 and y>=0 and y<64 then
+		return pico8.map[y][x]
+	end
+	return 0
 end
 
 function api.mset(x, y, v)
-
+	x=flr(x or 0)
+	y=flr(y or 0)
+	v=flr(v or 0)%256
+	if x>=0 and x<128 and y>=0 and y<64 then
+		pico8.map[y][x]=v
+	end
 end
 
 function api.fget(n, f)
-
+	if n==nil then return nil end
+	if f~=nil then
+		-- return just that bit as a boolean
+		if not pico8.spriteflags[flr(n)] then
+			warning(string.format('fget(%d, %d)', n, f))
+			return false
+		end
+		return bit.band(pico8.spriteflags[flr(n)], bit.lshift(1, flr(f)))~=0
+	end
+	return pico8.spriteflags[flr(n)] or 0
 end
 
 function api.fset(n, f, v)
-
+	-- fset n [f] v
+	-- f is the flag index 0..7
+	-- v is boolean
+	if v==nil then
+		v, f=f, nil
+	end
+	if f then
+		-- set specific bit to v (true or false)
+		if v then
+			pico8.spriteflags[n]=bit.bor(pico8.spriteflags[n], bit.lshift(1, f))
+		else
+			pico8.spriteflags[n]=bit.band(pico8.spriteflags[n], bit.bnot(bit.lshift(1, f)))
+		end
+	else
+		-- set bitfield to v (number)
+		pico8.spriteflags[n]=v
+	end
 end
 
 function api.sget(x, y)
