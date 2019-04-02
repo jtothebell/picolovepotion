@@ -130,6 +130,7 @@ local loveFrames = 0
 
 --log=print
 --log=function() end
+status = '';
 
 function updateStatus(newPart)
 	status = status .. '\n' .. newPart
@@ -244,7 +245,7 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('game/xwing.p8')
+	_load('game/collide.p8')
 end
 
 function love.update(dt)
