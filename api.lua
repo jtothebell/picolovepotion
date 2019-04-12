@@ -114,7 +114,7 @@ function api.print(str, x, y, col)
 		local xAdd = 0
     	for i = 1, #tostring(line) do
         	love.graphics.draw(pico8.fontImg, pico8.fontQuads[string.sub(line, i, i)], pico8.cursor[1]+xAdd, pico8.cursor[2]+size)
-        	xAdd = xAdd + 3
+        	xAdd = xAdd + 4
     	end
 		size=size+5
 	end
