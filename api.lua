@@ -97,17 +97,60 @@ function api.color(c)
 end
 
 function api.print(str, x, y, col)
+	local prevCol = pico8.color
+	if col then
+		color(col)
+	end
 
+	if x and y then
+		pico8.cursor[1]=flr(tonumber(x) or 0)
+		pico8.cursor[2]=flr(tonumber(y) or 0)
+	end
+	
+	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"
+	local size=0
+
+	for line in str:gmatch("(.-)\n") do
+		local xAdd = 0
+    	for i = 1, #tostring(line) do
+        	love.graphics.draw(pico8.fontImg, pico8.fontQuads[string.sub(line, i, i)], pico8.cursor[1]+xAdd, pico8.cursor[2]+size)
+        	xAdd = xAdd + 3
+    	end
+		size=size+5
+	end
+
+	--[[
+	if not x and not y then
+		if pico8.cursor[2]+size>122 then
+			love.graphics.setShader()
+			love.graphics.setColor(1, 1, 1, 1)
+			love.graphics.setCanvas(pico8.tmpscr)
+			love.graphics.draw(pico8.screen)
+			love.graphics.setCanvas(pico8.screen)
+			love.graphics.draw(pico8.tmpscr, 0, -size)
+			love.graphics.setColor(0, 0, 0, 1)
+			love.graphics.rectangle("fill", 0, pico8.resolution[2]-size, pico8.resolution[1], size)
+			setColor(pico8.color)
+		else
+			pico8.cursor[2]=pico8.cursor[2]+size
+		end
+	end
+	love.graphics.setShader(pico8.draw_shader)
+	--]]
+
+	if prevCol then
+		color(prevCol)
+	end
 end
 
 api.printh=print
 
 function api.cursor(x, y)
-
+	pico8.cursor={x or 0, y or 0}
 end
 
 function api.tonum(val)
-
+	return tonumber(val) -- not a direct assignment to prevent usage of the radix argument
 end
 
 function api.tostr(val, hex)

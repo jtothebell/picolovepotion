@@ -150,6 +150,7 @@ function setColor(c)
 end
 
 local exts={'', '.p8'}
+
 function _load(filename)
 	filename=filename or cartname
 	for i=1, #exts do
@@ -228,6 +229,20 @@ function love.load()
 	--this runs initially, but font is not working... come back to this
 	--local font=love.graphics.newFont("PICO-8 mono.fnt", 1)
 	--love.graphics.setFont(font)
+	pico8.fontImg = love.graphics.newImage("font32bit.png")
+    pico8.fontQuads = {}
+
+    local glyphs=""
+	for i=32, 127 do
+		glyphs=glyphs..string.char(i)
+	end
+	for i=128, 153 do
+		glyphs=glyphs..string.char(194, i)
+	end
+	pico8.glyphs = glyphs
+    for i = 1, #glyphs do
+        pico8.fontQuads[string.sub(glyphs, i, i)] = love.graphics.newQuad((i-1)*4+1, 0, 3, 5, 593, 5)
+    end
 
 	--not implemented
 	--font:setFilter('nearest', 'nearest')
@@ -280,6 +295,10 @@ function love.draw()
 		love.graphics.draw(pico8.spritesheet_data, testquad, 0, 600, 0, 4, 4)
 	end
 	]]
+
+	love.graphics.draw(pico8.fontImg, 0, 600)
+
+	love.graphics.draw(pico8.fontImg, pico8.fontQuads["A"], 0, 610)
 
 
 	if pico8.screen then
