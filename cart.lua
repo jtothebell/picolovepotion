@@ -263,6 +263,7 @@ function cart.load_p8(filename)
 		end
 	end
 	updateStatus("finished loading cart", filename)
+	love.graphics.setCanvas()
 
 	return cart_env
 

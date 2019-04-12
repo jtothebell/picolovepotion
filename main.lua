@@ -171,7 +171,7 @@ function _load(filename)
 	api.pal()
 	pico8.color=6
 	setColor(pico8.color)
-	love.graphics.setCanvas(pico8.screen)
+	love.graphics.setCanvas()
 	
 	--not implemented
 	--love.graphics.setShader(pico8.draw_shader)
@@ -278,16 +278,16 @@ function love.update(dt)
 end
 
 function love.draw()
-	love.graphics.setCanvas()
+	--love.graphics.setCanvas()
 	love.graphics.setColor(1, 1, 1, 1)
 
 	local i = 0
     for k, v in pairs(currentButton) do
-        love.graphics.print(k .. ": " .. v, 900, 100 + (i * 18))
+        love.graphics.print(k .. ": " .. v, 360, 100 + (i * 18))
         i = i + 1
 	end
 	
-	love.graphics.print(status, 600, 10)
+	love.graphics.print(status, 260, 10)
 
 	--[[
 	if pico8.spritesheet_data then
@@ -296,10 +296,6 @@ function love.draw()
 	end
 	]]
 
-	love.graphics.draw(pico8.fontImg, 0, 600)
-
-	love.graphics.draw(pico8.fontImg, pico8.fontQuads["A"], 0, 610)
-
 
 	if pico8.screen then
 		love.graphics.setCanvas(pico8.screen)
@@ -307,7 +303,7 @@ function love.draw()
 
 		love.graphics.setCanvas()
 	
-		love.graphics.draw(pico8.screen, 0, 0, 0, 4, 4)
+		love.graphics.draw(pico8.screen, 0, 0, 0, 2, 2)
 	end
 end
 
@@ -360,3 +356,6 @@ function update_buttons()
 		pico8.keypressed.counter=loop
 	end
 end
+
+--TODO somehow make this conditional?
+--require 'Horizon'
