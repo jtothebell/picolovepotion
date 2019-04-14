@@ -53,6 +53,12 @@ function cart.load_p8(filename)
 	--no support for pngs yet
 	--local f=love.filesystem.newFile(filename, 'r')
 	f=love.filesystem.newFile(filename, 'r')
+	if not f and filename:sub(1, 5) == "game/" then
+		--if running in regular love, it won't be in the game directory
+		filename = filename:sub(5)
+		f=love.filesystem.newFile(filename, 'r')
+	end
+
 	if not f then
 		error(string.format("Unable to open: %s", filename))
 	end
@@ -85,7 +91,7 @@ function cart.load_p8(filename)
 	updateStatus("version " .. version)
 	-- extract the lua
 	lua=data:match("\n__lua__.-\n(.-)\n__") or ""
-	-- load the sprites into an imagedata
+	-- load the sprites into a canvas
 	-- generate a quad for each sprite index
 	local gfxdata=data:match("\n__gfx__.-\n(.-\n)\n-__")
 
@@ -264,6 +270,7 @@ function cart.load_p8(filename)
 	end
 	updateStatus("finished loading cart", filename)
 
+	love.graphics.setCanvas()
 	return cart_env
 
 end

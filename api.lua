@@ -26,15 +26,29 @@ end
 local api={}
 
 function api.flip()
-
+	flip_screen()
+	love.timer.sleep(1/pico8.fps)
 end
 
 function api.camera(x, y)
-
+	if x~=nil then
+		pico8.camera_x=flr(x)
+		pico8.camera_y=flr(y)
+	else
+		pico8.camera_x=0
+		pico8.camera_y=0
+	end
+	restore_camera()
 end
 
 function api.clip(x, y, w, h)
-
+	if x and y and w and h then
+		love.graphics.setScissor(x, y, w, h)
+		pico8.clip={x, y, w, h}
+	else
+		love.graphics.setScissor()
+		pico8.clip=nil
+	end
 end
 
 function api.cls(c)
@@ -89,7 +103,19 @@ function api.pset(x, y, c)
 end
 
 function api.pget(x, y)
-
+	x=x-pico8.camera_x
+	y=y-pico8.camera_y
+	--TODO: ruh roh :( need imageData support from LovePotion, or huge refactor
+	--[[
+	if x>=0 and x<pico8.resolution[1] and y>=0 and y<pico8.resolution[2] then
+		love.graphics.setCanvas()
+		local c=pico8.screen:newImageData():getPixel(flr(x), flr(y))*15
+		love.graphics.setCanvas(pico8.screen)
+		return c
+	end
+	warning(string.format("pget out of screen %d, %d", x, y))
+	]]
+	return 0
 end
 
 function api.color(c)
@@ -116,13 +142,11 @@ function api.print(str, x, y, col)
         	love.graphics.draw(pico8.fontImg, pico8.fontQuads[string.sub(line, i, i)], pico8.cursor[1]+xAdd, pico8.cursor[2]+size)
         	xAdd = xAdd + 4
     	end
-		size=size+5
+		size=size+6
 	end
 
-	--[[
 	if not x and not y then
 		if pico8.cursor[2]+size>122 then
-			love.graphics.setShader()
 			love.graphics.setColor(1, 1, 1, 1)
 			love.graphics.setCanvas(pico8.tmpscr)
 			love.graphics.draw(pico8.screen)
@@ -135,8 +159,6 @@ function api.print(str, x, y, col)
 			pico8.cursor[2]=pico8.cursor[2]+size
 		end
 	end
-	love.graphics.setShader(pico8.draw_shader)
-	--]]
 
 	if prevCol then
 		color(prevCol)
@@ -485,7 +507,7 @@ function api.rnd(x)
 end
 
 function api.srand(seed)
-	--math.randomseed(flr(seed*0x10000))
+	math.randomseed(flr(seed*0x10000))
 end
 
 api.flr=math.floor
@@ -529,6 +551,47 @@ end
 
 api.sqrt=math.sqrt
 
+function api.atan2(x, y)
+	return (0.75 + math.atan2(x,y) / (math.pi * 2)) % 1.0
+end
+
+function api.band(x, y)
+	return bit.band(x*0x10000, y*0x10000)/0x10000
+end
+
+function api.bor(x, y)
+	return bit.bor(x*0x10000, y*0x10000)/0x10000
+end
+
+function api.bxor(x, y)
+	return bit.bxor(x*0x10000, y*0x10000)/0x10000
+end
+
+function api.bnot(x)
+	return bit.bnot(x*0x10000)/0x10000
+end
+
+function api.shl(x, y)
+	return bit.lshift(x*0x10000, y)/0x10000
+end
+
+function api.shr(x, y)
+	return bit.arshift(x*0x10000, y)/0x10000
+end
+
+function api.lshr(x, y)
+	return bit.rshift(x*0x10000, y)/0x10000
+end
+
+function api.rotl(x, y)
+	return bit.rol(x*0x10000, y)/0x10000
+end
+
+function api.rotr(x, y)
+	return bit.ror(x*0x10000, y)/0x10000
+end
+
+
 
 function api.load(filename)
 	_load(filename)
@@ -569,7 +632,7 @@ end
 function api.time()
 	return pico8.frames/30
 end
---api.t=api.time
+api.t=api.time
 
 function api.login()
 	return nil

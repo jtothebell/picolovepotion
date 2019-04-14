@@ -103,12 +103,11 @@ local frametime=1/pico8.fps
 local cart=nil
 local cartname=nil
 local love_args=nil
---local scale=nil
---local xpadding=nil
---local ypadding=nil
-local scale=2
 local xpadding=0
 local ypadding=0
+local scale=5
+local xpadding=320
+local ypadding=40
 
 local tobase=nil
 local topad=nil
@@ -173,8 +172,6 @@ function _load(filename)
 	setColor(pico8.color)
 	love.graphics.setCanvas(pico8.screen)
 	
-	--not implemented
-	--love.graphics.setShader(pico8.draw_shader)
 
 	updateStatus('calling load_p8 on ' .. filename)
 	pico8.cart=cart.load_p8(filename)
@@ -260,7 +257,7 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('game/collide.p8')
+	_load('game/xwing.p8')
 end
 
 function love.update(dt)
@@ -278,9 +275,11 @@ function love.update(dt)
 end
 
 function love.draw()
+	--[[
+		enable to show debugging info
 	love.graphics.setCanvas()
 	love.graphics.setColor(1, 1, 1, 1)
-
+	
 	local i = 0
     for k, v in pairs(currentButton) do
         love.graphics.print(k .. ": " .. v, 900, 100 + (i * 18))
@@ -288,18 +287,7 @@ function love.draw()
 	end
 	
 	love.graphics.print(status, 600, 10)
-
-	--[[
-	if pico8.spritesheet_data then
-		testquad = love.graphics.newQuad(8, 0, 16, 16, 128, 128)
-		love.graphics.draw(pico8.spritesheet_data, testquad, 0, 600, 0, 4, 4)
-	end
 	]]
-
-	love.graphics.draw(pico8.fontImg, 0, 600)
-
-	love.graphics.draw(pico8.fontImg, pico8.fontQuads["A"], 0, 610)
-
 
 	if pico8.screen then
 		love.graphics.setCanvas(pico8.screen)
@@ -307,8 +295,30 @@ function love.draw()
 
 		love.graphics.setCanvas()
 	
-		love.graphics.draw(pico8.screen, 0, 0, 0, 4, 4)
+		love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
 	end
+end
+
+function restore_camera()
+	love.graphics.origin()
+	love.graphics.translate(-pico8.camera_x, -pico8.camera_y)
+end
+
+function flip_screen()
+	love.graphics.setCanvas()
+	love.graphics.origin()
+	love.graphics.setScissor()
+
+	love.graphics.clear()
+
+	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
+
+	love.graphics.present()
+
+	-- get ready for next time
+	love.graphics.setCanvas(pico8.screen)
+	restore_clip()
+	restore_camera()
 end
 
 function love.gamepadpressed(joy, button)
@@ -334,7 +344,7 @@ function update_buttons()
 		for i=0, 5 do
 			local btn=false
 			for _, testkey in pairs(keymap[i]) do
-				if love.keyboard and love.keyboard.isDown then
+				if love.keyboard and love.keyboard.isDown and testkey:sub(1, 2) ~= "dp" then
 					if love.keyboard.isDown(testkey) then
 						btn=true
 						break
