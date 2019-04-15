@@ -60,6 +60,7 @@ LÖVE: https://love2d.org/
 ##### Differences/Known issues:
 
  * pget() does not work (will require an update to LovePotion or a very big refactor to graphics)
+ * pal() and palt() also do not work (no pallette shifting)
  * some graphics not rendering properly
  * floating point, not fixed point
  * no audio
