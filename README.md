@@ -17,17 +17,19 @@ LÖVE: https://love2d.org/
 
 #### Current status:
 
- * Very incomplete
- * Able to parse the cart's sprite sheet and set it to canvas for drawing
+ * Incomplete
+* Able to parse the cart's sprite sheet and set it to canvas for drawing
  * Switch gamepad input is able to be detected and should be usable by PICO-8 btn() calls
+ * Basics of graphics API is working
 
 #### Basic Roadmap:
 
- * Load and parse cart (in progress)
- * Implement PICO-8's drawing and scale to match screen size
- * Add text support
+* Fix graphics incompatibilities
+* Fix other bugs
+* make both 30 and 60 fps work properly
  * Add SFX and music support
  * SPLORE support?
+ * 3ds support?
 
 ##### Why:
 
@@ -37,7 +39,7 @@ LÖVE: https://love2d.org/
 
 ##### What it isn't:
 
- * Working
+ * Fully functional
  * A replacement for PICO-8
  * A perfect replica
  * No dev tools, no image editor, map editor, sfx editor, music editor
@@ -45,6 +47,9 @@ LÖVE: https://love2d.org/
  * No GIF recording
  * Not memory compatible with PICO-8
 
-##### Differences:
+##### Differences/Known issues:
 
- * (Currently) doesn't work ;)
+ * pget() does not work (will require an update to LovePotion or a very big refactor to graphics)
+ * some graphics not rendering properly
+ * floating point, not fixed point
+ * no audio
