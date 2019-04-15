@@ -99,7 +99,7 @@ function api.pset(x, y, c)
 	if c then
 		color(c)
 	end
-	love.graphics.points(flr(x), flr(y))
+	love.graphics.points(flr(x) + 1, flr(y) + 1)
 end
 
 function api.pget(x, y)
