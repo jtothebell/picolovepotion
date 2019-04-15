@@ -95,12 +95,18 @@ function cart.load_p8(filename)
 	-- generate a quad for each sprite index
 	local gfxdata=data:match("\n__gfx__.-\n(.-\n)\n-__")
 
+	local os = love.system.getOS()
+	local startVal = 0;
+	if os ~= "3DS" and os ~= "Horizon" then
+		startVal = 1
+	end
+
 	if gfxdata then
-		local row=1
+		local row=startVal
 		love.graphics.setCanvas(pico8.spritesheet_data)
 
 		for line in gfxdata:gmatch("(.-)\n") do
-			local col=1
+			local col=startVal
 			for v in line:gmatch(".") do
 				v=tonumber(v, 16)
 				local colorIndex = v + 1
