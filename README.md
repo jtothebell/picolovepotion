@@ -22,6 +22,15 @@ LÖVE: https://love2d.org/
  * Switch gamepad input is able to be detected and should be usable by PICO-8 btn() calls
  * Basics of graphics API is working
 
+#### How to use
+ * Get a homebrew capable switch (I can't offher help on this, but you can start here: https://nh-server.github.io/switch-guide/)
+ * Download the latest nightly LovePotion build (see doozer link on this page: https://github.com/TurtleP/LovePotion. Currently latest build is https://doozer.io/artifact/29wu4z6qb2/LovePotion-switch-1.0.2.2.45.nro)
+ * put the LovePotion build in the "switch" folder of you Switch's SD card, and then PicoLovePotion (all files from this repo) in the "switch/LovePotion/game" directory
+ * add your own *.p8 cart and change the name of the in main.lua
+ * cross your fingers
+
+ If you want to build a standalone game, use the above instructions but follow the directions for distribution in the LovePotion wiki (https://turtlep.github.io/LovePotion/wiki/#/packaging)
+
 #### Basic Roadmap:
 
  * Fix graphics incompatibilities
