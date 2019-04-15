@@ -18,15 +18,16 @@ LÖVE: https://love2d.org/
 #### Current status:
 
  * Incomplete
-* Able to parse the cart's sprite sheet and set it to canvas for drawing
+ * Able to parse the cart's sprite sheet and set it to canvas for drawing
  * Switch gamepad input is able to be detected and should be usable by PICO-8 btn() calls
  * Basics of graphics API is working
 
 #### Basic Roadmap:
 
-* Fix graphics incompatibilities
-* Fix other bugs
-* make both 30 and 60 fps work properly
+ * Fix graphics incompatibilities
+ * Fix other bugs
+ * make both 30 and 60 fps work properly
+ * add png cart support
  * Add SFX and music support
  * SPLORE support?
  * 3ds support?
