@@ -262,7 +262,7 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('game/demos/api.p8')
+	_load('game/otherTestGames/celeste.p8')
 end
 
 function love.update(dt)
@@ -293,6 +293,11 @@ function love.draw()
 	
 	love.graphics.print(status, 600, 10)
 	]]
+
+	love.graphics.setCanvas()
+	love.graphics.setColor(1, 1, 1, 1)
+	
+	love.graphics.print(love.system.getOS(), 0, 0)
 
 	if pico8.screen then
 		love.graphics.setCanvas(pico8.screen)
