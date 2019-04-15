@@ -241,11 +241,16 @@ function love.load()
         pico8.fontQuads[string.sub(glyphs, i, i)] = love.graphics.newQuad((i-1)*4+1, 0, 3, 5, 593, 5)
     end
 
-	--not implemented
-	--font:setFilter('nearest', 'nearest')
-	--love.graphics.setLineStyle('rough')
-	--love.graphics.setPointSize(1)
-	--love.graphics.setLineWidth(1)
+	--not implemented on switch
+	if love.graphics.setLineStyle then
+		love.graphics.setLineStyle('rough')
+	end
+	if love.graphics.setPointsize then
+		love.graphics.setPointSize(1)
+	end
+	if love.graphics.setLineWidth then
+		love.graphics.setLineWidth(1)
+	end
 
 	for i=0, 15 do
 		pico8.draw_palette[i]=i
@@ -257,11 +262,11 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('game/xwing.p8')
+	_load('game/demos/api.p8')
 end
 
 function love.update(dt)
-	require("lovebird").update()
+	--require("lovebird").update()
 
 	--hack to force 30 fps. TODO: support 30 or 60
 	if (loveFrames % 2 == 0) then
