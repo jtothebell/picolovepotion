@@ -96,11 +96,11 @@ function cart.load_p8(filename)
 	local gfxdata=data:match("\n__gfx__.-\n(.-\n)\n-__")
 
 	if gfxdata then
-		local row=0
+		local row=1
 		love.graphics.setCanvas(pico8.spritesheet_data)
 
 		for line in gfxdata:gmatch("(.-)\n") do
-			local col=0
+			local col=1
 			for v in line:gmatch(".") do
 				v=tonumber(v, 16)
 				local colorIndex = v + 1
