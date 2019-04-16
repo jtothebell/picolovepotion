@@ -13,10 +13,18 @@ function cart.load_p8(filename)
 	local lua=""
 	pico8.quads={}
 	pico8.spritesheet_data=love.graphics.newCanvas(128, 128)
+
+	pico8.spritesheet_table={}
+	for i =0, 127 do
+		pico8.spritesheet_table[i] = {}
+		for j = 0, 127 do
+			pico8.spritesheet_table[i][j] = 0
+		end
+	end
 	--turn it all black
 	--pico8.spritesheet_data:mapPixel(function() return 0, 0, 0, 1 end)
+
 	pico8.map={}
-	updateStatus('setting initial cart table state')
 	for y=0, 63 do
 		pico8.map[y]={}
 		for x=0, 127 do
@@ -95,20 +103,15 @@ function cart.load_p8(filename)
 	-- generate a quad for each sprite index
 	local gfxdata=data:match("\n__gfx__.-\n(.-\n)\n-__")
 
-	local os = love.system.getOS()
-	local startVal = 0;
-	if os ~= "3DS" and os ~= "Horizon" then
-		startVal = 1
-	end
-
 	if gfxdata then
-		local row=startVal
+		local row=0
 		love.graphics.setCanvas(pico8.spritesheet_data)
 
 		for line in gfxdata:gmatch("(.-)\n") do
-			local col=startVal
+			local col=0
 			for v in line:gmatch(".") do
 				v=tonumber(v, 16)
+				pico8.spritesheet_table[row][col] = v
 				local colorIndex = v + 1
 				local alpha = 1
 				--by default black (color index 1) is rendered as transparent
@@ -138,14 +141,14 @@ function cart.load_p8(filename)
 
 	local shared=0
 
-	--[[ TODO: re-implement this without getPixel()
+	
 	if version>3 then
 		local tx, ty=0, 32
 		for sy=64, 127 do
 			for sx=0, 127, 2 do
 				-- get the two pixel values and merge them
-				local lo=pico8.spritesheet_data:getPixel(sx, sy)*15
-				local hi=pico8.spritesheet_data:getPixel(sx+1, sy)*15
+				local lo=pico8.spritesheet_table[sy][sx]
+				local hi=pico8.spritesheet_table[sy][sx+1]
 				local v=bit.bor(bit.lshift(hi, 4), lo)
 				pico8.map[ty][tx]=v
 				shared=shared+1
@@ -157,11 +160,16 @@ function cart.load_p8(filename)
 			end
 		end
 	end
-	]]
+	
+	local os = love.system.getOS()
+	local offset = 0;
+	if os ~= "3DS" and os ~= "Horizon" then
+		offset = 1
+	end
 
 	for y=0, 15 do
 		for x=0, 15 do
-			pico8.quads[y*16+x]=love.graphics.newQuad(8*x, 8*y, 8, 8, 128, 128)
+			pico8.quads[y*16+x]=love.graphics.newQuad(8*x + offset, 8*y + offset, 8, 8, 128, 128)
 		end
 	end
 
