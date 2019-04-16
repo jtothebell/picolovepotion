@@ -299,9 +299,11 @@ function love.draw()
 	
 	love.graphics.print(love.system.getOS(), 0, 0)
 
-	if pico8.screen then
-		love.graphics.setCanvas(pico8.screen)
-		if pico8.cart._draw then pico8.cart._draw() end
+	if pico8.screen  then
+		if (loveFrames % 2 == 0) then
+			love.graphics.setCanvas(pico8.screen)
+			if pico8.cart._draw then pico8.cart._draw() end
+		end
 
 		love.graphics.setCanvas()
 	
