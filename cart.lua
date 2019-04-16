@@ -263,10 +263,9 @@ function cart.load_p8(filename)
 		local result
 		updateStatus('pcalling patched lua')
 		setfenv(f, cart_env)
-		--love.graphics.setShader(pico8.draw_shader)
 		love.graphics.setCanvas(pico8.screen)
 		love.graphics.origin()
-		--restore_clip()
+		restore_clip()
 		ok, result=pcall(f)
 		if not ok then
 			updateStatus("Error running lua: "..tostring(result))

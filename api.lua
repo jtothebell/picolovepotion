@@ -395,7 +395,7 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 					local v=pico8.map[flr(cel_y+y)][flr(cel_x+x)]
 					if v~=0 then
 						if bitmask==nil or bitmask==0 or bit.band(pico8.spriteflags[v], bitmask)~=0 then
-							love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx+8*x, sy+8*y)
+							love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx+(8*x), sy+(8*y))
 						end
 					end
 				end
