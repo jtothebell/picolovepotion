@@ -59,6 +59,7 @@ LÖVE: https://love2d.org/
 
 ##### Differences/Known issues:
 
+ * shared sprite/map data is not working properly (celeste title screen is not displaying)
  * pget() does not work (will require an update to LovePotion or a very big refactor to graphics)
  * pal() and palt() also do not work (no pallette shifting)
  * some graphics not rendering properly
