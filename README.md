@@ -33,7 +33,7 @@ LÖVE: https://love2d.org/
 
 #### Basic Roadmap:
 
- * Fix graphics incompatibilities
+ * Fix graphics incompatibilities (palette shifting)
  * Fix other bugs
  * make both 30 and 60 fps work properly
  * add png cart support
