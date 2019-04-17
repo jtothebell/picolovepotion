@@ -59,9 +59,10 @@ LÖVE: https://love2d.org/
 
 ##### Differences/Known issues:
 
- * shared sprite/map data is not working properly (celeste title screen is not displaying)
  * pget() does not work (will require an update to LovePotion or a very big refactor to graphics)
+ * Hard coded to use 30 fps update/draw calls for now
  * pal() and palt() also do not work (no pallette shifting)
- * some graphics not rendering properly
- * floating point, not fixed point
+ * memory functions (peek(), poke(), memcpy(), memset(), etc) not implemented
+ * some graphics not rendering properly (flickering?)
+ * floating point, not fixed point numbers
  * no audio
