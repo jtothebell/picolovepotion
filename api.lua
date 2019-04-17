@@ -370,11 +370,60 @@ function api.line(x0, y0, x1, y1, col)
 end
 
 function api.pal(c0, c1, p)
-
+	if c0==nil then
+		local __palette_modified=false
+		local __display_modified=false
+		local __alpha_modified=false
+		for i=0, 15 do
+			if pico8.draw_palette[i]~=i then
+				pico8.draw_palette[i]=i
+				__palette_modified=true
+			end
+			if pico8.display_palette[i]~=pico8.palette[i+1] then
+				pico8.display_palette[i]=pico8.palette[i+1]
+				__display_modified=true
+			end
+			local alpha=i==0 and 0 or 1
+			if pico8.pal_transparent[i]~=alpha then
+				pico8.pal_transparent[i]=alpha
+				__alpha_modified=true
+			end
+		end
+		if __palette_modified then
+			
+		end
+		if __display_modified then
+			
+		end
+		if __alpha_modified then
+			
+		end
+	elseif p==1 and c1~=nil then
+		c0=flr(c0)%16
+		c1=flr(c1)%16
+		if pico8.draw_palette[c0]~=pico8.palette[c1+1] then
+			pico8.display_palette[c0]=pico8.palette[c1+1]
+			--not sure there is a good way to do this one without imageData or a shader :|
+		end
+	elseif c1~=nil then
+		c0=flr(c0)%16
+		c1=flr(c1)%16
+		if pico8.draw_palette[c0]~=c1 then
+			pico8.draw_palette[c0]=c1
+			
+		end
+	end
 end
 
 function api.palt(c, t)
-
+	if c==nil then
+		for i=0, 15 do
+			pico8.pal_transparent[i]=i==0 and 0 or 1
+		end
+	else
+		c=flr(c)%16
+		pico8.pal_transparent[c]=t and 0 or 1
+	end
 end
 
 function api.fillp(p)
@@ -457,10 +506,26 @@ function api.fset(n, f, v)
 end
 
 function api.sget(x, y)
+	-- return the color from the spritesheet
+	x=flr(x)
+	y=flr(y)
+	if x>=0 and x<128 and y>=0 and y<128 then
+		local c=pico8.spritesheet_table[x][y]
+		return c
+	end
+	return 0
 
 end
 
 function api.sset(x, y, c)
+	x=flr(x)
+	y=flr(y)
+	c=flr(c or 0)%16
+	if x>=0 and x<128 and y>=0 and y<128 then
+		pico8.spritesheet_table[x][y] = c
+		--TODO: refresh spritesheet canvas
+		--pico8.spritesheet:refresh()
+	end
 
 end
 
