@@ -266,8 +266,6 @@ function love.load()
 end
 
 function love.update(dt)
-	--require("lovebird").update()
-
 	--hack to force 30 fps. TODO: support 30 or 60
 	if (loveFrames % 2 == 0) then
 		pico8.frames=pico8.frames+1
