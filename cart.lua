@@ -266,9 +266,9 @@ function cart.load_p8(filename)
 	if not ok or f==nil then
 		local ln=1
 		lua="1:"..lua:gsub("\n", function(a) ln=ln+1 return "\n"..ln..":" end)
-		updateStatus('=======8<========')
-		updateStatus(lua)
-		updateStatus('=======>8========')
+		--updateStatus('=======8<========')
+		--updateStatus(lua)
+		--updateStatus('=======>8========')
 		updateStatus("Error loading lua: "..tostring(e),0)
 	else
 		local result

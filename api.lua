@@ -20,6 +20,7 @@ local function _plot4points(lines, cx, cy, x, y)
 		_horizontal_line(lines, cx-x, cy-y, cx+x)
 	end
 end
+
 --------------------------------------------------------------------------------
 -- PICO-8 API
 
@@ -75,7 +76,7 @@ end
 
 function api.ls()
 end
---api.dir=api.ls
+api.dir=api.ls
 
 function api.cd()
 end
@@ -176,7 +177,23 @@ function api.tonum(val)
 end
 
 function api.tostr(val, hex)
-
+	local kind=type(val)
+	if kind == "string" then
+		return val
+	elseif kind == "number" then
+		if hex then
+			val=val*0x10000
+			local part1=bit.rshift(bit.band(val, 0xFFFF0000), 16)
+			local part2=bit.band(val, 0xFFFF)
+			return string.format("0x%04x.%04x", part1, part2)
+		else
+			return tostring(val)
+		end
+	elseif kind == "boolean" then
+		return tostring(val)
+	else
+		return "[" .. kind .. "]"
+	end
 end
 
 function api.spr(n, x, y, w, h, flip_x, flip_y)
@@ -538,7 +555,7 @@ function api.sfx(n, channel, offset)
 end
 
 function api.peek(addr)
-
+	return 0
 end
 
 function api.poke(addr, val)
@@ -546,7 +563,7 @@ function api.poke(addr, val)
 end
 
 function api.peek4(addr)
-
+	return 0
 end
 
 function api.poke4(addr, val)
@@ -656,8 +673,6 @@ function api.rotr(x, y)
 	return bit.ror(x*0x10000, y)/0x10000
 end
 
-
-
 function api.load(filename)
 	_load(filename)
 end
@@ -765,6 +780,85 @@ function api.btnp(i, p)
 		end
 		return bits
 	end
+end
+
+function api.cartdata(id)
+end
+
+function api.dget(index)
+	index=flr(index)
+	if index<0 or index>63 then
+		warning('cartdata index out of range')
+		return
+	end
+	return pico8.cartdata[index]
+end
+
+function api.dset(index, value)
+	index=flr(index)
+	if index<0 or index>63 then
+		warning('cartdata index out of range')
+		return
+	end
+	pico8.cartdata[index]=value
+end
+
+local tfield={[0]="year", "month", "day", "hour", "min", "sec"}
+function api.stat(x)
+	if x == 4 then
+		return pico8.clipboard
+	elseif x == 7 then
+		return pico8.fps
+	elseif x == 8 then
+		return pico8.fps
+	elseif x == 9 then
+		return love.timer.getFPS()
+	elseif x >= 16 and x <= 23 then
+		local ch=pico8.audio_channels[x%4]
+		if not ch.sfx then
+			return -1
+		elseif x < 20 then
+			return ch.sfx
+		else
+			return flr(ch.offset)
+		end
+	elseif x == 30 then
+		return #pico8.kbdbuffer ~= 0
+	elseif x == 31 then
+		return (table.remove(pico8.kbdbuffer, 1) or "")
+	elseif x == 32 then
+		return getMouseX()
+	elseif x == 33 then
+		return getMouseY()
+	elseif x == 34 then
+		local btns=0
+		for i=0, 2 do
+			if love.mouse.isDown(i+1) then
+				btns=bit.bor(btns, bit.lshift(1, i))
+			end
+		end
+		return btns
+	elseif x == 36 then
+		return pico8.mwheel
+	elseif (x >= 80 and x <= 85) or (x >= 90 and x <= 95) then
+		local tinfo
+		if x < 90 then
+			tinfo = os.date("!*t")
+		else
+			tinfo = os.date("*t")
+		end
+		return tinfo[tfield[x%10]]
+	elseif x == 100 then
+		return nil -- TODO: breadcrumb not supported
+	end
+	return 0
+end
+
+function api.holdframe()
+	-- TODO: Implement this
+end
+
+function api.menuitem()
 end
 
 api.sub=string.sub
