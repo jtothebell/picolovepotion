@@ -129,7 +129,8 @@ local loveFrames = 0
 
 --log=print
 --log=function() end
-status = '';
+status = ''
+showDebugInfo = false
 
 function updateStatus(newPart)
 	status = status .. '\n' .. newPart
@@ -262,7 +263,7 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('game/otherTestGames/lilking.p8')
+	_load('game/demos/collide.p8')
 end
 
 function love.update(dt)
@@ -299,13 +300,16 @@ function love.draw()
 	
 	love.graphics.print(love.system.getOS(), 0, 0)
 
-	local i = 0
-    for k, v in pairs(currentButton) do
-        love.graphics.print(k .. ": " .. v, 900, 100 + (i * 18))
-        i = i + 1
+	if showDebugInfo then
+		local i = 0
+		for k, v in pairs(currentButton) do
+			love.graphics.print(k .. ": " .. v, 1000, 100 + (i * 18))
+			i = i + 1
+		end
+		
+		love.graphics.print(status, 0, 10)
+
 	end
-	
-	love.graphics.print(status, 0, 10)
 
 	if pico8.screen  then
 		if (loveFrames % 2 == 0) then

@@ -269,6 +269,8 @@ function cart.load_p8(filename)
 		--updateStatus('=======8<========')
 		--updateStatus(lua)
 		--updateStatus('=======>8========')
+		--force show debug info if the cart doesn't load
+		showDebugInfo = true
 		updateStatus("Error loading lua: "..tostring(e),0)
 	else
 		local result
