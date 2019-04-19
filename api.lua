@@ -97,10 +97,16 @@ function api.splore()
 end
 
 function api.pset(x, y, c)
-	if c then
-		color(c)
+	local prevCol = pico8.color
+	if col then
+		color(col)
 	end
+
 	love.graphics.points(flr(x) + 1, flr(y) + 1)
+
+	if prevCol then
+		color(prevCol)
+	end
 end
 
 function api.pget(x, y)
