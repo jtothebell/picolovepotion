@@ -12,7 +12,7 @@ function cart.load_p8(filename)
 
 	local lua=""
 	pico8.quads={}
-	pico8.spritesheet_data=love.graphics.newCanvas(128, 128)
+
 
 	pico8.spritesheet_table={}
 	for i =0, 127 do
@@ -122,23 +122,9 @@ function cart.load_p8(filename)
 	end
 
 	--convert spritesheet table into canvas
-	love.graphics.setCanvas(pico8.spritesheet_data)
-	for col =0, 127 do
-		for row = 0, 127 do
-			local c = pico8.spritesheet_table[col][row]
-			local colorIndex = c + 1
-			local alpha = 1
-			--by default black (color index 1) is rendered as transparent
-			--this can be changed using api.palt(), but that isn't implemented yet
-			if colorIndex == 1 then
-				alpha = 0
-			end
-			local color = pico8.palette[colorIndex]
-			--setColor(v)
-			love.graphics.setColor(color[1] / 255, color[2] / 255, color[3] / 255, alpha)
-			love.graphics.points(col, row)
-		end
-	end
+
+	pico8.spritesheet_data=getSpritesheetCanvas()
+
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setCanvas()
 
