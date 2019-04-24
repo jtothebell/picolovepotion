@@ -33,12 +33,11 @@ LÖVE: https://love2d.org/
 
 #### Basic Roadmap:
 
- * Fix graphics incompatibilities (palette shifting)
- * Fix other bugs
+ * Fix bugs
  * make both 30 and 60 fps work properly
- * add png cart support
+ * optimize slowness (palette shifting, other places to combine pixel setting calls)
+ * add png cart support? (may need image data support from LovePotion for this)
  * Add SFX and music support
- * SPLORE support?
  * 3ds support?
 
 ##### Why:
@@ -61,8 +60,8 @@ LÖVE: https://love2d.org/
 
  * pget() does not work (will require an update to LovePotion or a very big refactor to graphics)
  * Hard coded to use 30 fps update/draw calls for now
- * pal() and palt() also do not work (no pallette shifting)
+ * pal() and palt() are very slow on initial use, and screen palette shifting is not supported
  * memory functions (peek(), poke(), memcpy(), memset(), etc) not implemented
- * some graphics not rendering properly (flickering?)
+ * some graphics not rendering properly (flickering, black screen in celeste. Unsure of root cause)
  * floating point, not fixed point numbers
  * no audio
