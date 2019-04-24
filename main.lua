@@ -1,7 +1,6 @@
 pico8={
 	fps=30,
 	frames=0,
-	pal_transparent={},
 	resolution={128, 128},
 	palette={
 		{0,  0,  0,  255},
@@ -60,6 +59,7 @@ pico8={
 	draw_palette={},
 	display_palette={},
 	pal_transparent={},
+	spritesheet_cache={}
 }
 
 function add(a, v)
@@ -129,7 +129,8 @@ local loveFrames = 0
 
 --log=print
 --log=function() end
-status = '';
+status = ''
+showDebugInfo = false
 
 function updateStatus(newPart)
 	status = status .. '\n' .. newPart
@@ -265,6 +266,50 @@ function love.load()
 	_load('game/otherTestGames/celeste.p8')
 end
 
+function paletteKey()
+	local key = ""
+	for k, v in pairs(pico8.draw_palette) do
+		key = key .. v .. pico8.pal_transparent[k]
+	end
+
+	return key
+end
+
+function refreshSpritesheetCanvas()
+	pico8.spritesheet_data = getSpritesheetCanvas()
+end
+
+function getSpritesheetCanvas()
+	local currentPalKey = paletteKey()
+
+	local cached = pico8.spritesheet_cache[currentPalKey]
+	if cached ~= nil then
+		return cached
+	end
+
+	local canvas = love.graphics.newCanvas(128, 128)
+
+	pico8.spritesheet_cache[currentPalKey] = canvas
+	love.graphics.setCanvas(canvas)
+	
+	for col =0, 127 do
+		for row = 0, 127 do
+			local c = pico8.spritesheet_table[col][row]
+			local pal_c = pico8.draw_palette[c]
+			local colorIndex = pal_c + 1
+			local alpha = pico8.pal_transparent[c]
+			local color = pico8.palette[colorIndex]
+			--setColor(v)
+			--todo: list points for each color, then draw in batches
+			love.graphics.setColor(color[1] / 255, color[2] / 255, color[3] / 255, alpha)
+			love.graphics.points(col, row)
+		end
+	end
+	love.graphics.setCanvas()
+
+	return canvas
+end
+
 function love.update(dt)
 	--hack to force 30 fps. TODO: support 30 or 60
 	if (loveFrames % 2 == 0) then
@@ -296,6 +341,17 @@ function love.draw()
 	love.graphics.setColor(1, 1, 1, 1)
 	
 	love.graphics.print(love.system.getOS(), 0, 0)
+
+	if showDebugInfo then
+		local i = 0
+		for k, v in pairs(currentButton) do
+			love.graphics.print(k .. ": " .. v, 1000, 100 + (i * 18))
+			i = i + 1
+		end
+		
+		love.graphics.print(status, 0, 10)
+
+	end
 
 	if pico8.screen  then
 		if (loveFrames % 2 == 0) then

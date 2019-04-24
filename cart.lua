@@ -12,7 +12,7 @@ function cart.load_p8(filename)
 
 	local lua=""
 	pico8.quads={}
-	pico8.spritesheet_data=love.graphics.newCanvas(128, 128)
+
 
 	pico8.spritesheet_table={}
 	for i =0, 127 do
@@ -103,38 +103,27 @@ function cart.load_p8(filename)
 	-- generate a quad for each sprite index
 	local gfxdata=data:match("\n__gfx__.-\n(.-\n)\n-__")
 
+	--get sprite sheet data and store in table
 	if gfxdata then
 		local row=0
-		love.graphics.setCanvas(pico8.spritesheet_data)
 
 		for line in gfxdata:gmatch("(.-)\n") do
 			local col=0
 			for v in line:gmatch(".") do
 				v=tonumber(v, 16)
-				pico8.spritesheet_table[row][col] = v
-				local colorIndex = v + 1
-				local alpha = 1
-				--by default black (color index 1) is rendered as transparent
-				--this can be changed using api.palt(), but that isn't implemented yet
-				if colorIndex == 1 then
-					alpha = 0
-				end
-				local color = pico8.palette[colorIndex]
-				--setColor(v)
-				love.graphics.setColor(color[1] / 255, color[2] / 255, color[3] / 255, alpha)
-				love.graphics.points(col, row)
+				pico8.spritesheet_table[col][row] = v
 
-				--we can use this if imageData is implemented
-				--pico8.spritesheet_data:setPixel(col, row, v/15, 0, 0, 1)
 				col=col+1
 				if col==128 then break end
 			end
 			row=row+1
 			if row==128 then break end
 		end
-
-		--pico8.spritesheet_image = love.graphics.newImage(pico8.spritesheet_data:getImageData())
 	end
+
+	--convert spritesheet table into canvas
+
+	pico8.spritesheet_data=getSpritesheetCanvas()
 
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setCanvas()
@@ -147,8 +136,8 @@ function cart.load_p8(filename)
 		for sy=64, 127 do
 			for sx=0, 127, 2 do
 				-- get the two pixel values and merge them
-				local lo=pico8.spritesheet_table[sy][sx]
-				local hi=pico8.spritesheet_table[sy][sx+1]
+				local lo=pico8.spritesheet_table[sx][sy]
+				local hi=pico8.spritesheet_table[sx+1][sy]
 				local v=bit.bor(bit.lshift(hi, 4), lo)
 				pico8.map[ty][tx]=v
 				shared=shared+1
@@ -263,9 +252,11 @@ function cart.load_p8(filename)
 	if not ok or f==nil then
 		local ln=1
 		lua="1:"..lua:gsub("\n", function(a) ln=ln+1 return "\n"..ln..":" end)
-		updateStatus('=======8<========')
-		updateStatus(lua)
-		updateStatus('=======>8========')
+		--updateStatus('=======8<========')
+		--updateStatus(lua)
+		--updateStatus('=======>8========')
+		--force show debug info if the cart doesn't load
+		showDebugInfo = true
 		updateStatus("Error loading lua: "..tostring(e),0)
 	else
 		local result
