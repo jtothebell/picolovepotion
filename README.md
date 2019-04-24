@@ -61,6 +61,7 @@ LÖVE: https://love2d.org/
  * pget() does not work (will require an update to LovePotion or a very big refactor to graphics)
  * Hard coded to use 30 fps update/draw calls for now
  * pal() and palt() are very slow on initial use, and screen palette shifting is not supported
+ * Based on Lua 5.1, so GOTO (and possible other pico 8 supported features) not working
  * memory functions (peek(), poke(), memcpy(), memset(), etc) not implemented
  * some graphics not rendering properly (flickering, black screen in celeste. Unsure of root cause)
  * floating point, not fixed point numbers
