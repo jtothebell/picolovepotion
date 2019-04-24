@@ -263,7 +263,7 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('game/otherTestGames/celeste.p8')
+	_load('game/xwing.p8')
 end
 
 function paletteKey()

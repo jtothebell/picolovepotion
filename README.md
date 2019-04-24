@@ -37,7 +37,7 @@ LÖVE: https://love2d.org/
  * make both 30 and 60 fps work properly
  * optimize slowness (palette shifting, other places to combine pixel setting calls)
  * add png cart support? (may need image data support from LovePotion for this)
- * Add SFX and music support
+ * Add SFX and music support (may need support for creating in memory sound objects from LovePotion)
  * 3ds support?
 
 ##### Why:
