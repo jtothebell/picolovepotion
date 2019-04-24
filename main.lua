@@ -263,7 +263,7 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('game/xwing.p8')
+	_load('game/otherTestGames/celeste.p8')
 end
 
 function paletteKey()
@@ -273,6 +273,10 @@ function paletteKey()
 	end
 
 	return key
+end
+
+function refreshSpritesheetCanvas()
+	pico8.spritesheet_data = getSpritesheetCanvas()
 end
 
 function getSpritesheetCanvas()
@@ -301,6 +305,7 @@ function getSpritesheetCanvas()
 			love.graphics.points(col, row)
 		end
 	end
+	love.graphics.setCanvas()
 
 	return canvas
 end

@@ -412,14 +412,11 @@ function api.pal(c0, c1, p)
 				__alpha_modified=true
 			end
 		end
-		if __palette_modified then
-			
+		if __palette_modified or __alpha_modified then
+			refreshSpritesheetCanvas()
 		end
 		if __display_modified then
-			
-		end
-		if __alpha_modified then
-			
+			--not yet supported
 		end
 	elseif p==1 and c1~=nil then
 		c0=flr(c0)%16
@@ -435,6 +432,7 @@ function api.pal(c0, c1, p)
 			pico8.draw_palette[c0]=c1
 			
 		end
+		refreshSpritesheetCanvas()
 	end
 end
 
@@ -447,6 +445,7 @@ function api.palt(c, t)
 		c=flr(c)%16
 		pico8.pal_transparent[c]=t and 0 or 1
 	end
+	refreshSpritesheetCanvas()
 end
 
 function api.fillp(p)
