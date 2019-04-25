@@ -263,7 +263,7 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('game/xwing.p8')
+	_load('game/otherTestGames/celeste.p8')
 end
 
 function paletteKey()
@@ -337,12 +337,11 @@ function love.draw()
 	love.graphics.print(status, 600, 10)
 	]]
 
-	love.graphics.setCanvas()
-	love.graphics.setColor(1, 1, 1, 1)
-	
-	love.graphics.print(love.system.getOS(), 0, 0)
+	--love.graphics.print(love.system.getOS(), 0, 0)
 
+	--[[
 	if showDebugInfo then
+		love.graphics.setCanvas()
 		local i = 0
 		for k, v in pairs(currentButton) do
 			love.graphics.print(k .. ": " .. v, 1000, 100 + (i * 18))
@@ -350,19 +349,32 @@ function love.draw()
 		end
 		
 		love.graphics.print(status, 0, 10)
-
 	end
+	]]
 
-	if pico8.screen  then
 		if (loveFrames % 2 == 0) then
 			love.graphics.setCanvas(pico8.screen)
-			if pico8.cart._draw then pico8.cart._draw() end
+
+			if pico8.cart._draw then 
+				pico8.cart._draw() 
+			end
+
+			love.graphics.setCanvas()
+
+			love.graphics.print(love.system.getOS(), 0, 0)
+
+			
 		end
 
+		flip_screen()
+
+		--[[
 		love.graphics.setCanvas()
+
+		love.graphics.print(love.system.getOS(), 0, 0)
 	
 		love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
-	end
+		]]
 end
 
 function restore_camera()
@@ -379,12 +391,12 @@ function flip_screen()
 
 	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
 
-	love.graphics.present()
-
 	-- get ready for next time
+	--[[
 	love.graphics.setCanvas(pico8.screen)
 	restore_clip()
 	restore_camera()
+	]]
 end
 
 function love.gamepadpressed(joy, button)
