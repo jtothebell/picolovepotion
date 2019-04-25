@@ -288,6 +288,7 @@ function getSpritesheetCanvas()
 	end
 
 	local canvas = love.graphics.newCanvas(128, 128)
+	local pointsByColor = {}
 
 	pico8.spritesheet_cache[currentPalKey] = canvas
 	love.graphics.setCanvas(canvas)
@@ -295,16 +296,40 @@ function getSpritesheetCanvas()
 	for col =0, 127 do
 		for row = 0, 127 do
 			local c = pico8.spritesheet_table[col][row]
+
+			local point = {x = col, y = row}
+
+			if pointsByColor[c] == nil then
+				pointsByColor[c] = {}
+			end
+
+			add(pointsByColor[c], point)
+
+		end
+	end
+
+	for c, table in pairs(pointsByColor) do
+		if table ~= nil then
 			local pal_c = pico8.draw_palette[c]
 			local colorIndex = pal_c + 1
 			local alpha = pico8.pal_transparent[c]
 			local color = pico8.palette[colorIndex]
 			--setColor(v)
-			--todo: list points for each color, then draw in batches
+
 			love.graphics.setColor(color[1] / 255, color[2] / 255, color[3] / 255, alpha)
-			love.graphics.points(col, row)
+
+			--not sure why i can't just pass the table?! wtf
+			local points = {}
+			for i=1, #table do 
+				local x = table[i].x
+				local y = table[i].y
+				points[i] = {x, y}
+			end
+
+			love.graphics.points(points)
 		end
 	end
+
 	love.graphics.setCanvas()
 
 	return canvas
@@ -323,58 +348,16 @@ function love.update(dt)
 end
 
 function love.draw()
-	--[[
-		enable to show debugging info
-	love.graphics.setCanvas()
-	love.graphics.setColor(1, 1, 1, 1)
-	
-	local i = 0
-    for k, v in pairs(currentButton) do
-        love.graphics.print(k .. ": " .. v, 900, 100 + (i * 18))
-        i = i + 1
-	end
-	
-	love.graphics.print(status, 600, 10)
-	]]
+	--hack to force 30 fps. TODO: support 30 or 60
+	if (loveFrames % 2 == 0) then
+		love.graphics.setCanvas(pico8.screen)
 
-	--love.graphics.print(love.system.getOS(), 0, 0)
-
-	--[[
-	if showDebugInfo then
-		love.graphics.setCanvas()
-		local i = 0
-		for k, v in pairs(currentButton) do
-			love.graphics.print(k .. ": " .. v, 1000, 100 + (i * 18))
-			i = i + 1
+		if pico8.cart._draw then 
+			pico8.cart._draw() 
 		end
-		
-		love.graphics.print(status, 0, 10)
 	end
-	]]
 
-		if (loveFrames % 2 == 0) then
-			love.graphics.setCanvas(pico8.screen)
-
-			if pico8.cart._draw then 
-				pico8.cart._draw() 
-			end
-
-			love.graphics.setCanvas()
-
-			love.graphics.print(love.system.getOS(), 0, 0)
-
-			
-		end
-
-		flip_screen()
-
-		--[[
-		love.graphics.setCanvas()
-
-		love.graphics.print(love.system.getOS(), 0, 0)
-	
-		love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
-		]]
+	flip_screen()
 end
 
 function restore_camera()
@@ -389,14 +372,26 @@ function flip_screen()
 
 	love.graphics.clear()
 
+	love.graphics.print(love.system.getOS(), 0, 0)
+
+	if showDebugInfo then
+		local i = 0
+		for k, v in pairs(currentButton) do
+			love.graphics.print(k .. ": " .. v, 1000, 100 + (i * 18))
+			i = i + 1
+		end
+		
+		love.graphics.print(status, 0, 10)
+	end
+
 	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
 
 	-- get ready for next time
-	--[[
-	love.graphics.setCanvas(pico8.screen)
+	--setting canvas here doesn't work for lovePotion. 
+	--we do it just before calling _draw() instead, but that may cause problems
+	--love.graphics.setCanvas(pico8.screen)
 	restore_clip()
 	restore_camera()
-	]]
 end
 
 function love.gamepadpressed(joy, button)
