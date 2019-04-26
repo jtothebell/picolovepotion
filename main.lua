@@ -3,22 +3,22 @@ pico8={
 	frames=0,
 	resolution={128, 128},
 	palette={
-		{0,  0,  0,  255},
-		{29, 43, 83, 255},
-		{126,37, 83, 255},
-		{0,  135,81, 255},
-		{171,82, 54, 255},
-		{95, 87, 79, 255},
-		{194,195,199,255},
-		{255,241,232,255},
-		{255,0,  77, 255},
-		{255,163,0,  255},
-		{255,240,36, 255},
-		{0,  231,86, 255},
-		{41, 173,255,255},
-		{131,118,156,255},
-		{255,119,168,255},
-		{255,204,170,255}
+		{0,      0,      0,      1},
+		{29/255, 43/255, 83/255, 1},
+		{126/255,37/255, 83/255, 1},
+		{0,      135/255,81/255, 1},
+		{171/255,82/255, 54/255, 1},
+		{95/255, 87/255, 79/255, 1},
+		{194/255,195/255,199/255,1},
+		{1,      241/255,232/255,1},
+		{1,      0,      77/255, 1},
+		{1,      163/255,0,      1},
+		{1,      240/255,36/255, 1},
+		{0,      231/255,86/255, 1},
+		{41/255, 173/255,1      ,1},
+		{131/255,118/255,156/255,1},
+		{1,      119/255,168/255,1},
+		{1,      204/255,170/255,1}
 	},
 	spriteflags={},
 	audio_channels={},
@@ -146,7 +146,19 @@ end
 
 function setColor(c)
 	c = c + 1
-	love.graphics.setColor(pico8.palette[c][1] / 255, pico8.palette[c][2] / 255, pico8.palette[c][3] / 255, 1)
+	love.graphics.setColor(pico8.palette[c][1], pico8.palette[c][2], pico8.palette[c][3], 1)
+end
+
+function setShiftedColor(c, alphat)
+	local pal_c = pico8.draw_palette[c]
+	local alpha = 1
+	if alphat then
+		alpha = pico8.pal_transparent[c]
+	end
+	local colorIndex = pal_c + 1
+	local color = pico8.palette[colorIndex]
+
+	love.graphics.setColor(color[1], color[2], color[3], alpha)
 end
 
 local exts={'', '.p8'}
@@ -295,13 +307,7 @@ function getSpritesheetCanvas()
 
 	for c, table in pairs(pico8.spritesheet_pointsByColor) do
 		if table ~= nil then
-			local pal_c = pico8.draw_palette[c]
-			local colorIndex = pal_c + 1
-			local alpha = pico8.pal_transparent[c]
-			local color = pico8.palette[colorIndex]
-			--setColor(v)
-
-			love.graphics.setColor(color[1] / 255, color[2] / 255, color[3] / 255, alpha)
+			setShiftedColor(c, true)
 
 			--not sure why i can't just pass the table?! wtf
 			local points = {}

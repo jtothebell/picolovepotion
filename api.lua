@@ -1,9 +1,13 @@
 local flr=math.floor
 
-local function color(c)
+local function color(c, disallowShift)
 	c=flr(c or 0)%16
 	pico8.color=c
-	setColor(c)
+	if disallowShift then
+		setColor(c)
+	else
+		setShiftedColor(c)
+	end
 end
 
 local function warning(msg)
@@ -63,9 +67,9 @@ function api.cls(c)
 	love.graphics.setScissor()
 	--TODO clear the color passed
 	local color = pico8.palette[c + 1]
-	--love.graphics.clear(color[1] / 255, color[2] / 255, color[3] / 255, 1)
+	--love.graphics.clear(color[1], color[2], color[3], 1)
 	--pico love uses the background color for clear. This doesn't match love behavior
-	love.graphics.setBackgroundColor(color[1] / 255, color[2] / 255, color[3] / 255)
+	love.graphics.setBackgroundColor(color[1], color[2], color[3])
 	love.graphics.clear()
 	pico8.cursor={0, 0}
 
