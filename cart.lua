@@ -21,6 +21,7 @@ function cart.load_p8(filename)
 			pico8.spritesheet_table[i][j] = 0
 		end
 	end
+	pico8.spritesheet_pointsByColor={}
 	--turn it all black
 	--pico8.spritesheet_data:mapPixel(function() return 0, 0, 0, 1 end)
 
@@ -113,6 +114,14 @@ function cart.load_p8(filename)
 				v=tonumber(v, 16)
 				pico8.spritesheet_table[col][row] = v
 
+				local point = {x = col, y = row}
+
+				if pico8.spritesheet_pointsByColor[v] == nil then
+					pico8.spritesheet_pointsByColor[v] = {}
+				end
+
+				add(pico8.spritesheet_pointsByColor[v], point)
+
 				col=col+1
 				if col==128 then break end
 			end
@@ -120,7 +129,6 @@ function cart.load_p8(filename)
 			if row==128 then break end
 		end
 	end
-
 	--convert spritesheet table into canvas
 
 	pico8.spritesheet_data=getSpritesheetCanvas()

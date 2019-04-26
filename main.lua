@@ -288,27 +288,12 @@ function getSpritesheetCanvas()
 	end
 
 	local canvas = love.graphics.newCanvas(128, 128)
-	local pointsByColor = {}
 
 	pico8.spritesheet_cache[currentPalKey] = canvas
 	love.graphics.setCanvas(canvas)
 	
-	for col =0, 127 do
-		for row = 0, 127 do
-			local c = pico8.spritesheet_table[col][row]
 
-			local point = {x = col, y = row}
-
-			if pointsByColor[c] == nil then
-				pointsByColor[c] = {}
-			end
-
-			add(pointsByColor[c], point)
-
-		end
-	end
-
-	for c, table in pairs(pointsByColor) do
+	for c, table in pairs(pico8.spritesheet_pointsByColor) do
 		if table ~= nil then
 			local pal_c = pico8.draw_palette[c]
 			local colorIndex = pal_c + 1
