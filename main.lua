@@ -95,7 +95,6 @@ function btn(i, p)
 end
 
 --require("strict")
---local bit=require("bit")
 
 local flr, abs=math.floor, math.abs
 
@@ -227,9 +226,6 @@ function love.load()
         down = "start"
     end
 	exitKey = down
-	
-	--getDimensions not implemented yet
-	--love.resize(love.graphics.getDimensions()) -- Setup initial scaling and padding
 
 	love.graphics.clear()
 	love.graphics.setDefaultFilter('nearest', 'nearest')

@@ -22,8 +22,6 @@ function cart.load_p8(filename)
 		end
 	end
 	pico8.spritesheet_pointsByColor={}
-	--turn it all black
-	--pico8.spritesheet_data:mapPixel(function() return 0, 0, 0, 1 end)
 
 	pico8.map={}
 	for y=0, 63 do
@@ -60,8 +58,7 @@ function cart.load_p8(filename)
 	end
 
 	--no support for pngs yet
-	--local f=love.filesystem.newFile(filename, 'r')
-	f=love.filesystem.newFile(filename, 'r')
+	local f=love.filesystem.newFile(filename, 'r')
 	if not f and filename:sub(1, 5) == "game/" then
 		--if running in regular love, it won't be in the game directory
 		filename = filename:sub(5)
@@ -100,11 +97,9 @@ function cart.load_p8(filename)
 	updateStatus("version " .. version)
 	-- extract the lua
 	lua=data:match("\n__lua__.-\n(.-)\n__") or ""
-	-- load the sprites into a canvas
-	-- generate a quad for each sprite index
-	local gfxdata=data:match("\n__gfx__.-\n(.-\n)\n-__")
 
 	--get sprite sheet data and store in table
+	local gfxdata=data:match("\n__gfx__.-\n(.-\n)\n-__")
 	if gfxdata then
 		local row=0
 
@@ -129,8 +124,8 @@ function cart.load_p8(filename)
 			if row==128 then break end
 		end
 	end
-	--convert spritesheet table into canvas
 
+	--convert spritesheet table into canvas
 	pico8.spritesheet_data=getSpritesheetCanvas()
 
 	love.graphics.setColor(1, 1, 1, 1)
@@ -164,6 +159,7 @@ function cart.load_p8(filename)
 		offset = 1
 	end
 
+	-- generate a quad for each sprite index
 	for y=0, 15 do
 		for x=0, 15 do
 			pico8.quads[y*16+x]=love.graphics.newQuad(8*x + offset, 8*y + offset, 8, 8, 128, 128)
@@ -260,6 +256,7 @@ function cart.load_p8(filename)
 	if not ok or f==nil then
 		local ln=1
 		lua="1:"..lua:gsub("\n", function(a) ln=ln+1 return "\n"..ln..":" end)
+		--possible todo: write to disk instead of output to screen?
 		--updateStatus('=======8<========')
 		--updateStatus(lua)
 		--updateStatus('=======>8========')
