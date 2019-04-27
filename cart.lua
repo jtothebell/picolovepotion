@@ -256,13 +256,18 @@ function cart.load_p8(filename)
 	if not ok or f==nil then
 		local ln=1
 		lua="1:"..lua:gsub("\n", function(a) ln=ln+1 return "\n"..ln..":" end)
-		--possible todo: write to disk instead of output to screen?
 		--updateStatus('=======8<========')
 		--updateStatus(lua)
+		--write the lua we're actually using for debug purposes
+		local name = "parsed.lua"
+		local myFile = love.filesystem.newFile(name, "w")
+		myFile:write(lua)
+		myFile:flush()
+		myFile:close()
 		--updateStatus('=======>8========')
 		--force show debug info if the cart doesn't load
 		showDebugInfo = true
-		updateStatus("Error loading lua: "..tostring(e),0)
+		updateStatus("Error loading lua (writing parsed lua to disk): "..tostring(e),0)
 	else
 		local result
 		updateStatus('pcalling patched lua')
