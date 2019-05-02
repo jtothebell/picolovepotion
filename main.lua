@@ -299,6 +299,8 @@ function getSpritesheetCanvas()
 
 	pico8.spritesheet_cache[currentPalKey] = canvas
 	love.graphics.setCanvas(canvas)
+	--workaround for bug in current lovepotion (5/2/19)
+	love.graphics.clear()
 	
 
 	for c, table in pairs(pico8.spritesheet_pointsByColor) do
