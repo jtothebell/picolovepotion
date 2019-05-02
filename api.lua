@@ -106,7 +106,7 @@ function api.pset(x, y, c)
 		color(col)
 	end
 
-	love.graphics.points(flr(x) + 1, flr(y) + 1)
+	love.graphics.points(flr(x), flr(y))
 
 	if prevCol then
 		color(prevCol)
