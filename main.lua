@@ -1,3 +1,6 @@
+--!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
+local cartPath = 'game/otherTestGames/TESTceleste.p8'
+
 pico8={
 	fps=30,
 	frames=0,
@@ -271,7 +274,7 @@ function love.load()
 	cart=require("cart")
 
 	-- load the cart
-	_load('game/otherTestGames/celeste.p8')
+	_load(cartPath)
 end
 
 function paletteKey()
