@@ -1,5 +1,5 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/otherTestGames/TESTceleste.p8'
+local cartPath = 'game/demos/jelpi.p8'
 
 pico8={
 	fps=30,
@@ -282,6 +282,11 @@ function paletteKey()
 	for k, v in pairs(pico8.draw_palette) do
 		key = key .. v .. pico8.pal_transparent[k]
 	end
+	--[[
+	for i=0, 15 do
+		key = key .. pico8.draw_palette[i] .. pico8.pal_transparent[i]
+	end
+	]]
 
 	return key
 end
@@ -375,6 +380,21 @@ function flip_screen()
 		
 		love.graphics.print(status, 0, 10)
 	end
+
+	--[[
+	--draw sprite sheets for debugging
+	local ssx = 0
+	local ssy = 30
+	for k,v in pairs(pico8.spritesheet_cache) do
+		love.graphics.print(k, ssx, ssy)
+		love.graphics.draw(v, ssx, ssy + 15, 0, 2, 2)
+		ssy = ssy + 256 + 15
+		if (ssy > 500) then
+			ssy = 0
+			ssx = 1280 - 256
+		end
+	end
+	]]
 
 	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
 
