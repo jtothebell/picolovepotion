@@ -1,5 +1,5 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/demos/jelpi.p8'
+local cartPath = 'game/otherTestGames/celeste.p8'
 
 pico8={
 	fps=30,
@@ -108,7 +108,7 @@ local love_args=nil
 local xpadding=0
 local ypadding=0
 local scale=5
-local xpadding=320
+local xpadding=620
 local ypadding=40
 
 local tobase=nil
@@ -217,6 +217,11 @@ end
 
 function love.load()
 
+	--[[ TODO: remove this]]
+	love.profiler = require('profile') 
+  	love.profiler.hookall("Lua")
+	love.profiler.start()
+	  
 	currentButton =
     {
         pressed = 'None',
@@ -278,17 +283,31 @@ function love.load()
 end
 
 function paletteKey()
+	--[[
+	--one way (probably not optimal)
 	local key = ""
 	for k, v in pairs(pico8.draw_palette) do
 		key = key .. v .. pico8.pal_transparent[k]
 	end
+	return key
+	]]
+
 	--[[
+	--another way (also probably bad)
+	local key = ""
 	for i=0, 15 do
 		key = key .. pico8.draw_palette[i] .. pico8.pal_transparent[i]
 	end
+	return key
 	]]
 
-	return key
+	--third way should be better
+	local t = {}
+	for k, v in pairs(pico8.draw_palette) do
+		t[#t + 1] = v
+		t[#t + 2] = pico8.pal_transparent[k]
+	end
+	return table.concat(t, "")
 end
 
 function refreshSpritesheetCanvas()
@@ -343,6 +362,10 @@ function love.update(dt)
 
 		if pico8.cart._update then pico8.cart._update() end
 	end
+	if loveFrames%100 == 0 then
+		love.report = love.profiler.report('time', 20)
+		love.profiler.reset()
+	  end
 	loveFrames = loveFrames + 1
 end
 
@@ -371,7 +394,9 @@ function flip_screen()
 
 	love.graphics.clear()
 
-	love.graphics.print(love.system.getOS(), 0, 0)
+	--love.graphics.print(love.system.getOS(), 0, 0)
+
+	love.graphics.print(love.report or "Please wait...")
 
 	if showDebugInfo then
 		local i = 0
