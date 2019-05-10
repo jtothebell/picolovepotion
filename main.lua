@@ -309,6 +309,7 @@ function getSpritesheetCanvas()
 	love.graphics.setCanvas(canvas)
 	--workaround for bug in current lovepotion (5/2/19)
 	love.graphics.clear()
+	love.graphics.origin()
 	
 
 	for c, table in pairs(pico8.spritesheet_pointsByColor) do
@@ -328,6 +329,7 @@ function getSpritesheetCanvas()
 	end
 
 	love.graphics.setCanvas()
+	restore_camera()
 
 	return canvas
 end
