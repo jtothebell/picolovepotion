@@ -156,7 +156,7 @@ function cart.load_p8(filename)
 	local os = love.system.getOS()
 	local offset = 0;
 	if os ~= "3DS" and os ~= "Horizon" then
-		offset = 1
+		offset = -1
 	end
 
 	-- generate a quad for each sprite index
