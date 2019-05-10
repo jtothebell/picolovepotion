@@ -217,7 +217,7 @@ end
 
 function love.load()
 
-	--[[ TODO: remove this]]
+	--[[ TODO: remove this after done profiling. requires profile.lua from https://bitbucket.org/itraykov/profile.lua/src/master/]]
 	love.profiler = require('profile') 
   	love.profiler.hookall("Lua")
 	love.profiler.start()
