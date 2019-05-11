@@ -1,5 +1,5 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/otherTestGames/celeste.p8'
+local cartPath = 'game/demos/jelpi.p8'
 
 pico8={
 	fps=30,
@@ -246,9 +246,10 @@ function paletteKey()
 
 	--third way should be better
 	local t = {}
-	for k, v in pairs(pico8.draw_palette) do
-		t[#t + 1] = v
-		t[#t + 2] = pico8.pal_transparent[k]
+	for i=1, 16 do
+		local index = ((i - 1) * 2) + 1
+		t[index] = pico8.draw_palette[i]
+		t[index + 1] = pico8.pal_transparent[i]
 	end
 	return table.concat(t, "")
 end
