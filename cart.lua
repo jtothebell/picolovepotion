@@ -30,31 +30,10 @@ function cart.load_p8(filename)
 			pico8.map[y][x]=0
 		end
 	end
+
 	pico8.spriteflags={}
 	for i=0, 255 do
 		pico8.spriteflags[i]=0
-	end
-	pico8.sfx={}
-	for i=0, 63 do
-		pico8.sfx[i]={
-			editor_mode=0,
-			speed=16,
-			loop_start=0,
-			loop_end=0
-		}
-		for j=0, 31 do
-			pico8.sfx[i][j]={0, 0, 0, 0}
-		end
-	end
-	pico8.music={}
-	for i=0, 63 do
-		pico8.music[i]={
-			loop=0,
-			[0]=65,
-			[1]=66,
-			[2]=67,
-			[3]=68
-		}
 	end
 
 	--no support for pngs yet
@@ -115,7 +94,7 @@ function cart.load_p8(filename)
 					pico8.spritesheet_pointsByColor[v] = {}
 				end
 
-				add(pico8.spritesheet_pointsByColor[v], point)
+				pico8.spritesheet_pointsByColor[v][#pico8.spritesheet_pointsByColor[v]+1]=point
 
 				col=col+1
 				if col==128 then break end
@@ -266,7 +245,7 @@ function cart.load_p8(filename)
 		myFile:close()
 		--updateStatus('=======>8========')
 		--force show debug info if the cart doesn't load
-		showDebugInfo = true
+		toggleShowDebugInfo(true)
 		updateStatus("Error loading lua (writing parsed lua to disk): "..tostring(e),0)
 	else
 		local result
