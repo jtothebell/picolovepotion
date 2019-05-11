@@ -24,10 +24,6 @@ pico8={
 		{1,      204/255,170/255,1}
 	},
 	spriteflags={},
-	audio_channels={},
-	sfx={},
-	music={},
-	current_music=nil,
 	usermemory={},
 	cartdata={},
 	clipboard="",
@@ -55,7 +51,6 @@ pico8={
 			[5]={'q'},
 		}
 	},
-	mwheel=0,
 	cursor={0, 0},
 	camera_x=0,
 	camera_y=0,
@@ -65,77 +60,32 @@ pico8={
 	spritesheet_cache={}
 }
 
-function add(a, v)
-	if a==nil then return end
-	a[#a+1]=v
-end
-
-function del(a, dv)
-	if a==nil then return end
-	for i=1, #a do
-		if a[i]==dv then
-			table.remove(a, i)
-			return
-		end
-	end
-end
-
-function btn(i, p)
-	if i~=nil or p~=nil then
-		p=p or 0
-		if p<0 or p>1 then
-			return false
-		end
-		return not not pico8.keypressed[p][i]
-	else
-		local bits=0
-		for i=0, 5 do
-			bits=bits+(pico8.keypressed[0][i] and 2^i or 0)
-			bits=bits+(pico8.keypressed[1][i] and 2^(i+8) or 0)
-		end
-		return bits
-	end
-end
-
---require("strict")
 
 local flr, abs=math.floor, math.abs
 
 local frametime=1/pico8.fps
 local cart=nil
 local cartname=nil
-local love_args=nil
-local xpadding=0
-local ypadding=0
 local scale=5
 local xpadding=620
 local ypadding=40
 
-local tobase=nil
-local topad=nil
-local gif_recording=nil
-local gif_canvas=nil
-local osc
-local host_time=0
-local retro_mode=false
-local paused=false
-local mobile=false
-local api, cart, gif
+local api, cart
 
-local __buffer_count=8
-local __buffer_size=1024
-local __sample_rate=22050
-local channels=1
-local bits=16
 local loveFrames = 0
 
 --log=print
 --log=function() end
-status = ''
-showDebugInfo = false
+local status = ''
+local showDebugInfo = false
+local exitKey
 
 function updateStatus(newPart)
 	status = status .. '\n' .. newPart
+end
+
+function toggleShowDebugInfo(isOn)
+	showDebugInfo = isOn
 end
 
 function restore_clip()
@@ -221,13 +171,6 @@ function love.load()
 	love.profiler = require('profile') 
   	love.profiler.hookall("Lua")
 	love.profiler.start()
-	  
-	currentButton =
-    {
-        pressed = 'None',
-        released = 'None'
-    }
-	currentButtonDown = {}
 
     local down, OS = "plus", {love.system.getOS()}
     if OS[2] == "3DS" then
@@ -336,6 +279,7 @@ function getSpritesheetCanvas()
 			setShiftedColor(c, true)
 
 			--not sure why i can't just pass the table?! wtf
+			--[[]]
 			local points = {}
 			for i=1, #table do 
 				local x = table[i].x
@@ -399,12 +343,6 @@ function flip_screen()
 	love.graphics.print(love.report or "Please wait...")
 
 	if showDebugInfo then
-		local i = 0
-		for k, v in pairs(currentButton) do
-			love.graphics.print(k .. ": " .. v, 1000, 100 + (i * 18))
-			i = i + 1
-		end
-		
 		love.graphics.print(status, 0, 10)
 	end
 
