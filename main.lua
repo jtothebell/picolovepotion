@@ -245,6 +245,7 @@ function paletteKey()
 	]]
 
 	--third way should be better
+	
 	local t = {}
 	for i=1, 16 do
 		local index = ((i - 1) * 2) + 1
@@ -252,6 +253,30 @@ function paletteKey()
 		t[index + 1] = pico8.pal_transparent[i]
 	end
 	return table.concat(t, "")
+	
+	
+
+	--another way?
+	--[[
+	return string.format(
+		"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d", 
+		pico8.draw_palette[0], pico8.pal_transparent[0],
+		pico8.draw_palette[1], pico8.pal_transparent[1], 
+		pico8.draw_palette[2], pico8.pal_transparent[2],
+		pico8.draw_palette[3], pico8.pal_transparent[3],
+		pico8.draw_palette[4], pico8.pal_transparent[4],
+		pico8.draw_palette[5], pico8.pal_transparent[5],
+		pico8.draw_palette[6], pico8.pal_transparent[6],
+		pico8.draw_palette[7], pico8.pal_transparent[7],
+		pico8.draw_palette[8], pico8.pal_transparent[8],
+		pico8.draw_palette[9], pico8.pal_transparent[9],
+		pico8.draw_palette[10], pico8.pal_transparent[10],
+		pico8.draw_palette[11], pico8.pal_transparent[11],
+		pico8.draw_palette[12], pico8.pal_transparent[12],
+		pico8.draw_palette[13], pico8.pal_transparent[13],
+		pico8.draw_palette[14], pico8.pal_transparent[14],
+		pico8.draw_palette[15], pico8.pal_transparent[15])
+		]]
 end
 
 function refreshSpritesheetCanvas()
