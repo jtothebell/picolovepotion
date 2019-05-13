@@ -460,13 +460,14 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 	sy=flr(sy or 0)
 	cel_w=flr(cel_w or 128)
 	cel_h=flr(cel_h or 64)
+	bitmask=flr(bitmask or 0)
 	for y=0, cel_h-1 do
 		if cel_y+y<64 and cel_y+y>=0 then
 			for x=0, cel_w-1 do
 				if cel_x+x<128 and cel_x+x>=0 then
 					local v=pico8.map[flr(cel_y+y)][flr(cel_x+x)]
 					if v~=0 then
-						if bitmask==nil or bitmask==0 or bit.band(pico8.spriteflags[v], bitmask)~=0 then
+						if bitmask==0 or bit.band(pico8.spriteflags[v], bitmask)~=0 then
 							love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx+(8*x), sy+(8*y))
 						end
 					end
