@@ -100,7 +100,7 @@ end
 function api.splore()
 end
 
-function api.pset(x, y, c)
+function api.pset(x, y, col)
 	local prevCol = pico8.color
 	if col then
 		color(col)
@@ -112,6 +112,27 @@ function api.pset(x, y, c)
 		color(prevCol)
 	end
 end
+--[[
+--attempt at setting up a functional approach to preserving color
+local function coloredFunc(col, func)
+	local prevCol = pico8.color
+	if col then
+		color(col)
+	end
+
+	func()
+
+	if prevCol then
+		color(prevCol)
+	end
+end
+
+function api.pset(x, y, col)
+	local func = function() love.graphics.points(flr(x), flr(y)) end
+	coloredFunc(col, func)
+end
+]]
+
 
 function api.pget(x, y)
 	x=x-pico8.camera_x
