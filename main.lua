@@ -1,5 +1,5 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/demos/jelpi.p8'
+local cartPath = 'game/otherTestGames/celeste.p8'
 
 pico8={
 	fps=30,
@@ -226,39 +226,48 @@ function love.load()
 end
 
 function paletteKey()
-	--[[
 	--one way (probably not optimal)
-	local key = ""
+	ProFi = require 'ProFi'
+
+	--ProFi:start()
+	local key1 = ""
 	for k, v in pairs(pico8.draw_palette) do
-		key = key .. v .. pico8.pal_transparent[k]
+		key1 = key1 .. v .. pico8.pal_transparent[k]
 	end
-	return key
-	]]
+	--return key1
 
-	--[[
+	--ProFi:stop()
+	--ProFi:writeReport( 'key1.txt' )
+
 	--another way (also probably bad)
-	local key = ""
+	--ProFi:start()
+	local key2 = ""
 	for i=0, 15 do
-		key = key .. pico8.draw_palette[i] .. pico8.pal_transparent[i]
+		key2 = key2 .. pico8.draw_palette[i] .. pico8.pal_transparent[i]
 	end
-	return key
-	]]
+	--return key2
+	--ProFi:stop()
+	--ProFi:writeReport( 'key2.txt' )
 
+	if key1 ~= key2 then error("key 2 is bad") end
+
+	--ProFi:start()
 	--third way should be better
-	
 	local t = {}
 	for i=1, 16 do
 		local index = ((i - 1) * 2) + 1
-		t[index] = pico8.draw_palette[i]
-		t[index + 1] = pico8.pal_transparent[i]
+		t[index] = pico8.draw_palette[i - 1]
+		t[index + 1] = pico8.pal_transparent[i - 1]
 	end
-	return table.concat(t, "")
-	
-	
+	local key3 =  table.concat(t, "")
+	--ProFi:stop()
+	--ProFi:writeReport( 'key3.txt' )
+
+	if key1 ~= key3 then error("key 3 is bad: " .. key1 .." " .. key3) end
 
 	--another way?
-	--[[
-	return string.format(
+	ProFi:start()
+	local key4 = string.format(
 		"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d", 
 		pico8.draw_palette[0], pico8.pal_transparent[0],
 		pico8.draw_palette[1], pico8.pal_transparent[1], 
@@ -276,7 +285,13 @@ function paletteKey()
 		pico8.draw_palette[13], pico8.pal_transparent[13],
 		pico8.draw_palette[14], pico8.pal_transparent[14],
 		pico8.draw_palette[15], pico8.pal_transparent[15])
-		]]
+
+	ProFi:stop()
+	ProFi:writeReport( 'key4.txt' )
+
+	if key1 ~= key4 then error("key 4 is bad") end
+
+	return key1
 end
 
 function refreshSpritesheetCanvas()
