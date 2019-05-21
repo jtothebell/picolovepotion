@@ -468,7 +468,12 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 					local v=pico8.map[flr(cel_y+y)][flr(cel_x+x)]
 					if v~=0 then
 						if bitmask==0 or bit.band(pico8.spriteflags[v], bitmask)~=0 then
-							love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx+(8*x), sy+(8*y))
+							local xPos = sx + (8*x) - pico8.camera_x;
+							local yPos = sy + (8*y) - pico8.camera_y;
+							--limit drawing to what is on screen
+							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
+								love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
+							end
 						end
 					end
 				end
