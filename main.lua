@@ -254,6 +254,7 @@ function getSpritesheetCanvas()
 	love.graphics.setCanvas(canvas)
 	--workaround for bug in current lovepotion (5/2/19)
 	love.graphics.clear()
+	--need to call this in case the camera has moved, we don't want our spritesheet offset
 	love.graphics.origin()
 	
 
