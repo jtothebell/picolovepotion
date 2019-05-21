@@ -226,32 +226,6 @@ function love.load()
 end
 
 function paletteKey()
-	--one way (probably not optimal)
-	ProFi = require 'ProFi'
-
-	--ProFi:start()
-	local key1 = ""
-	for k, v in pairs(pico8.draw_palette) do
-		key1 = key1 .. v .. pico8.pal_transparent[k]
-	end
-	--return key1
-
-	--ProFi:stop()
-	--ProFi:writeReport( 'key1.txt' )
-
-	--another way (also probably bad)
-	--ProFi:start()
-	local key2 = ""
-	for i=0, 15 do
-		key2 = key2 .. pico8.draw_palette[i] .. pico8.pal_transparent[i]
-	end
-	--return key2
-	--ProFi:stop()
-	--ProFi:writeReport( 'key2.txt' )
-
-	if key1 ~= key2 then error("key 2 is bad") end
-
-	--ProFi:start()
 	--third way should be better
 	local t = {}
 	for i=1, 16 do
@@ -259,39 +233,7 @@ function paletteKey()
 		t[index] = pico8.draw_palette[i - 1]
 		t[index + 1] = pico8.pal_transparent[i - 1]
 	end
-	local key3 =  table.concat(t, "")
-	--ProFi:stop()
-	--ProFi:writeReport( 'key3.txt' )
-
-	if key1 ~= key3 then error("key 3 is bad: " .. key1 .." " .. key3) end
-
-	--another way?
-	ProFi:start()
-	local key4 = string.format(
-		"%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d", 
-		pico8.draw_palette[0], pico8.pal_transparent[0],
-		pico8.draw_palette[1], pico8.pal_transparent[1], 
-		pico8.draw_palette[2], pico8.pal_transparent[2],
-		pico8.draw_palette[3], pico8.pal_transparent[3],
-		pico8.draw_palette[4], pico8.pal_transparent[4],
-		pico8.draw_palette[5], pico8.pal_transparent[5],
-		pico8.draw_palette[6], pico8.pal_transparent[6],
-		pico8.draw_palette[7], pico8.pal_transparent[7],
-		pico8.draw_palette[8], pico8.pal_transparent[8],
-		pico8.draw_palette[9], pico8.pal_transparent[9],
-		pico8.draw_palette[10], pico8.pal_transparent[10],
-		pico8.draw_palette[11], pico8.pal_transparent[11],
-		pico8.draw_palette[12], pico8.pal_transparent[12],
-		pico8.draw_palette[13], pico8.pal_transparent[13],
-		pico8.draw_palette[14], pico8.pal_transparent[14],
-		pico8.draw_palette[15], pico8.pal_transparent[15])
-
-	ProFi:stop()
-	ProFi:writeReport( 'key4.txt' )
-
-	if key1 ~= key4 then error("key 4 is bad") end
-
-	return key1
+	return table.concat(t, "")
 end
 
 function refreshSpritesheetCanvas()
