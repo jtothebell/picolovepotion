@@ -337,15 +337,6 @@ function api.rectfill(x0, y0, x1, y1, col)
 	if col then
 		color(col)
 	end
-	--[[
-	if x1<x0 then
-		x0, x1=x1, x0
-	end
-	if y1<y0 then
-		y0, y1=y1, y0
-	end
-	love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
-	]]
 
 	local points = getRectFillPoints(x0, y0, x1, y1)
 
@@ -358,11 +349,7 @@ function api.rectfill(x0, y0, x1, y1, col)
 	end
 end
 
-function api.circ(ox, oy, r, col)
-	local prevCol = pico8.color
-	if col then
-		color(col)
-	end
+local function getCircPoints(ox, oy, r)
 	ox=flr(ox)+0.5
 	oy=flr(oy)+0.5
 	r=flr(r)
@@ -389,7 +376,19 @@ function api.circ(ox, oy, r, col)
 			decisionOver2=decisionOver2+2*(y-x)+1
 		end
 	end
-	if #points>0 then
+
+	return points
+end
+
+function api.circ(ox, oy, r, col)
+	local prevCol = pico8.color
+	if col then
+		color(col)
+	end
+
+	local points = getCircPoints(ox, oy, r)
+	
+	if points then
 		love.graphics.points(points)
 	end
 
