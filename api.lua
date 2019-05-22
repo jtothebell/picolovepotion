@@ -268,16 +268,39 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 		0, dw/sw*(flip_x and-1 or 1), dh/sh*(flip_y and-1 or 1))
 end
 
+local function getRectPoints(x0, y0, x1, y1)
+	local w, h=flr(x1-x0), flr(y1-y0)
+
+	local points = {}
+	local pointCount = 0
+
+	for i = 1, w + 1 do
+		local index = pointCount + 1
+		points[index] = {x0 + (i - 1), y0}
+		points[index + 1] = {x0 + (i - 1), y1}
+		pointCount = pointCount + 2
+	end
+
+	for i = 1, h + 1 do
+		local index = pointCount + 1
+		points[index] = {x0, y0 + (i - 1)}
+		points[index + 1] = {x1, y0 + (i - 1)}
+		pointCount = pointCount + 2
+	end
+
+	return points
+end
+
 function api.rect(x0, y0, x1, y1, col)
 	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
-	local w, h=flr(x1-x0), flr(y1-y0)
-	if w==0 or h==0 then
-		love.graphics.rectangle("fill", flr(x0), flr(y0), w+1, h+1)
-	else
-		love.graphics.rectangle("line", flr(x0)+0.5, flr(y0)+0.5, w, h)
+
+	local points = getRectPoints(x0, y0, x1, y1)
+
+	if points then
+		love.graphics.points(points)
 	end
 
 	if prevCol then
@@ -285,11 +308,36 @@ function api.rect(x0, y0, x1, y1, col)
 	end
 end
 
+local function getRectFillPoints(x0, y0, x1, y1)
+	if x1<x0 then
+		x0, x1=x1, x0
+	end
+	if y1<y0 then
+		y0, y1=y1, y0
+	end
+
+	local w, h=flr(x1-x0), flr(y1-y0)
+
+	local points = {}
+	local pointCount = 0
+
+	for i = 1, w + 1 do
+		for j = 1, h + 1 do
+			local index = pointCount + 1
+			points[index] = {x0 + (i - 1), y0 + (j + 1) }
+			pointCount = pointCount + 1
+		end
+	end
+
+	return points
+end
+
 function api.rectfill(x0, y0, x1, y1, col)
 	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
+	--[[
 	if x1<x0 then
 		x0, x1=x1, x0
 	end
@@ -297,6 +345,13 @@ function api.rectfill(x0, y0, x1, y1, col)
 		y0, y1=y1, y0
 	end
 	love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
+	]]
+
+	local points = getRectFillPoints(x0, y0, x1, y1)
+
+	if points then
+		love.graphics.points(points)
+	end
 
 	if prevCol then
 		color(prevCol)
@@ -401,28 +456,29 @@ local function getLinePoints(x0, y0, x1, y1)
 	local rise = ymax - ymin
 	local run = xmax - xmin
 
+	local ceil = math.ceil
+
 	local points = {}
 	if run == 0 then
 		--vertical line
-		for i = 1, rise do
+		for i = 1, rise + 1 do
 			points[i] = {xmin , ymin + (i - 1)}
 		end
 	else
 		local slope = rise / run
 		if slope >= 1 then
-			for i = 1, rise do
-				points[i] = {xmin + flr((i - 1) / slope) , ymin + (i - 1)}
+			for i = 1, rise + 1 do
+				points[i] = {xmin + ceil((i - 1) / slope) , ymin + (i - 1)}
 			end
 		else
-			for i = 1, run do
-				points[i] = {xmin + (i - 1), ymin + flr((i - 1) * slope)}
+			for i = 1, run + 1 do
+				points[i] = {xmin + (i - 1), ymin + ceil((i - 1) * slope)}
 			end
 
 		end
 	end
 
 	return points
-
 end
 
 function api.line(x0, y0, x1, y1, col)

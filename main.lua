@@ -1,5 +1,5 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/otherTestGames/celeste.p8'
+local cartPath = 'game/linetest.p8'
 
 pico8={
 	fps=30,
