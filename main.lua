@@ -60,6 +60,21 @@ pico8={
 	spritesheet_cache={}
 }
 
+function add(a, v)
+	if a==nil then return end
+	a[#a+1]=v
+end
+
+function del(a, dv)
+	if a==nil then return end
+	for i=1, #a do
+		if a[i]==dv then
+			table.remove(a, i)
+			return
+		end
+	end
+end
+
 
 local flr, abs=math.floor, math.abs
 
@@ -172,6 +187,8 @@ function love.load()
   	love.profiler.hookall("Lua")
 	love.profiler.start()
 	]]
+
+	currentButtonDown = {}
 
     local down, OS = "plus", {love.system.getOS()}
     if OS[2] == "3DS" then
@@ -362,14 +379,12 @@ function love.gamepadpressed(joy, button)
     if button == exitKey then
         love.event.quit()
     else
-        currentButton.pressed = button
-		add(currentButtonDown, button)
+		api.add(currentButtonDown, button)
     end
 end
 
 function love.gamepadreleased(joy, button)
-    currentButton.released = button
-	del(currentButtonDown, button)
+	api.del(currentButtonDown, button)
 end
 
 function update_buttons()
