@@ -1,5 +1,5 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/demos/jelpi.p8'
+local cartPath = 'game/otherTestGames/celeste.p8'
 
 pico8={
 	fps=30,
@@ -274,16 +274,7 @@ function getSpritesheetCanvas()
 		if table ~= nil then
 			setShiftedColor(c, true)
 
-			--not sure why i can't just pass the table?! wtf
-			--[[]]
-			local points = {}
-			for i=1, #table do 
-				local x = table[i].x
-				local y = table[i].y
-				points[i] = {x, y}
-			end
-
-			love.graphics.points(points)
+			love.graphics.points(table)
 		end
 	end
 

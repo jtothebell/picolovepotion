@@ -88,7 +88,7 @@ function cart.load_p8(filename)
 				v=tonumber(v, 16)
 				pico8.spritesheet_table[col][row] = v
 
-				local point = {x = col, y = row}
+				local point = {col, row}
 
 				if pico8.spritesheet_pointsByColor[v] == nil then
 					pico8.spritesheet_pointsByColor[v] = {}
