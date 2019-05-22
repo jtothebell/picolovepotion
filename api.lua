@@ -381,13 +381,7 @@ function api.circfill(cx, cy, r, col)
 	end
 end
 
-function api.line(x0, y0, x1, y1, col)
-	local prevCol = pico8.color
-
-	if col then
-		color(col)
-	end
-
+local function getLinePoints(x0, y0, x1, y1)
 	if x0~=x0 or y0~=y0 or x1~=x1 or y1~=y1 then
 		warning("line has NaN value")
 		return
@@ -398,21 +392,64 @@ function api.line(x0, y0, x1, y1, col)
 	x1=flr(x1)
 	y1=flr(y1)
 
-	if x0==x1 or y0==y1 then
-		-- simple case draw a straight line
-		love.graphics.rectangle("fill", x0, y0, x1-x0+1, y1-y0+1)
+	local xmin = api.min(x0, x1)
+	local xmax = api.max(x0, x1)
+	
+	local ymin = api.min(y0, y1)
+	local ymax = api.max(y0, y1)
+
+	local rise = ymax - ymin
+	local run = xmax - xmin
+
+	local points = {}
+	if run == 0 then
+		--vertical line
+		for i = 1, rise do
+			local x = xmin
+			local y = ymin + (i - 1)
+			points[i] = {x , y}
+		end
 	else
-		--this line is too fat, but it will do for now
-		--TODO: redraw using points that isn't fat
-		love.graphics.line(x0+0.5, y0+0.5, x1+0.5, y1+0.5)
-		-- Final pixel not being reached?
-		--love.graphics.points(x1+0.5, y1+0.5)
+		local slope = rise / run
+		if slope >= 1 then
+			for i = 1, rise do
+				local x = xmin + flr((i - 1) / slope)
+				local y = ymin + (i - 1)
+				points[i] = {x , y}
+			end
+		else
+			for i = 1, run do
+				local x = xmin + (i - 1)
+				local y = ymin + flr((i - 1) * slope)
+				points[i] = {x, y}
+			end
+
+		end
+	end
+
+	return points
+
+end
+
+function api.line(x0, y0, x1, y1, col)
+	local prevCol = pico8.color
+
+	if col then
+		color(col)
+	end
+
+	local points = getLinePoints(x0, y0, x1, y1)
+	
+	if points then
+		love.graphics.points(points)
 	end
 
 	if prevCol then
 		color(prevCol)
 	end
 end
+
+
 
 function api.pal(c0, c1, p)
 	if c0==nil then
