@@ -405,23 +405,17 @@ local function getLinePoints(x0, y0, x1, y1)
 	if run == 0 then
 		--vertical line
 		for i = 1, rise do
-			local x = xmin
-			local y = ymin + (i - 1)
-			points[i] = {x , y}
+			points[i] = {xmin , ymin + (i - 1)}
 		end
 	else
 		local slope = rise / run
 		if slope >= 1 then
 			for i = 1, rise do
-				local x = xmin + flr((i - 1) / slope)
-				local y = ymin + (i - 1)
-				points[i] = {x , y}
+				points[i] = {xmin + flr((i - 1) / slope) , ymin + (i - 1)}
 			end
 		else
 			for i = 1, run do
-				local x = xmin + (i - 1)
-				local y = ymin + flr((i - 1) * slope)
-				points[i] = {x, y}
+				points[i] = {xmin + (i - 1), ymin + flr((i - 1) * slope)}
 			end
 
 		end
