@@ -324,7 +324,7 @@ local function getRectFillPoints(x0, y0, x1, y1)
 	for i = 1, w + 1 do
 		for j = 1, h + 1 do
 			local index = pointCount + 1
-			points[index] = {x0 + (i - 1), y0 + (j + 1) }
+			points[index] = {x0 + (i - 1), y0 + (j - 1) }
 			pointCount = pointCount + 1
 		end
 	end
