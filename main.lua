@@ -182,12 +182,6 @@ end
 
 function love.load()
 
-	--[[ TODO: remove this after done profiling. requires profile.lua from https://bitbucket.org/itraykov/profile.lua/src/master/
-	love.profiler = require('profile') 
-  	love.profiler.hookall("Lua")
-	love.profiler.start()
-	]]
-
 	currentButtonDown = {}
 
     local down, OS = "plus", {love.system.getOS()}
@@ -308,12 +302,6 @@ function love.update(dt)
 
 		if pico8.cart._update then pico8.cart._update() end
 	end
-	--[[
-	if loveFrames%100 == 0 then
-		love.report = love.profiler.report('time', 20)
-		love.profiler.reset()
-	end
-	]]
 	loveFrames = loveFrames + 1
 end
 
@@ -344,26 +332,10 @@ function flip_screen()
 
 	--love.graphics.print(love.system.getOS(), 0, 0)
 
-	--love.graphics.print(love.report or "Please wait...")
-
 	if showDebugInfo then
 		love.graphics.print(status, 0, 10)
 	end
 
-	--[[
-	--draw sprite sheets for debugging
-	local ssx = 0
-	local ssy = 30
-	for k,v in pairs(pico8.spritesheet_cache) do
-		love.graphics.print(k, ssx, ssy)
-		love.graphics.draw(v, ssx, ssy + 15, 0, 2, 2)
-		ssy = ssy + 256 + 15
-		if (ssy > 500) then
-			ssy = 0
-			ssx = 1280 - 256
-		end
-	end
-	]]
 
 	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
 
