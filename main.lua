@@ -1,5 +1,5 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/otherTestGames/celeste.p8'
+local cartPath = 'game/demos/jelpi.p8'
 
 pico8={
 	fps=30,
@@ -67,7 +67,7 @@ local frametime=1/pico8.fps
 local cart=nil
 local cartname=nil
 local scale=5
-local xpadding=620
+local xpadding=320
 local ypadding=40
 
 local api, cart
@@ -167,10 +167,11 @@ end
 
 function love.load()
 
-	--[[ TODO: remove this after done profiling. requires profile.lua from https://bitbucket.org/itraykov/profile.lua/src/master/]]
+	--[[ TODO: remove this after done profiling. requires profile.lua from https://bitbucket.org/itraykov/profile.lua/src/master/
 	love.profiler = require('profile') 
   	love.profiler.hookall("Lua")
 	love.profiler.start()
+	]]
 
     local down, OS = "plus", {love.system.getOS()}
     if OS[2] == "3DS" then
@@ -290,10 +291,12 @@ function love.update(dt)
 
 		if pico8.cart._update then pico8.cart._update() end
 	end
+	--[[
 	if loveFrames%100 == 0 then
 		love.report = love.profiler.report('time', 20)
 		love.profiler.reset()
-	  end
+	end
+	]]
 	loveFrames = loveFrames + 1
 end
 
@@ -324,7 +327,7 @@ function flip_screen()
 
 	--love.graphics.print(love.system.getOS(), 0, 0)
 
-	love.graphics.print(love.report or "Please wait...")
+	--love.graphics.print(love.report or "Please wait...")
 
 	if showDebugInfo then
 		love.graphics.print(status, 0, 10)
