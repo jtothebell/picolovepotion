@@ -57,7 +57,9 @@ pico8={
 	draw_palette={},
 	display_palette={},
 	pal_transparent={},
-	spritesheet_cache={}
+	spritesheet_cache={},
+
+	screen_buffer={}
 }
 
 function add(a, v)
@@ -144,6 +146,14 @@ function _load(filename)
 
 	pico8.camera_x=0
 	pico8.camera_y=0
+	pico8.screen_buffer={}
+	local pixelCount = pico8.resolution[1]*pico8.resolution[2]
+	--print(pixelCount)
+	for i=1, pixelCount do
+		pico8.screen_buffer[i] = 1
+	end
+	--print(#pico8.screen_buffer)
+
 	love.graphics.origin()
 	pico8.clip=nil
 	love.graphics.setScissor()
@@ -168,6 +178,26 @@ function _load(filename)
 	else
 		setfps(30)
 	end
+end
+
+function getScreenBufferPointsByColor()
+	local pointsByColor = {}
+	for i=1, 16 do
+		pointsByColor[i] = {}
+	end
+
+	for y=0, pico8.resolution[1] - 1  do
+		for x=0, pico8.resolution[2] - 1 do
+			local index = y*pico8.resolution[2] + x + 1
+			local cIdx = pico8.screen_buffer[index]
+			local point = {x, y}
+
+			local pointCount = #pointsByColor[cIdx]
+			pointsByColor[cIdx][pointCount+1]=point
+		end
+	end
+
+	return pointsByColor
 end
 
 
@@ -314,6 +344,18 @@ function restore_camera()
 	love.graphics.translate(-pico8.camera_x, -pico8.camera_y)
 end
 
+function drawScreenBuffer()
+	local pointsByColor = getScreenBufferPointsByColor()
+
+	for c, table in pairs(pointsByColor) do
+		if table ~= nil then
+			setShiftedColor(c - 1, true)
+
+			love.graphics.points(table)
+		end
+	end
+end
+
 function flip_screen()
 	love.graphics.setCanvas()
 	love.graphics.origin()
@@ -326,6 +368,8 @@ function flip_screen()
 	if showDebugInfo then
 		love.graphics.print(status, 0, 10)
 	end
+
+	drawScreenBuffer()
 
 
 	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
