@@ -397,6 +397,42 @@ function api.circ(ox, oy, r, col)
 	end
 end
 
+local function getCircFillPoints(cx, cy, r)
+	cx=flr(cx)
+	cy=flr(cy)
+	r=flr(r)
+	local x=r
+	local y=0
+	local err=1-r
+
+	local lines={}
+	local points={}
+
+	while y<=x do
+		_plot4points(lines, cx, cy, x, y)
+		if err<0 then
+			err=err+2*y+3
+		else
+			if x~=y then
+				_plot4points(lines, cx, cy, y, x)
+			end
+			x=x-1
+			err=err+2*(y-x)+3
+		end
+		y=y+1
+	end
+
+	if #lines>0 then
+		for i=1, #lines do
+			local linePoints = getLinePoints(lines[i][1], lines[i][2], lines[i][3], lines[i][4])
+
+			add(points, linePoints)
+		end
+	end
+
+	return points
+end
+
 function api.circfill(cx, cy, r, col)
 	local prevCol = pico8.color
 	if col then
