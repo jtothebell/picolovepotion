@@ -150,7 +150,7 @@ function _load(filename)
 	local pixelCount = pico8.resolution[1]*pico8.resolution[2]
 	--print(pixelCount)
 	for i=1, pixelCount do
-		pico8.screen_buffer[i] = 1
+		pico8.screen_buffer[i] = 0
 	end
 	--print(#pico8.screen_buffer)
 
@@ -189,7 +189,7 @@ function getScreenBufferPointsByColor()
 	for y=0, pico8.resolution[1] - 1  do
 		for x=0, pico8.resolution[2] - 1 do
 			local index = y*pico8.resolution[2] + x + 1
-			local cIdx = pico8.screen_buffer[index]
+			local cIdx = pico8.screen_buffer[index] + 1
 			local point = {x, y}
 
 			local pointCount = #pointsByColor[cIdx]

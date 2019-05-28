@@ -1,5 +1,18 @@
 local flr=math.floor
 
+local resX = pico8.resolution[1]
+local resY = pico8.resolution[2]
+local pixelCount = resX * resY
+
+local function setPointsOnScreenBuffer(points, colorIdx)
+	if points then
+		for i=1, #points do
+			local index = points[i][2]*resY +points[i][1] + 1
+			pico8.screen_buffer[index] = colorIdx
+		end
+	end
+end
+
 local function color(c, disallowShift)
 	c=flr(c or 0)%16
 	pico8.color=c
@@ -67,6 +80,10 @@ function api.cls(c)
 	love.graphics.setScissor()
 	--TODO clear the color passed
 	local color = pico8.palette[c + 1]
+
+	for i=1, pixelCount do
+		pico8.screen_buffer[i] = c
+	end
 	--love.graphics.clear(color[1], color[2], color[3], 1)
 	--pico love uses the background color for clear. This doesn't match love behavior
 	love.graphics.setBackgroundColor(color[1], color[2], color[3])
@@ -107,6 +124,11 @@ function api.pset(x, y, col)
 	end
 
 	love.graphics.points(flr(x), flr(y))
+
+	local points = {}
+	points[1] = {flr(x), flr(y)}
+	setPointsOnScreenBuffer(points, col)
+	
 
 	if prevCol then
 		color(prevCol)
@@ -301,6 +323,8 @@ function api.rect(x0, y0, x1, y1, col)
 
 	if points then
 		love.graphics.points(points)
+
+		setPointsOnScreenBuffer(points, col)
 	end
 
 	if prevCol then
@@ -342,6 +366,8 @@ function api.rectfill(x0, y0, x1, y1, col)
 
 	if points then
 		love.graphics.points(points)
+
+		setPointsOnScreenBuffer(points, col)
 	end
 
 	if prevCol then
@@ -390,6 +416,8 @@ function api.circ(ox, oy, r, col)
 	
 	if points then
 		love.graphics.points(points)
+
+		setPointsOnScreenBuffer(points, col)
 	end
 
 	if prevCol then
@@ -491,6 +519,8 @@ function api.line(x0, y0, x1, y1, col)
 	
 	if points then
 		love.graphics.points(points)
+
+		setPointsOnScreenBuffer(points, col)
 	end
 
 	if prevCol then
