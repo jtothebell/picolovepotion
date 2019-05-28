@@ -8,7 +8,11 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 	if points then
 		for i=1, #points do
 			local index = points[i][2]*resY +points[i][1] + 1
-			pico8.screen_buffer[index] = colorIdx
+			local color = colorIdx
+			if points[i][3] ~= nil then
+				color = color[i][3]
+			end
+			pico8.screen_buffer[index] = color
 		end
 	end
 end
