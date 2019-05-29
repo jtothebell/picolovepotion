@@ -10,7 +10,7 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 			local index = flr(points[i][2]*resY +points[i][1]) + 1
 			local color = colorIdx
 			if points[i][3] ~= nil then
-				color = color[i][3]
+				color = points[i][3]
 			end
 			pico8.screen_buffer[index] = color
 		end
@@ -256,6 +256,33 @@ function api.tostr(val, hex)
 	end
 end
 
+local function getSprPoints(n, x, y, w, h, flip_x, flip_y)
+	n=flr(n)
+	w=w or 1
+	h=h or 1
+
+	points = {}
+
+	local pixelW = flr(8 * w)
+	local pixelH = flr(8 * h)
+
+	local pixelIdx = 1
+
+	local ssTable = pico8.spritesheet_table
+
+	for yInc=0, pixelH - 1 do
+		for xInc=0, pixelW - 1 do
+			local color = ssTable[flr(n%16)*8 + xInc][flr(n/16)*8 + yInc]
+			if color > 0 then
+				points[pixelIdx] = {x + xInc, y + yInc, color}
+				pixelIdx = pixelIdx + 1
+			end
+		end
+	end
+
+	return points
+end
+
 function api.spr(n, x, y, w, h, flip_x, flip_y)
 	n=flr(n)
 	w=w or 1
@@ -283,6 +310,12 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 		flr(x)+(w*8*(flip_x and 1 or 0)),
 		flr(y)+(h*8*(flip_y and 1 or 0)),
 		0, flip_x and-1 or 1, flip_y and-1 or 1)
+
+	local points = getSprPoints(n, x, y, w, h, flip_x, flip_y)
+
+	if points then
+		setPointsOnScreenBuffer(points)
+	end
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
