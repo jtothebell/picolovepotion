@@ -432,43 +432,6 @@ function api.circ(ox, oy, r, col)
 	end
 end
 
-function api.circfill(cx, cy, r, col)
-	local prevCol = pico8.color
-	if col then
-		color(col)
-	end
-	cx=flr(cx)
-	cy=flr(cy)
-	r=flr(r)
-	local x=r
-	local y=0
-	local err=1-r
-
-	local lines={}
-
-	while y<=x do
-		_plot4points(lines, cx, cy, x, y)
-		if err<0 then
-			err=err+2*y+3
-		else
-			if x~=y then
-				_plot4points(lines, cx, cy, y, x)
-			end
-			x=x-1
-			err=err+2*(y-x)+3
-		end
-		y=y+1
-	end
-	if #lines>0 then
-		for i=1, #lines do
-			love.graphics.line(lines[i])
-		end
-	end
-
-	if prevCol then
-		color(prevCol)
-	end
-end
 
 local function getLinePoints(x0, y0, x1, y1)
 	if x0~=x0 or y0~=y0 or x1~=x1 or y1~=y1 then
@@ -514,6 +477,87 @@ local function getLinePoints(x0, y0, x1, y1)
 
 	return points
 end
+
+local function getCircFillPoints(cx, cy, r)
+	cx=flr(cx)
+	cy=flr(cy)
+	r=flr(r)
+	local x=r
+	local y=0
+	local err=1-r
+
+	local lines={}
+	local points={}
+
+	while y<=x do
+		_plot4points(lines, cx, cy, x, y)
+		if err<0 then
+			err=err+2*y+3
+		else
+			if x~=y then
+				_plot4points(lines, cx, cy, y, x)
+			end
+			x=x-1
+			err=err+2*(y-x)+3
+		end
+		y=y+1
+	end
+
+	for i=1, #lines do
+		local circLinePoints = getLinePoints(lines[i][1], lines[i][2], lines[i][3], lines[i][4])
+		for j=1, #circLinePoints do
+			points[#points + 1] = circLinePoints[j]
+		end
+	end
+
+	return points
+end
+
+function api.circfill(cx, cy, r, col)
+	local prevCol = pico8.color
+	if col then
+		color(col)
+	end
+	cx=flr(cx)
+	cy=flr(cy)
+	r=flr(r)
+	local x=r
+	local y=0
+	local err=1-r
+
+	local lines={}
+
+	while y<=x do
+		_plot4points(lines, cx, cy, x, y)
+		if err<0 then
+			err=err+2*y+3
+		else
+			if x~=y then
+				_plot4points(lines, cx, cy, y, x)
+			end
+			x=x-1
+			err=err+2*(y-x)+3
+		end
+		y=y+1
+	end
+	if #lines>0 then
+		for i=1, #lines do
+			love.graphics.line(lines[i])
+		end
+	end
+
+	local points = getCircFillPoints(cx, cy, r)
+	
+	if points then
+
+		setPointsOnScreenBuffer(points, col)
+	end
+
+	if prevCol then
+		color(prevCol)
+	end
+end
+
 
 function api.line(x0, y0, x1, y1, col)
 	local prevCol = pico8.color

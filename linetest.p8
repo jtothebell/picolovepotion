@@ -23,5 +23,5 @@ function _draw()
 
 	circ(15, 65, 5, 10)
 
-	--circfill(15, 80, 5, 11)
+	circfill(15, 80, 5, 11)
 end
