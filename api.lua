@@ -518,37 +518,11 @@ function api.circfill(cx, cy, r, col)
 	if col then
 		color(col)
 	end
-	cx=flr(cx)
-	cy=flr(cy)
-	r=flr(r)
-	local x=r
-	local y=0
-	local err=1-r
-
-	local lines={}
-
-	while y<=x do
-		_plot4points(lines, cx, cy, x, y)
-		if err<0 then
-			err=err+2*y+3
-		else
-			if x~=y then
-				_plot4points(lines, cx, cy, y, x)
-			end
-			x=x-1
-			err=err+2*(y-x)+3
-		end
-		y=y+1
-	end
-	if #lines>0 then
-		for i=1, #lines do
-			love.graphics.line(lines[i])
-		end
-	end
 
 	local points = getCircFillPoints(cx, cy, r)
 	
 	if points then
+		love.graphics.points(points)
 
 		setPointsOnScreenBuffer(points, col)
 	end
