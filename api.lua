@@ -7,7 +7,7 @@ local pixelCount = resX * resY
 local function setPointsOnScreenBuffer(points, colorIdx)
 	if points then
 		for i=1, #points do
-			local index = points[i][2]*resY +points[i][1] + 1
+			local index = flr(points[i][2]*resY +points[i][1]) + 1
 			local color = colorIdx
 			if points[i][3] ~= nil then
 				color = color[i][3]
@@ -163,6 +163,9 @@ end
 function api.pget(x, y)
 	x=x-pico8.camera_x
 	y=y-pico8.camera_y
+
+	local index = y*pico8.resolution[2] + x + 1
+	return pico8.screen_buffer[index]
 	--TODO: ruh roh :( need imageData support from LovePotion, or huge refactor
 	--[[
 	if x>=0 and x<pico8.resolution[1] and y>=0 and y<pico8.resolution[2] then
@@ -173,7 +176,7 @@ function api.pget(x, y)
 	end
 	warning(string.format("pget out of screen %d, %d", x, y))
 	]]
-	return 0
+	--return 0
 end
 
 function api.color(c)
@@ -380,8 +383,8 @@ function api.rectfill(x0, y0, x1, y1, col)
 end
 
 local function getCircPoints(ox, oy, r)
-	ox=flr(ox)+0.5
-	oy=flr(oy)+0.5
+	ox=flr(ox)--+0.5
+	oy=flr(oy)--+0.5
 	r=flr(r)
 	local points={}
 	local x=r
