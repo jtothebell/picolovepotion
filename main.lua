@@ -186,14 +186,23 @@ function getScreenBufferPointsByColor()
 		pointsByColor[i] = {}
 	end
 
+	local pixelScale = 2
+
 	for y=0, pico8.resolution[1] - 1  do
 		for x=0, pico8.resolution[2] - 1 do
-			local index = y*pico8.resolution[2] + x + 1
-			local cIdx = pico8.screen_buffer[index] + 1
+			local pixelIndex = y*pico8.resolution[2] + x + 1
+			local cIdx = pico8.screen_buffer[pixelIndex] + 1
 			local point = {x, y}
 
 			local pointCount = #pointsByColor[cIdx]
-			pointsByColor[cIdx][pointCount+1]=point
+			local pointsAdded = 1
+
+			for yscale=1, pixelScale do
+				for xscale=1, pixelScale do
+					pointsByColor[cIdx][pointCount+pointsAdded]={(point[1] * pixelScale) + (xscale - 1), (point[2] * pixelScale) + (yscale - 1)}
+					pointsAdded = pointsAdded + 1
+				end
+			end
 		end
 	end
 
