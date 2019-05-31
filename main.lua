@@ -199,7 +199,10 @@ function getScreenBufferPointsByColor()
 
 			for yscale=1, pixelScale do
 				for xscale=1, pixelScale do
-					pointsByColor[cIdx][pointCount+pointsAdded]={(point[1] * pixelScale) + (xscale - 1), (point[2] * pixelScale) + (yscale - 1)}
+					pointsByColor[cIdx][pointCount+pointsAdded]={
+						(point[1] * pixelScale) + (xscale - 1), 
+						(point[2] * pixelScale) + (yscale - 1)
+					}
 					pointsAdded = pointsAdded + 1
 				end
 			end
