@@ -3,6 +3,8 @@ version 16
 __lua__
 function _draw()
 	cls(1)
+	
+	print("what color is this")
 	--45 degree
 	line(10, 10, 20, 20, 2)
 	line(10, 10, 20, 20, 2)
@@ -11,6 +13,8 @@ function _draw()
 	line(10, 10, 20, 10, 3)
 	
 	line(10, 20, 20, 25, 4)
+	
+	print("what is this color?")
 	
 	--vertical
 	line(10, 30, 10, 40, 5)
@@ -28,6 +32,8 @@ function _draw()
 	spr(0, 10, 100)
 	
 	spr(1, 10, 110)
+	
+	print("a texty thing", 70, 60)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
