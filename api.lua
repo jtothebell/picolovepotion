@@ -8,7 +8,7 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 	if points then
 		for i=1, #points do
 			local index = flr(points[i][2]*resY +points[i][1]) + 1
-			local color = colorIdx
+			local color = colorIdx or pico8.color
 			if points[i][3] ~= nil then
 				color = points[i][3]
 			end
@@ -45,7 +45,9 @@ end
 --------------------------------------------------------------------------------
 -- PICO-8 API
 
-local api={}
+local api={
+	fontSpriteTable = require("fontSpriteTable")
+}
 
 function api.flip()
 	flip_screen()
@@ -183,15 +185,74 @@ function api.color(c)
 	color(c)
 end
 
+local function getPrintPoints(str, x, y)
+
+	if x and y then
+		pico8.cursor[1]=flr(tonumber(x) or 0)
+		pico8.cursor[2]=flr(tonumber(y) or 0)
+	end
+
+	local points = {}
+	local pointCount = 0
+
+	local inspect = require 'inspect'
+
+	
+	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"
+	local size=0
+
+	for line in str:gmatch("(.-)\n") do
+		local xAdd = 0
+		for i = 1, #tostring(line) do
+			local character = string.sub(line, i, i)
+			--print("char: " .. character)
+			local charTable = api.fontSpriteTable[character]
+
+			--print(inspect(charTable))
+			--print(charTable[1][1])
+			--print(#charTable)
+			--print(#charTable[1])
+
+			if charTable ~= nil then
+				local startX = pico8.cursor[1] + xAdd
+				local startY =  pico8.cursor[2] + size
+				local tableX = 0
+				local tableY = 0
+
+				for tableY = 1, #charTable do
+					for tableX = 1, #charTable[tableY] do
+						local val = charTable[tableY][tableX]
+
+						if val > 0 then
+							pointCount = pointCount + 1
+							local x = startX + tableX - 1
+							local y = startY + tableY - 1
+							--print(x .. ', ' .. y)
+							points[pointCount] = {x, y}
+						end
+					end
+				end
+			end
+
+        	xAdd = xAdd + 4
+    	end
+		size=size+6
+	end
+
+	return points
+
+end
+
 function api.print(str, x, y, col)
 	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
 
-	if x and y then
-		pico8.cursor[1]=flr(tonumber(x) or 0)
-		pico8.cursor[2]=flr(tonumber(y) or 0)
+	local points = getPrintPoints(str, x, y)
+
+	if points then
+		setPointsOnScreenBuffer(points, col)
 	end
 	
 	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"

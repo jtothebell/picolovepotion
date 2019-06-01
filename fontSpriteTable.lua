@@ -2,7 +2,7 @@
 --pico 8 saves all text as lowercase in p8 files, but only renders upper case letters
 --cart developers can use them by using the escaped ascii codes
 
-fontSpriteTable = {
+local fontSpriteTable = {
     [" "] = { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } },
     ["!"] = { { 0, 1, 0 }, { 0, 1, 0 }, { 0, 1, 0 }, { 0, 0, 0 }, { 0, 1, 0 } },
     ['"'] = { { 1, 0, 1 }, { 1, 0, 1 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } },
@@ -127,3 +127,5 @@ fontSpriteTable = {
     ["Ö"] = { { 1, 0, 1 }, { 1, 0, 1 }, { 1, 0, 1 }, { 1, 0, 1 }, { 1, 0, 1 } },
     ["┬"] = { { 1, 0, 1 }, { 1, 0, 1 }, { 1, 0, 1 }, { 1, 0, 1 }, { 1, 0, 1 } }
   }
+
+  return fontSpriteTable

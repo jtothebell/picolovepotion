@@ -4,3 +4,4 @@ demos/
 binaries/
 profile.lua
 ProFi.lua
+inspect.lua
