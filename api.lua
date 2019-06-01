@@ -124,7 +124,6 @@ function api.splore()
 end
 
 function api.pset(x, y, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -135,24 +134,15 @@ function api.pset(x, y, col)
 	points[1] = {flr(x), flr(y)}
 	setPointsOnScreenBuffer(points, col)
 	
-
-	if prevCol then
-		color(prevCol)
-	end
 end
 --[[
 --attempt at setting up a functional approach to preserving color
 local function coloredFunc(col, func)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
 
 	func()
-
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 function api.pset(x, y, col)
@@ -244,7 +234,6 @@ local function getPrintPoints(str, x, y)
 end
 
 function api.print(str, x, y, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -282,9 +271,6 @@ function api.print(str, x, y, col)
 		end
 	end
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 api.printh=print
@@ -415,7 +401,6 @@ local function getRectPoints(x0, y0, x1, y1)
 end
 
 function api.rect(x0, y0, x1, y1, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -428,9 +413,6 @@ function api.rect(x0, y0, x1, y1, col)
 		setPointsOnScreenBuffer(points, col)
 	end
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 local function getRectFillPoints(x0, y0, x1, y1)
@@ -458,7 +440,6 @@ local function getRectFillPoints(x0, y0, x1, y1)
 end
 
 function api.rectfill(x0, y0, x1, y1, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -471,9 +452,6 @@ function api.rectfill(x0, y0, x1, y1, col)
 		setPointsOnScreenBuffer(points, col)
 	end
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 local function getCircPoints(ox, oy, r)
@@ -508,7 +486,6 @@ local function getCircPoints(ox, oy, r)
 end
 
 function api.circ(ox, oy, r, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -521,9 +498,6 @@ function api.circ(ox, oy, r, col)
 		setPointsOnScreenBuffer(points, col)
 	end
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 
@@ -608,7 +582,6 @@ local function getCircFillPoints(cx, cy, r)
 end
 
 function api.circfill(cx, cy, r, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -621,15 +594,10 @@ function api.circfill(cx, cy, r, col)
 		setPointsOnScreenBuffer(points, col)
 	end
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 
 function api.line(x0, y0, x1, y1, col)
-	local prevCol = pico8.color
-
 	if col then
 		color(col)
 	end
@@ -642,9 +610,6 @@ function api.line(x0, y0, x1, y1, col)
 		setPointsOnScreenBuffer(points, col)
 	end
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 
