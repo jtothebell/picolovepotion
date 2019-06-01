@@ -148,11 +148,9 @@ function _load(filename)
 	pico8.camera_y=0
 	pico8.screen_buffer={}
 	local pixelCount = pico8.resolution[1]*pico8.resolution[2]
-	--print(pixelCount)
 	for i=1, pixelCount do
 		pico8.screen_buffer[i] = 0
 	end
-	--print(#pico8.screen_buffer)
 
 	love.graphics.origin()
 	pico8.clip=nil
@@ -186,7 +184,8 @@ function getScreenBufferPointsByColor()
 		pointsByColor[i] = {}
 	end
 
-	local pixelScale = 2
+	--bumping this up appears to work on PC, but crashes on the switch
+	local pixelScale = 1
 
 	for y=0, pico8.resolution[1] - 1  do
 		for x=0, pico8.resolution[2] - 1 do
