@@ -729,6 +729,12 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 							--limit drawing to what is on screen
 							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
 								love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
+
+								local points = getSprPoints(v, sx + (8*x), sy + (8*y))
+
+								if points then
+									setPointsOnScreenBuffer(points)
+								end
 							end
 						end
 					end
