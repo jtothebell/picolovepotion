@@ -7,7 +7,9 @@ local pixelCount = resX * resY
 local function setPointsOnScreenBuffer(points, colorIdx)
 	if points then
 		for i=1, #points do
-			local index = flr(points[i][2]*resY +points[i][1]) + 1
+			local x = points[i][1] - pico8.camera_x
+			local y = points[i][2] - pico8.camera_y
+			local index = flr(y*resY + x) + 1
 			local color = colorIdx or pico8.color
 			if points[i][3] ~= nil then
 				color = points[i][3]
