@@ -7,7 +7,9 @@ local pixelCount = resX * resY
 local function setPointsOnScreenBuffer(points, colorIdx)
 	if points then
 		for i=1, #points do
-			local index = flr(points[i][2]*resY +points[i][1]) + 1
+			local x = points[i][1] - pico8.camera_x
+			local y = points[i][2] - pico8.camera_y
+			local index = flr(y*resY + x) + 1
 			local color = colorIdx or pico8.color
 			if points[i][3] ~= nil then
 				color = points[i][3]
@@ -185,7 +187,7 @@ local function getPrintPoints(str, x, y)
 	local points = {}
 	local pointCount = 0
 
-	local inspect = require 'inspect'
+	--local inspect = require 'inspect'
 
 	
 	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"
@@ -365,6 +367,29 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 	end
 end
 
+local function getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+	dw=dw or sw
+	dh=dh or sh
+
+	points = {}
+
+	local pixelIdx = 1
+
+	local ssTable = pico8.spritesheet_table
+
+	for yInc=0, sw - 1 do
+		for xInc=0, sh - 1 do
+			local color = ssTable[dx + xInc][dy + yInc]
+			if color > 0 then
+				points[pixelIdx] = {sx + xInc, sy + yInc, color}
+				pixelIdx = pixelIdx + 1
+			end
+		end
+	end
+
+	return points
+end
+
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 	dw=dw or sw
 	dh=dh or sh
@@ -375,6 +400,12 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 		flr(dx)+(flip_x and dw or 0),
 		flr(dy)+(flip_y and dh or 0),
 		0, dw/sw*(flip_x and-1 or 1), dh/sh*(flip_y and-1 or 1))
+
+	local points = getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+
+	if points then
+		setPointsOnScreenBuffer(points)
+	end
 end
 
 local function getRectPoints(x0, y0, x1, y1)
@@ -694,6 +725,12 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 							--limit drawing to what is on screen
 							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
 								love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
+
+								local points = getSprPoints(v, sx + (8*x), sy + (8*y))
+
+								if points then
+									setPointsOnScreenBuffer(points)
+								end
 							end
 						end
 					end
