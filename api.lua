@@ -381,6 +381,29 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 	end
 end
 
+local function getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+	dw=dw or sw
+	dh=dh or sh
+
+	points = {}
+
+	local pixelIdx = 1
+
+	local ssTable = pico8.spritesheet_table
+
+	for yInc=0, sw - 1 do
+		for xInc=0, sh - 1 do
+			local color = ssTable[dx + xInc][dy + yInc]
+			if color > 0 then
+				points[pixelIdx] = {sx + xInc, sy + yInc, color}
+				pixelIdx = pixelIdx + 1
+			end
+		end
+	end
+
+	return points
+end
+
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 	dw=dw or sw
 	dh=dh or sh
@@ -391,6 +414,12 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 		flr(dx)+(flip_x and dw or 0),
 		flr(dy)+(flip_y and dh or 0),
 		0, dw/sw*(flip_x and-1 or 1), dh/sh*(flip_y and-1 or 1))
+
+	local points = getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+
+	if points then
+		setPointsOnScreenBuffer(points)
+	end
 end
 
 local function getRectPoints(x0, y0, x1, y1)
