@@ -195,7 +195,7 @@ local function getPrintPoints(str, x, y)
 	local points = {}
 	local pointCount = 0
 
-	local inspect = require 'inspect'
+	--local inspect = require 'inspect'
 
 	
 	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"
