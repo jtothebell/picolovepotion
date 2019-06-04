@@ -7,9 +7,9 @@ local pixelCount = resX * resY
 local function clipContains(clip, x, y)
 	return clip == nil or (
 		clip[1] <= x and 
-		x < clip[1] + clip[3] and 
+		x <= clip[1] + clip[3] and 
 		clip[2] <= y and 
-		y < clip[2] + clip[4])
+		y <= clip[2] + clip[4])
 end
 
 local function setPointsOnScreenBuffer(points, colorIdx)
@@ -99,6 +99,7 @@ function api.cls(c)
 	--TODO clear the color passed
 	local color = pico8.palette[c + 1]
 
+	local pixelCount = pico8.resolution[1]*pico8.resolution[2]
 	for i=1, pixelCount do
 		pico8.screen_buffer[i] = c
 	end
