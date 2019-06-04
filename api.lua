@@ -316,71 +316,23 @@ function api.tostr(val, hex)
 	end
 end
 
-local function getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
-	dw=dw or sw
-	dh=dh or sh
-
-	points = {}
-
-	local pixelIdx = 1
-
-	local ssTable = pico8.spritesheet_table
-
-	local widthFactor = dw / sw
-	local heightFactor = dh / sh
-
-	--iterate through screen pixels
-	for y = 0, dh do
-		for x = 0, dw do
-			local adjustedX = flr(widthFactor * x)
-			local adjustedY = flr(heightFactor * y)
-			if flip_x then
-				adjustedX = sw - adjustedX
-			end
-			if flip_y then
-				adjustedY = sh - adjustedY
-			end
-			local color = ssTable[dx + adjustedX][dy + adjustedY]
-			if color > 0 then
-				points[pixelIdx] = {sx + x, sy + y, color}
-				pixelIdx = pixelIdx + 1
-			end
-		end
-	end
-
-	return points
-end
-
 local function getSprPoints(n, x, y, w, h, flip_x, flip_y)
 	n=flr(n)
 	w=w or 1
 	h=h or 1
 
+	points = {}
 
 	local pixelW = flr(8 * w)
 	local pixelH = flr(8 * h)
 
-	local sx = flr(n%16)*8;
-	local sy = flr(n/16)*8
-
-	points = {}
 	local pixelIdx = 1
 
 	local ssTable = pico8.spritesheet_table
 
 	for yInc=0, pixelH - 1 do
 		for xInc=0, pixelW - 1 do
-			local ssX = xInc
-			if flip_x then
-				ssX = pixelW - xInc - 1
-			end
-
-			local ssY = yInc
-			if flip_y then
-				ssY = pixelH - yInc - 1
-			end
-
-			local color = ssTable[sx + ssX][sy + ssY]
+			local color = ssTable[flr(n%16)*8 + xInc][flr(n/16)*8 + yInc]
 			if color > 0 then
 				points[pixelIdx] = {x + xInc, y + yInc, color}
 				pixelIdx = pixelIdx + 1
@@ -426,7 +378,28 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 	end
 end
 
+local function getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+	dw=dw or sw
+	dh=dh or sh
 
+	points = {}
+
+	local pixelIdx = 1
+
+	local ssTable = pico8.spritesheet_table
+
+	for yInc=0, sw - 1 do
+		for xInc=0, sh - 1 do
+			local color = ssTable[dx + xInc][dy + yInc]
+			if color > 0 then
+				points[pixelIdx] = {sx + xInc, sy + yInc, color}
+				pixelIdx = pixelIdx + 1
+			end
+		end
+	end
+
+	return points
+end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 	dw=dw or sw
