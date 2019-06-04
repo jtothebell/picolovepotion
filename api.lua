@@ -321,18 +321,31 @@ local function getSprPoints(n, x, y, w, h, flip_x, flip_y)
 	w=w or 1
 	h=h or 1
 
-	points = {}
 
 	local pixelW = flr(8 * w)
 	local pixelH = flr(8 * h)
 
+	local sx = flr(n%16)*8;
+	local sy = flr(n/16)*8
+
+	points = {}
 	local pixelIdx = 1
 
 	local ssTable = pico8.spritesheet_table
 
 	for yInc=0, pixelH - 1 do
 		for xInc=0, pixelW - 1 do
-			local color = ssTable[flr(n%16)*8 + xInc][flr(n/16)*8 + yInc]
+			local ssX = xInc
+			if flip_x then
+				ssX = pixelW - xInc - 1
+			end
+
+			local ssY = yInc
+			if flip_y then
+				ssY = pixelH - yInc - 1
+			end
+
+			local color = ssTable[sx + ssX][sy + ssY]
 			if color > 0 then
 				points[pixelIdx] = {x + xInc, y + yInc, color}
 				pixelIdx = pixelIdx + 1
