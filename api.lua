@@ -391,27 +391,31 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 	end
 end
 
+--s: sprite sheet coords, d: screen coords
 local function getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
-	dw=dw or sw
-	dh=dh or sh
-
+    dw=dw or sw
+    dh=dh or sh
 	points = {}
+	local widthFactor = sw / dw
+	local heightFactor = sh / dh
 
-	local pixelIdx = 1
+    local pixelIdx = 1
+    local ssTable = pico8.spritesheet_table
+    for yInc=0, dh - 1 do
+		for xInc=0, dw - 1 do
+			local ssDeltaX = flr(xInc * widthFactor)
+			if flip_x then ssDeltaX = sw - ssDeltaX end
+			local ssDeltaY = flr(yInc * heightFactor)
+			if flip_y then ssDeltaY = sh - ssDeltaY end
 
-	local ssTable = pico8.spritesheet_table
-
-	for yInc=0, sw - 1 do
-		for xInc=0, sh - 1 do
-			local color = ssTable[dx + xInc][dy + yInc]
-			if color > 0 then
-				points[pixelIdx] = {sx + xInc, sy + yInc, color}
-				pixelIdx = pixelIdx + 1
-			end
-		end
-	end
-
-	return points
+            local color = ssTable[sx + ssDeltaX][sy + ssDeltaY]
+            if color > 0 then
+                points[pixelIdx] = {dx + xInc, dy + yInc, color}
+                pixelIdx = pixelIdx + 1
+            end
+        end
+    end
+    return points
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
