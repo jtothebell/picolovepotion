@@ -13,22 +13,30 @@ local function clipContains(clip, x, y)
 end
 
 local function setPointsOnScreenBuffer(points, colorIdx)
+	local lp8 = pico8
+	local clip = lp8.clip
+	local camera_x = lp8.camera_x
+	local camera_y = lp8.camera_y
+	local screen_buffer = lp8.screen_buffer
+	local draw_palette = lp8.draw_palette
+	local resY = lp8.resolution[2]
+	local globalColor = lp8.color
 	if points then
 		for i=1, #points do
-			local x = points[i][1] - pico8.camera_x
-			local y = points[i][2] - pico8.camera_y
-			if clipContains(pico8.clip, x, y) then
+			local x = points[i][1] - camera_x
+			local y = points[i][2] - camera_y
+			if clipContains(clip, x, y) then
 				local index = flr(y*resY + x) + 1
-				local color = colorIdx or pico8.color
+				local color = colorIdx or globalColor
 				
 				if points[i][3] ~= nil then
 					color = points[i][3]
 				end
 
 				--account for palette shifting
-				color = pico8.draw_palette[color]
+				color = draw_palette[color]
 
-				pico8.screen_buffer[index] = color
+				screen_buffer[index] = color
 			end
 		end
 	end
@@ -37,11 +45,11 @@ end
 local function color(c, disallowShift)
 	c=flr(c or 0)%16
 	pico8.color=c
-	if disallowShift then
-		setColor(c)
-	else
-		setShiftedColor(c)
-	end
+	--if disallowShift then
+	--	setColor(c)
+	--else
+	--	setShiftedColor(c)
+	--end
 end
 
 local function warning(msg)
@@ -79,15 +87,15 @@ function api.camera(x, y)
 		pico8.camera_x=0
 		pico8.camera_y=0
 	end
-	restore_camera()
+	--restore_camera()
 end
 
 function api.clip(x, y, w, h)
 	if x and y and w and h then
-		love.graphics.setScissor(x, y, w, h)
+		--love.graphics.setScissor(x, y, w, h)
 		pico8.clip={x, y, w, h}
 	else
-		love.graphics.setScissor()
+		--love.graphics.setScissor()
 		pico8.clip=nil
 	end
 end
@@ -100,7 +108,7 @@ function api.cls(c)
 
 	pico8.clip=nil
 	--size of pico 8 screen
-	love.graphics.setScissor()
+	--love.graphics.setScissor()
 	--TODO clear the color passed
 	local color = pico8.palette[c + 1]
 
@@ -110,8 +118,8 @@ function api.cls(c)
 	end
 	--love.graphics.clear(color[1], color[2], color[3], 1)
 	--pico love uses the background color for clear. This doesn't match love behavior
-	love.graphics.setBackgroundColor(color[1], color[2], color[3])
-	love.graphics.clear()
+	--love.graphics.setBackgroundColor(color[1], color[2], color[3])
+	--love.graphics.clear()
 	pico8.cursor={0, 0}
 
 end
@@ -146,7 +154,7 @@ function api.pset(x, y, col)
 		color(col)
 	end
 
-	love.graphics.points(flr(x), flr(y))
+	--love.graphics.points(flr(x), flr(y))
 
 	local points = {}
 	points[1] = {flr(x), flr(y)}
@@ -216,11 +224,6 @@ local function getPrintPoints(str, x, y)
 			--print("char: " .. character)
 			local charTable = api.fontSpriteTable[character]
 
-			--print(inspect(charTable))
-			--print(charTable[1][1])
-			--print(#charTable)
-			--print(#charTable[1])
-
 			if charTable ~= nil then
 				local startX = pico8.cursor[1] + xAdd
 				local startY =  pico8.cursor[2] + size
@@ -247,6 +250,14 @@ local function getPrintPoints(str, x, y)
 		size=size+6
 	end
 
+	if not x and not y then
+		if pico8.cursor[2]+size>122 then
+			
+		else
+			pico8.cursor[2]=pico8.cursor[2]+size
+		end
+	end
+
 	return points
 
 end
@@ -262,6 +273,7 @@ function api.print(str, x, y, col)
 		setPointsOnScreenBuffer(points, col)
 	end
 	
+	--[[
 	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"
 	local size=0
 
@@ -273,6 +285,7 @@ function api.print(str, x, y, col)
     	end
 		size=size+6
 	end
+	
 
 	if not x and not y then
 		if pico8.cursor[2]+size>122 then
@@ -288,6 +301,7 @@ function api.print(str, x, y, col)
 			pico8.cursor[2]=pico8.cursor[2]+size
 		end
 	end
+	]]
 
 end
 
@@ -362,6 +376,7 @@ local function getSprPoints(n, x, y, w, h, flip_x, flip_y)
 end
 
 function api.spr(n, x, y, w, h, flip_x, flip_y)
+	--[[
 	n=flr(n)
 	w=w or 1
 	h=h or 1
@@ -388,6 +403,7 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 		flr(x)+(w*8*(flip_x and 1 or 0)),
 		flr(y)+(h*8*(flip_y and 1 or 0)),
 		0, flip_x and-1 or 1, flip_y and-1 or 1)
+	]]
 
 	local points = getSprPoints(n, x, y, w, h, flip_x, flip_y)
 
@@ -424,6 +440,7 @@ local function getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+	--[[
 	dw=dw or sw
 	dh=dh or sh
 	-- FIXME: cache this quad
@@ -433,6 +450,7 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 		flr(dx)+(flip_x and dw or 0),
 		flr(dy)+(flip_y and dh or 0),
 		0, dw/sw*(flip_x and-1 or 1), dh/sh*(flip_y and-1 or 1))
+	]]
 
 	local points = getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 
@@ -472,7 +490,7 @@ function api.rect(x0, y0, x1, y1, col)
 	local points = getRectPoints(x0, y0, x1, y1)
 
 	if points then
-		love.graphics.points(points)
+		--love.graphics.points(points)
 
 		setPointsOnScreenBuffer(points, col)
 	end
@@ -511,7 +529,7 @@ function api.rectfill(x0, y0, x1, y1, col)
 	local points = getRectFillPoints(x0, y0, x1, y1)
 
 	if points then
-		love.graphics.points(points)
+		--love.graphics.points(points)
 
 		setPointsOnScreenBuffer(points, col)
 	end
@@ -557,7 +575,7 @@ function api.circ(ox, oy, r, col)
 	local points = getCircPoints(ox, oy, r)
 	
 	if points then
-		love.graphics.points(points)
+		--love.graphics.points(points)
 
 		setPointsOnScreenBuffer(points, col)
 	end
@@ -653,7 +671,7 @@ function api.circfill(cx, cy, r, col)
 	local points = getCircFillPoints(cx, cy, r)
 	
 	if points then
-		love.graphics.points(points)
+		--love.graphics.points(points)
 
 		setPointsOnScreenBuffer(points, col)
 	end
@@ -669,7 +687,7 @@ function api.line(x0, y0, x1, y1, col)
 	local points = getLinePoints(x0, y0, x1, y1)
 	
 	if points then
-		love.graphics.points(points)
+		--love.graphics.points(points)
 
 		setPointsOnScreenBuffer(points, col)
 	end
@@ -699,7 +717,7 @@ function api.pal(c0, c1, p)
 			end
 		end
 		if __palette_modified or __alpha_modified then
-			refreshSpritesheetCanvas()
+			--refreshSpritesheetCanvas()
 		end
 		if __display_modified then
 			--not yet supported
@@ -718,7 +736,7 @@ function api.pal(c0, c1, p)
 			pico8.draw_palette[c0]=c1
 			
 		end
-		refreshSpritesheetCanvas()
+		--refreshSpritesheetCanvas()
 	end
 end
 
@@ -731,7 +749,7 @@ function api.palt(c, t)
 		c=flr(c)%16
 		pico8.pal_transparent[c]=t and 0 or 1
 	end
-	refreshSpritesheetCanvas()
+	--refreshSpritesheetCanvas()
 end
 
 function api.fillp(p)
@@ -757,7 +775,7 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 							local yPos = sy + (8*y) - pico8.camera_y;
 							--limit drawing to what is on screen
 							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
-								love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
+								--love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
 
 								local points = getSprPoints(v, sx + (8*x), sy + (8*y))
 

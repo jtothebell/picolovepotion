@@ -1,5 +1,5 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/linetest.p8'
+local cartPath = 'game/otherTestGames/celeste.p8'
 
 pico8={
 	fps=30,
@@ -106,11 +106,13 @@ function toggleShowDebugInfo(isOn)
 end
 
 function restore_clip()
+	--[[
 	if pico8.clip then
 		love.graphics.setScissor(unpack(pico8.clip))
 	else
 		love.graphics.setScissor()
 	end
+	]]
 end
 
 function setColor(c)
@@ -222,6 +224,10 @@ end
 
 
 function love.load()
+
+	love.profiler = require('profile')  
+  	love.profiler.hookall("Lua")
+  	love.profiler.start()
 
 	currentButtonDown = {}
 
@@ -335,6 +341,11 @@ function love.update(dt)
 		if pico8.cart._update then pico8.cart._update() end
 	end
 	loveFrames = loveFrames + 1
+
+	if loveFrames%100 == 0 then
+		love.report = love.profiler.report('time', 20)
+		love.profiler.reset()
+	end
 end
 
 function love.draw()
@@ -351,8 +362,8 @@ function love.draw()
 end
 
 function restore_camera()
-	love.graphics.origin()
-	love.graphics.translate(-pico8.camera_x, -pico8.camera_y)
+	--love.graphics.origin()
+	--love.graphics.translate(-pico8.camera_x, -pico8.camera_y)
 end
 
 function drawScreenBuffer()
@@ -374,7 +385,7 @@ function flip_screen()
 
 	love.graphics.clear()
 
-	--love.graphics.print(love.system.getOS(), 0, 0)
+	love.graphics.print(love.report or "Please wait...", 500, 0)
 
 	if showDebugInfo then
 		love.graphics.print(status, 0, 10)
@@ -383,7 +394,7 @@ function flip_screen()
 	drawScreenBuffer()
 
 
-	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
+	--love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
 
 	-- get ready for next time
 	--setting canvas here doesn't work for lovePotion. 
