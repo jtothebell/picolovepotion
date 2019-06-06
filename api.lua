@@ -1,7 +1,7 @@
 local flr=math.floor
 
-local resX = pico8.resolution[1]
-local resY = pico8.resolution[2]
+local resX = flr(pico8.resolution[1])
+local resY = flr(pico8.resolution[2])
 local pixelCount = resX * resY
 
 local function clipContains(clip, x, y)
@@ -10,6 +10,7 @@ local function clipContains(clip, x, y)
 		clip[2] <= y and 
 		y < clip[2] + clip[4]
 end
+
 
 local function setPointsOnScreenBuffer(points, colorIdx)
 	local lp8 = pico8
@@ -29,7 +30,7 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 			local x = p[1] - camera_x
 			local y = p[2] - camera_y
 			if clip == nil or clipContains(clip, x, y) then
-				local index = flr(y*resY + x) + 1
+				local index = flr(y)*resY + flr(x) + 1
 				
 				
 				if p[3] ~= nil then
@@ -40,6 +41,39 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 		end
 	end
 end
+
+--[[
+	--possible optimization- 3 separate tables instead of 1 table of tables for points
+local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colvalues, colorIdx)
+	local lp8 = pico8
+	local clip = lp8.clip
+	local camera_x = lp8.camera_x
+	local camera_y = lp8.camera_y
+	local screen_buffer = lp8.screen_buffer
+	local draw_palette = lp8.draw_palette
+	local resY = lp8.resolution[2]
+	local globalColor = lp8.color
+	local color = colorIdx or globalColor
+	color = draw_palette[color]
+
+	if xvalues and yvalues then
+		for i=1, #xvalues do
+			local p = points[i]
+			local x = xvalues[i] - camera_x
+			local y = yvalues[i] - camera_y
+			if clip == nil or clipContains(clip, x, y) then
+				local index = flr(y*resY + x) + 1
+				
+				
+				if colvalues ~= nil then
+					color = draw_palette[ colvalues[i] ]
+				end
+				screen_buffer[index] = color
+			end
+		end
+	end
+end
+]]
 
 local function color(c, disallowShift)
 	c=flr(c or 0)%16
