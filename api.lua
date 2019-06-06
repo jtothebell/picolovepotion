@@ -20,22 +20,21 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 	local draw_palette = lp8.draw_palette
 	local resY = lp8.resolution[2]
 	local globalColor = lp8.color
+	local color = colorIdx or globalColor
+	color = draw_palette[color]
 
 	if points then
 		for i=1, #points do
-			local x = points[i][1] - camera_x
-			local y = points[i][2] - camera_y
+			local p = points[i]
+			local x = p[1] - camera_x
+			local y = p[2] - camera_y
 			if clip == nil or clipContains(clip, x, y) then
 				local index = flr(y*resY + x) + 1
-				local color = colorIdx or globalColor
 				
-				if points[i][3] ~= nil then
-					color = points[i][3]
+				
+				if p[3] ~= nil then
+					color = draw_palette[p[3]]
 				end
-
-				--account for palette shifting
-				color = draw_palette[color]
-
 				screen_buffer[index] = color
 			end
 		end
