@@ -5,11 +5,10 @@ local resY = pico8.resolution[2]
 local pixelCount = resX * resY
 
 local function clipContains(clip, x, y)
-	return clip == nil or (
-		clip[1] <= x and 
+	return clip[1] <= x and 
 		x < clip[1] + clip[3] and 
 		clip[2] <= y and 
-		y < clip[2] + clip[4])
+		y < clip[2] + clip[4]
 end
 
 local function setPointsOnScreenBuffer(points, colorIdx)
@@ -21,11 +20,12 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 	local draw_palette = lp8.draw_palette
 	local resY = lp8.resolution[2]
 	local globalColor = lp8.color
+
 	if points then
 		for i=1, #points do
 			local x = points[i][1] - camera_x
 			local y = points[i][2] - camera_y
-			if clipContains(clip, x, y) then
+			if clip == nil or clipContains(clip, x, y) then
 				local index = flr(y*resY + x) + 1
 				local color = colorIdx or globalColor
 				
