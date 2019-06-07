@@ -42,7 +42,6 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 	end
 end
 
---[[
 	--possible optimization- 3 separate tables instead of 1 table of tables for points
 local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colvalues, colorIdx)
 	local lp8 = pico8
@@ -58,7 +57,6 @@ local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colvalues, col
 
 	if xvalues and yvalues then
 		for i=1, #xvalues do
-			local p = points[i]
 			local x = xvalues[i] - camera_x
 			local y = yvalues[i] - camera_y
 			if clip == nil or clipContains(clip, x, y) then
@@ -73,7 +71,7 @@ local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colvalues, col
 		end
 	end
 end
-]]
+
 
 local function color(c, disallowShift)
 	c=flr(c or 0)%16
@@ -554,11 +552,40 @@ local function getRectFillPoints(x0, y0, x1, y1)
 	return points
 end
 
+local function getRectFillXAndYArrays(x0, y0, x1, y1)
+	if x1<x0 then
+		x0, x1=x1, x0
+	end
+	if y1<y0 then
+		y0, y1=y1, y0
+	end
+
+	local w, h=flr(x1-x0), flr(y1-y0)
+
+	local xs = {}
+	local ys = {}
+	local pointCount = 0
+
+	for i = 1, w + 1 do
+		for j = 1, h + 1 do
+			pointCount = pointCount + 1
+			xs[pointCount] = x0 + (i - 1)
+			ys[pointCount] = y0 + (j - 1)			
+		end
+	end
+
+	return xs, ys
+end
+
 function api.rectfill(x0, y0, x1, y1, col)
 	if col then
 		color(col)
 	end
 
+	local xs, ys = getRectFillXAndYArrays(x0, y0, x1, y1)
+
+	setSeparatedPointsOnScreenBuffer(xs, ys, nil, col)
+	--[[
 	local points = getRectFillPoints(x0, y0, x1, y1)
 
 	if points then
@@ -566,6 +593,7 @@ function api.rectfill(x0, y0, x1, y1, col)
 
 		setPointsOnScreenBuffer(points, col)
 	end
+	]]
 
 end
 
