@@ -28,7 +28,7 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 			local p = points[i]
 			local x = p[1] - camera_x
 			local y = p[2] - camera_y
-			if clip == nil or clipContains(clip, x, y) then
+			if (x >= 0 and x < 128 and y >= 0 and y < 128) and (clip == nil or clipContains(clip, x, y)) then
 				local index = flr(y)*resY + flr(x) + 1
 				
 				
@@ -60,7 +60,7 @@ local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colorIdx)
 		for i=1, #xvalues do
 			x = xvalues[i] - camera_x
 			y = yvalues[i] - camera_y
-			if clip == nil or clipContains(clip, x, y) then
+			if (x >= 0 and x < 128 and y >= 0 and y < 128) and (clip == nil or clipContains(clip, x, y)) then
 				index = flr(y)*resY + flr(x) + 1
 				
 				
@@ -89,7 +89,7 @@ local function setSeparatedSpritePointsOnScreenBuffer(xvalues, yvalues, colvalue
 		for i=1, #xvalues do
 			x = xvalues[i] - camera_x
 			y = yvalues[i] - camera_y
-			if clip == nil or clipContains(clip, x, y) then
+			if (x >= 0 and x < 128 and y >= 0 and y < 128) and (clip == nil or clipContains(clip, x, y)) then
 				index = flr(y)*resY + flr(x) + 1
 
 				color = draw_palette[ colvalues[i] ]
@@ -619,13 +619,18 @@ local function getRectFillPoints(x0, y0, x1, y1)
 		y0, y1=y1, y0
 	end
 
-	local w, h=flr(x1-x0), flr(y1-y0)
+	x0 = flr(x0)
+	y0 = flr(y0)
+
+	--love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
+
+	local w, h=flr(x1-x0)+1, flr(y1-y0)+1
 
 	local points = {}
 	local pointCount = 0
 
-	for i = 1, w + 1 do
-		for j = 1, h + 1 do
+	for i = 1, w do
+		for j = 1, h do
 			local index = pointCount + 1
 			points[index] = {x0 + (i - 1), y0 + (j - 1) }
 			pointCount = pointCount + 1
@@ -643,7 +648,9 @@ local function getRectFillXAndYArrays(x0, y0, x1, y1)
 		y0, y1=y1, y0
 	end
 
-	local w, h=flr(x1-x0), flr(y1-y0)
+	--love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
+
+	local w, h=flr(x1-x0)+1, flr(y1-y0)+1
 
 	local xs = {}
 	local ys = {}
@@ -652,8 +659,8 @@ local function getRectFillXAndYArrays(x0, y0, x1, y1)
 	for i = 1, w + 1 do
 		for j = 1, h + 1 do
 			pointCount = pointCount + 1
-			xs[pointCount] = x0 + (i - 1)
-			ys[pointCount] = y0 + (j - 1)			
+			xs[pointCount] = flr(x0) + (i - 1)
+			ys[pointCount] = flr(y0) + (j - 1)			
 		end
 	end
 
