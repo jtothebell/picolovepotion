@@ -19,7 +19,6 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 	local camera_y = lp8.camera_y
 	local screen_buffer = lp8.screen_buffer
 	local draw_palette = lp8.draw_palette
-	local resY = lp8.resolution[2]
 	local globalColor = lp8.color
 	local color = colorIdx or globalColor
 	color = draw_palette[color]
@@ -43,24 +42,26 @@ local function setPointsOnScreenBuffer(points, colorIdx)
 end
 
 	--possible optimization- 3 separate tables instead of 1 table of tables for points
-local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colvalues, colorIdx)
+local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colorIdx)
 	local lp8 = pico8
 	local clip = lp8.clip
 	local camera_x = lp8.camera_x
 	local camera_y = lp8.camera_y
 	local screen_buffer = lp8.screen_buffer
 	local draw_palette = lp8.draw_palette
-	local resY = lp8.resolution[2]
 	local globalColor = lp8.color
 	local color = colorIdx or globalColor
 	color = draw_palette[color]
+	local x = 0
+	local y = 0
+	local index = 1
 
 	if xvalues and yvalues then
 		for i=1, #xvalues do
-			local x = xvalues[i] - camera_x
-			local y = yvalues[i] - camera_y
+			x = xvalues[i] - camera_x
+			y = yvalues[i] - camera_y
 			if clip == nil or clipContains(clip, x, y) then
-				local index = flr(y*resY + x) + 1
+				index = flr(y)*resY + flr(x) + 1
 				
 				
 				if colvalues ~= nil then
@@ -71,6 +72,34 @@ local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colvalues, col
 		end
 	end
 end
+
+local function setSeparatedSpritePointsOnScreenBuffer(xvalues, yvalues, colvalues)
+	local lp8 = pico8
+	local clip = lp8.clip
+	local camera_x = lp8.camera_x
+	local camera_y = lp8.camera_y
+	local screen_buffer = lp8.screen_buffer
+	local draw_palette = lp8.draw_palette
+	local x = 0
+	local y = 0
+	local index = 1
+
+
+	if xvalues and yvalues and colvalues then
+		for i=1, #xvalues do
+			x = xvalues[i] - camera_x
+			y = yvalues[i] - camera_y
+			if clip == nil or clipContains(clip, x, y) then
+				index = flr(y)*resY + flr(x) + 1
+
+				color = draw_palette[ colvalues[i] ]
+
+				screen_buffer[index] = color
+			end
+		end
+	end
+end
+
 
 
 local function color(c, disallowShift)
@@ -367,6 +396,7 @@ function api.tostr(val, hex)
 end
 
 local function getSprPoints(n, x, y, w, h, flip_x, flip_y)
+
 	n=flr(n)
 	w=w or 1
 	h=h or 1
@@ -406,6 +436,52 @@ local function getSprPoints(n, x, y, w, h, flip_x, flip_y)
 	return points
 end
 
+local function getSprArrays(n, x, y, w, h, flip_x, flip_y)
+
+	n=flr(n)
+	w=w or 1
+	h=h or 1
+
+
+	local pixelW = flr(8 * w)
+	local pixelH = flr(8 * h)
+
+	local sx = flr(n%16)*8;
+	local sy = flr(n/16)*8
+
+	xs = {}
+	ys = {}
+	colors = {}
+	local pixelIdx = 1
+
+	local ssTable = pico8.spritesheet_table
+
+	for yInc=0, pixelH - 1 do
+		for xInc=0, pixelW - 1 do
+			local ssX = xInc
+			if flip_x then
+				ssX = pixelW - xInc - 1
+			end
+
+			local ssY = yInc
+			if flip_y then
+				ssY = pixelH - yInc - 1
+			end
+
+			local color = ssTable[sx + ssX][sy + ssY]
+			--todo check transparency here
+			if color > 0 then
+				xs[pixelIdx] = x + xInc
+				ys[pixelIdx] = y + yInc
+				colors[pixelIdx] = color	
+				pixelIdx = pixelIdx + 1
+			end
+		end
+	end
+
+	return xs, ys, colors
+end
+
 function api.spr(n, x, y, w, h, flip_x, flip_y)
 	--[[
 	n=flr(n)
@@ -436,11 +512,18 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 		0, flip_x and-1 or 1, flip_y and-1 or 1)
 	]]
 
+	--[[
 	local points = getSprPoints(n, x, y, w, h, flip_x, flip_y)
 
 	if points then
 		setPointsOnScreenBuffer(points)
 	end
+	]]
+	
+	local xs, ys, colors = getSprArrays(n, x, y, w, h, flip_x, flip_y)
+
+	setSeparatedSpritePointsOnScreenBuffer(xs, ys, colors)
+	
 end
 
 --s: sprite sheet coords, d: screen coords
@@ -584,7 +667,7 @@ function api.rectfill(x0, y0, x1, y1, col)
 
 	local xs, ys = getRectFillXAndYArrays(x0, y0, x1, y1)
 
-	setSeparatedPointsOnScreenBuffer(xs, ys, nil, col)
+	setSeparatedPointsOnScreenBuffer(xs, ys, col)
 	--[[
 	local points = getRectFillPoints(x0, y0, x1, y1)
 
@@ -838,11 +921,16 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
 								--love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
 
+								--[[
 								local points = getSprPoints(v, sx + (8*x), sy + (8*y))
 
 								if points then
 									setPointsOnScreenBuffer(points)
 								end
+								]]
+								local xs, ys, colors = getSprArrays(v, sx + (8*x), sy + (8*y))
+
+								setSeparatedSpritePointsOnScreenBuffer(xs, ys, colors)
 							end
 						end
 					end
