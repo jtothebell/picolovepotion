@@ -227,7 +227,7 @@ function love.load()
 
 	love.profiler = require('profile')  
   	love.profiler.hookall("Lua")
-  	love.profiler.start()
+  	--love.profiler.start()
 
 	currentButtonDown = {}
 
@@ -343,15 +343,15 @@ function love.update(dt)
 	loveFrames = loveFrames + 1
 
 	if loveFrames%100 == 0 then
-		love.report = love.profiler.report('time', 20)
-		love.profiler.reset()
+		--love.report = love.profiler.report('time', 20)
+		--love.profiler.reset()
 	end
 end
 
 function love.draw()
 	--hack to force 30 fps. TODO: support 30 or 60
 	if (loveFrames % 2 == 0) then
-		love.graphics.setCanvas(pico8.screen)
+		--love.graphics.setCanvas(pico8.screen)
 
 		if pico8.cart._draw then 
 			pico8.cart._draw() 
@@ -369,6 +369,8 @@ end
 function drawScreenBuffer()
 	local pointsByColor = getScreenBufferPointsByColor()
 
+	love.graphics.setCanvas(pico8.screen)
+	love.graphics.clear()
 	for c, table in pairs(pointsByColor) do
 		if table ~= nil then
 			setShiftedColor(c - 1, true)
@@ -376,6 +378,7 @@ function drawScreenBuffer()
 			love.graphics.points(table)
 		end
 	end
+	love.graphics.setCanvas()
 end
 
 function flip_screen()
@@ -393,8 +396,8 @@ function flip_screen()
 
 	drawScreenBuffer()
 
-
-	--love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
+	love.graphics.setColor(1, 1, 1, 1)
+	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
 
 	-- get ready for next time
 	--setting canvas here doesn't work for lovePotion. 
