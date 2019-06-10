@@ -21,7 +21,6 @@ function cart.load_p8(filename)
 			pico8.spritesheet_table[i][j] = 0
 		end
 	end
-	pico8.spritesheet_pointsByColor={}
 
 	pico8.map={}
 	for y=0, 63 do
@@ -88,14 +87,6 @@ function cart.load_p8(filename)
 				v=tonumber(v, 16)
 				pico8.spritesheet_table[col][row] = v
 
-				local point = {col, row}
-
-				if pico8.spritesheet_pointsByColor[v] == nil then
-					pico8.spritesheet_pointsByColor[v] = {}
-				end
-
-				pico8.spritesheet_pointsByColor[v][#pico8.spritesheet_pointsByColor[v]+1]=point
-
 				col=col+1
 				if col==128 then break end
 			end
@@ -103,9 +94,6 @@ function cart.load_p8(filename)
 			if row==128 then break end
 		end
 	end
-
-	--convert spritesheet table into canvas
-	pico8.spritesheet_data=getSpritesheetCanvas()
 
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.setCanvas()

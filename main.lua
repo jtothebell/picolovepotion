@@ -1,5 +1,6 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/otherTestGames/celeste.p8'
+--local cartPath = 'game/otherTestGames/celeste.p8'
+local cartPath = 'game/otherTestGames/api.p8'
 
 pico8={
 	fps=30,
@@ -57,17 +58,16 @@ pico8={
 	draw_palette={},
 	display_palette={},
 	pal_transparent={},
-	spritesheet_cache={},
 
 	screen_buffer={}
 }
 
-function add(a, v)
+local function add(a, v)
 	if a==nil then return end
 	a[#a+1]=v
 end
 
-function del(a, dv)
+local function del(a, dv)
 	if a==nil then return end
 	for i=1, #a do
 		if a[i]==dv then
@@ -86,6 +86,9 @@ local cartname=nil
 local scale=5
 local xpadding=320
 local ypadding=40
+
+local resX = flr(pico8.resolution[1])
+local resY = flr(pico8.resolution[2])
 
 local api, cart
 
@@ -186,27 +189,26 @@ function getScreenBufferPointsByColor()
 		pointsByColor[i] = {}
 	end
 
-	--bumping this up appears to work on PC, but crashes on the switch
-	local pixelScale = 1
+	local pixelIndex = 1
+	local cIdx = 1
+	local point = {0, 0}
+
+	local numPointVals = 0
+	local pointsAdded = 1
 
 	for y=0, pico8.resolution[1] - 1  do
 		for x=0, pico8.resolution[2] - 1 do
-			local pixelIndex = y*pico8.resolution[2] + x + 1
-			local cIdx = pico8.screen_buffer[pixelIndex] + 1
-			local point = {x, y}
+			pixelIndex = flr(y)*resY + flr(x) + 1
+			cIdx = (pico8.screen_buffer[pixelIndex] or 0) + 1
+			point[1] = x
+			point[2] = y
 
-			local pointCount = #pointsByColor[cIdx]
-			local pointsAdded = 1
+			numPointVals = #pointsByColor[cIdx]
+			pointsAdded = 1
 
-			for yscale=1, pixelScale do
-				for xscale=1, pixelScale do
-					pointsByColor[cIdx][pointCount+pointsAdded]={
-						(point[1] * pixelScale) + (xscale - 1), 
-						(point[2] * pixelScale) + (yscale - 1)
-					}
-					pointsAdded = pointsAdded + 1
-				end
-			end
+			pointsByColor[cIdx][numPointVals+pointsAdded] = point[1]
+			pointsByColor[cIdx][numPointVals+pointsAdded + 1] = point[2]
+			pointsAdded = pointsAdded + 1
 		end
 	end
 
@@ -284,52 +286,6 @@ function love.load()
 	_load(cartPath)
 end
 
-function paletteKey()
-	--third way should be better
-	local t = {}
-	for i=1, 16 do
-		local index = ((i - 1) * 2) + 1
-		t[index] = pico8.draw_palette[i - 1]
-		t[index + 1] = pico8.pal_transparent[i - 1]
-	end
-	return table.concat(t, "")
-end
-
-function refreshSpritesheetCanvas()
-	pico8.spritesheet_data = getSpritesheetCanvas()
-end
-
-function getSpritesheetCanvas()
-	local currentPalKey = paletteKey()
-
-	local cached = pico8.spritesheet_cache[currentPalKey]
-	if cached ~= nil then
-		return cached
-	end
-
-	local canvas = love.graphics.newCanvas(128, 128)
-
-	pico8.spritesheet_cache[currentPalKey] = canvas
-	love.graphics.setCanvas(canvas)
-	--workaround for bug in current lovepotion (5/2/19)
-	love.graphics.clear()
-	--need to call this in case the camera has moved, we don't want our spritesheet offset
-	love.graphics.origin()
-	
-
-	for c, table in pairs(pico8.spritesheet_pointsByColor) do
-		if table ~= nil then
-			setShiftedColor(c, true)
-
-			love.graphics.points(table)
-		end
-	end
-
-	love.graphics.setCanvas()
-	restore_camera()
-
-	return canvas
-end
 
 function love.update(dt)
 	--hack to force 30 fps. TODO: support 30 or 60
