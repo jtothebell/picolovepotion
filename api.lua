@@ -102,14 +102,9 @@ end
 
 
 
-local function color(c, disallowShift)
+local function color(c)
 	c=flr(c or 0)%16
 	pico8.color=c
-	--if disallowShift then
-	--	setColor(c)
-	--else
-	--	setShiftedColor(c)
-	--end
 end
 
 local function warning(msg)
@@ -214,28 +209,9 @@ function api.pset(x, y, col)
 		color(col)
 	end
 
-	--love.graphics.points(flr(x), flr(y))
-
-	local points = {}
-	points[1] = {flr(x), flr(y)}
-	setPointsOnScreenBuffer(points, col)
+	setSeparatedPointsOnScreenBuffer({flr(x)}, {flr(y)}, col)
 	
 end
---[[
---attempt at setting up a functional approach to preserving color
-local function coloredFunc(col, func)
-	if col then
-		color(col)
-	end
-
-	func()
-end
-
-function api.pset(x, y, col)
-	local func = function() love.graphics.points(flr(x), flr(y)) end
-	coloredFunc(col, func)
-end
-]]
 
 
 function api.pget(x, y)
@@ -259,6 +235,68 @@ end
 
 function api.color(c)
 	color(c)
+end
+
+local function getPrintArrays(str, x, y)
+	xs = {}
+	ys = {}
+
+	if x and y then
+		pico8.cursor[1]=flr(tonumber(x) or 0)
+		pico8.cursor[2]=flr(tonumber(y) or 0)
+	end
+
+	local pointCount = 0
+
+	--local inspect = require 'inspect'
+
+	
+	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"
+	local size=0
+
+	for line in str:gmatch("(.-)\n") do
+		local xAdd = 0
+		for i = 1, #tostring(line) do
+			local character = string.sub(line, i, i)
+			--print("char: " .. character)
+			local charTable = api.fontSpriteTable[character]
+
+			if charTable ~= nil then
+				local startX = pico8.cursor[1] + xAdd
+				local startY =  pico8.cursor[2] + size
+				local tableX = 0
+				local tableY = 0
+
+				for tableY = 1, #charTable do
+					for tableX = 1, #charTable[tableY] do
+						local val = charTable[tableY][tableX]
+
+						if val > 0 then
+							pointCount = pointCount + 1
+							local x = startX + tableX - 1
+							local y = startY + tableY - 1
+							--print(x .. ', ' .. y)
+							xs[pointCount] = x
+							ys[pointCount] = y
+						end
+					end
+				end
+			end
+
+        	xAdd = xAdd + 4
+    	end
+		size=size+6
+	end
+
+	if not x and not y then
+		if pico8.cursor[2]+size>122 then
+			
+		else
+			pico8.cursor[2]=pico8.cursor[2]+size
+		end
+	end
+
+	return xs, ys
 end
 
 local function getPrintPoints(str, x, y)
@@ -327,41 +365,9 @@ function api.print(str, x, y, col)
 		color(col)
 	end
 
-	local points = getPrintPoints(str, x, y)
+	local xs, ys = getPrintArrays(str, x, y)
 
-	if points then
-		setPointsOnScreenBuffer(points, col)
-	end
-	
-	--[[
-	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"
-	local size=0
-
-	for line in str:gmatch("(.-)\n") do
-		local xAdd = 0
-    	for i = 1, #tostring(line) do
-        	love.graphics.draw(pico8.fontImg, pico8.fontQuads[string.sub(line, i, i)], pico8.cursor[1]+xAdd, pico8.cursor[2]+size)
-        	xAdd = xAdd + 4
-    	end
-		size=size+6
-	end
-	
-
-	if not x and not y then
-		if pico8.cursor[2]+size>122 then
-			love.graphics.setColor(1, 1, 1, 1)
-			love.graphics.setCanvas(pico8.tmpscr)
-			love.graphics.draw(pico8.screen)
-			love.graphics.setCanvas(pico8.screen)
-			love.graphics.draw(pico8.tmpscr, 0, -size)
-			love.graphics.setColor(0, 0, 0, 1)
-			love.graphics.rectangle("fill", 0, pico8.resolution[2]-size, pico8.resolution[1], size)
-			setColor(pico8.color)
-		else
-			pico8.cursor[2]=pico8.cursor[2]+size
-		end
-	end
-	]]
+	setSeparatedPointsOnScreenBuffer(xs, ys, col)
 
 end
 
@@ -393,47 +399,6 @@ function api.tostr(val, hex)
 	else
 		return "[" .. kind .. "]"
 	end
-end
-
-local function getSprPoints(n, x, y, w, h, flip_x, flip_y)
-
-	n=flr(n)
-	w=w or 1
-	h=h or 1
-
-
-	local pixelW = flr(8 * w)
-	local pixelH = flr(8 * h)
-
-	local sx = flr(n%16)*8;
-	local sy = flr(n/16)*8
-
-	points = {}
-	local pixelIdx = 1
-
-	local ssTable = pico8.spritesheet_table
-
-	for yInc=0, pixelH - 1 do
-		for xInc=0, pixelW - 1 do
-			local ssX = xInc
-			if flip_x then
-				ssX = pixelW - xInc - 1
-			end
-
-			local ssY = yInc
-			if flip_y then
-				ssY = pixelH - yInc - 1
-			end
-
-			local color = ssTable[sx + ssX][sy + ssY]
-			if color > 0 then
-				points[pixelIdx] = {x + xInc, y + yInc, color}
-				pixelIdx = pixelIdx + 1
-			end
-		end
-	end
-
-	return points
 end
 
 local function getSprArrays(n, x, y, w, h, flip_x, flip_y)
@@ -483,47 +448,9 @@ local function getSprArrays(n, x, y, w, h, flip_x, flip_y)
 end
 
 function api.spr(n, x, y, w, h, flip_x, flip_y)
-	--[[
-	n=flr(n)
-	w=w or 1
-	h=h or 1
-	local q
-	if w==1 and h==1 then
-		q=pico8.quads[n]
-		if not q then
-			updateStatus('warning: sprite '..n..' is missing')
-			return
-		end
-	else
-		local id=string.format("%d-%d-%d", n, w, h)
-		if pico8.quads[id] then
-			q=pico8.quads[id]
-		else
-			q=love.graphics.newQuad(flr(n%16)*8, flr(n/16)*8, 8*w, 8*h, 128, 128)
-			pico8.quads[id]=q
-		end
-	end
-	if not q then
-		updateStatus('missing quad', n)
-	end
-	love.graphics.draw(pico8.spritesheet_data, q,
-		flr(x)+(w*8*(flip_x and 1 or 0)),
-		flr(y)+(h*8*(flip_y and 1 or 0)),
-		0, flip_x and-1 or 1, flip_y and-1 or 1)
-	]]
-
-	--[[
-	local points = getSprPoints(n, x, y, w, h, flip_x, flip_y)
-
-	if points then
-		setPointsOnScreenBuffer(points)
-	end
-	]]
-	
 	local xs, ys, colors = getSprArrays(n, x, y, w, h, flip_x, flip_y)
 
 	setSeparatedSpritePointsOnScreenBuffer(xs, ys, colors)
-	
 end
 
 --s: sprite sheet coords, d: screen coords
@@ -554,18 +481,6 @@ local function getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
-	--[[
-	dw=dw or sw
-	dh=dh or sh
-	-- FIXME: cache this quad
-	local q=love.graphics.newQuad(sx, sy, sw, sh, pico8.spritesheet_data:getDimensions())
-
-	love.graphics.draw(pico8.spritesheet_data, q,
-		flr(dx)+(flip_x and dw or 0),
-		flr(dy)+(flip_y and dh or 0),
-		0, dw/sw*(flip_x and-1 or 1), dh/sh*(flip_y and-1 or 1))
-	]]
-
 	local points = getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 
 	if points then
@@ -573,27 +488,32 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 	end
 end
 
-local function getRectPoints(x0, y0, x1, y1)
+local function getRectXAndYArrays(x0, y0, x1, y1)
 	local w, h=flr(x1-x0), flr(y1-y0)
 
-	local points = {}
+	local xs = {}
+	local ys = {}
 	local pointCount = 0
 
 	for i = 1, w + 1 do
 		local index = pointCount + 1
-		points[index] = {x0 + (i - 1), y0}
-		points[index + 1] = {x0 + (i - 1), y1}
+		xs[index] = x0 + (i - 1)
+		ys[index] = y0
+		xs[index + 1] = x0 + (i - 1)
+		ys[index + 1] = y1
 		pointCount = pointCount + 2
 	end
 
 	for i = 1, h + 1 do
 		local index = pointCount + 1
-		points[index] = {x0, y0 + (i - 1)}
-		points[index + 1] = {x1, y0 + (i - 1)}
+		xs[index] = x0
+		ys[index] = y0 + (i - 1)
+		xs[index + 1] = x1
+		ys[index + 1] = y0 + (i - 1)
 		pointCount = pointCount + 2
 	end
 
-	return points
+	return xs, ys
 end
 
 function api.rect(x0, y0, x1, y1, col)
@@ -601,44 +521,12 @@ function api.rect(x0, y0, x1, y1, col)
 		color(col)
 	end
 
-	local points = getRectPoints(x0, y0, x1, y1)
+	local xs, ys = getRectXAndYArrays(x0, y0, x1, y1)
 
-	if points then
-		--love.graphics.points(points)
-
-		setPointsOnScreenBuffer(points, col)
-	end
+	setSeparatedPointsOnScreenBuffer(xs, ys, col)
 
 end
 
-local function getRectFillPoints(x0, y0, x1, y1)
-	if x1<x0 then
-		x0, x1=x1, x0
-	end
-	if y1<y0 then
-		y0, y1=y1, y0
-	end
-
-	x0 = flr(x0)
-	y0 = flr(y0)
-
-	--love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
-
-	local w, h=flr(x1-x0)+1, flr(y1-y0)+1
-
-	local points = {}
-	local pointCount = 0
-
-	for i = 1, w do
-		for j = 1, h do
-			local index = pointCount + 1
-			points[index] = {x0 + (i - 1), y0 + (j - 1) }
-			pointCount = pointCount + 1
-		end
-	end
-
-	return points
-end
 
 local function getRectFillXAndYArrays(x0, y0, x1, y1)
 	if x1<x0 then
@@ -650,7 +538,7 @@ local function getRectFillXAndYArrays(x0, y0, x1, y1)
 
 	--love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
 
-	local w, h=flr(x1-x0)+1, flr(y1-y0)+1
+	local w, h=flr(x1-x0), flr(y1-y0)
 
 	local xs = {}
 	local ys = {}
@@ -675,37 +563,55 @@ function api.rectfill(x0, y0, x1, y1, col)
 	local xs, ys = getRectFillXAndYArrays(x0, y0, x1, y1)
 
 	setSeparatedPointsOnScreenBuffer(xs, ys, col)
-	--[[
-	local points = getRectFillPoints(x0, y0, x1, y1)
-
-	if points then
-		--love.graphics.points(points)
-
-		setPointsOnScreenBuffer(points, col)
-	end
-	]]
 
 end
 
-local function getCircPoints(ox, oy, r)
+local function getCircXAndYArrays(ox, oy, r)
 	ox=flr(ox)--+0.5
 	oy=flr(oy)--+0.5
 	r=flr(r)
-	local points={}
+	local xs={}
+	local ys={}
+	local pointCount = 0
 	local x=r
 	local y=0
 	local decisionOver2=1-x
 
 	while y<=x do
-		table.insert(points, {ox+x, oy+y})
-		table.insert(points, {ox+y, oy+x})
-		table.insert(points, {ox-x, oy+y})
-		table.insert(points, {ox-y, oy+x})
+		--table.insert(points, {ox+x, oy+y})
+		pointCount = pointCount + 1
+		xs[pointCount] = ox + x
+		ys[pointCount] = oy + y
+		--table.insert(points, {ox+y, oy+x})
+		pointCount = pointCount + 1
+		xs[pointCount] = ox + y
+		ys[pointCount] = oy + x
+		--table.insert(points, {ox-x, oy+y})
+		pointCount = pointCount + 1
+		xs[pointCount] = ox - x
+		ys[pointCount] = oy + y
+		--table.insert(points, {ox-y, oy+x})
+		pointCount = pointCount + 1
+		xs[pointCount] = ox - y
+		ys[pointCount] = oy + x
+		
 
-		table.insert(points, {ox-x, oy-y})
-		table.insert(points, {ox-y, oy-x})
-		table.insert(points, {ox+x, oy-y})
-		table.insert(points, {ox+y, oy-x})
+		--table.insert(points, {ox-x, oy-y})
+		pointCount = pointCount + 1
+		xs[pointCount] = ox - x
+		ys[pointCount] = oy - y
+		--table.insert(points, {ox-y, oy-x})
+		pointCount = pointCount + 1
+		xs[pointCount] = ox - y
+		ys[pointCount] = oy - x
+		--table.insert(points, {ox+x, oy-y})
+		pointCount = pointCount + 1
+		xs[pointCount] = ox + x
+		ys[pointCount] = oy - y
+		--table.insert(points, {ox+y, oy-x})
+		pointCount = pointCount + 1
+		xs[pointCount] = ox + y
+		ys[pointCount] = oy - x
 		y=y+1
 		if decisionOver2<0 then
 			decisionOver2=decisionOver2+2*y+1
@@ -715,7 +621,7 @@ local function getCircPoints(ox, oy, r)
 		end
 	end
 
-	return points
+	return xs, ys
 end
 
 function api.circ(ox, oy, r, col)
@@ -723,13 +629,9 @@ function api.circ(ox, oy, r, col)
 		color(col)
 	end
 
-	local points = getCircPoints(ox, oy, r)
-	
-	if points then
-		--love.graphics.points(points)
+	local xs, ys = getCircXAndYArrays(ox, oy, r)
 
-		setPointsOnScreenBuffer(points, col)
-	end
+	setSeparatedPointsOnScreenBuffer(xs, ys, col)
 
 end
 
