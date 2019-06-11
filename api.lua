@@ -635,8 +635,7 @@ function api.circ(ox, oy, r, col)
 
 end
 
-
-local function getLinePoints(x0, y0, x1, y1)
+local function getLineXAndYArrays(x0, y0, x1, y1)
 	if x0~=x0 or y0~=y0 or x1~=x1 or y1~=y1 then
 		warning("line has NaN value")
 		return
@@ -658,30 +657,34 @@ local function getLinePoints(x0, y0, x1, y1)
 
 	local ceil = math.ceil
 
-	local points = {}
+	local xs = {}
+	local ys = {}
 	if run == 0 then
 		--vertical line
 		for i = 1, rise + 1 do
-			points[i] = {xmin , ymin + (i - 1)}
+			xs[i] = xmin
+			ys[i] = ymin + (i - 1)
 		end
 	else
 		local slope = rise / run
 		if slope >= 1 then
 			for i = 1, rise + 1 do
-				points[i] = {xmin + ceil((i - 1) / slope) , ymin + (i - 1)}
+				xs[i] = xmin + ceil((i - 1) / slope)
+				ys[i] = ymin + (i - 1)
 			end
 		else
 			for i = 1, run + 1 do
-				points[i] = {xmin + (i - 1), ymin + ceil((i - 1) * slope)}
+				xs[i] = xmin + (i - 1)
+				ys[i] = ymin + ceil((i - 1) * slope)
 			end
 
 		end
 	end
 
-	return points
+	return xs, ys
 end
 
-local function getCircFillPoints(cx, cy, r)
+local function getCircFillXAndYArrays(cx, cy, r)
 	cx=flr(cx)
 	cy=flr(cy)
 	r=flr(r)
@@ -690,7 +693,8 @@ local function getCircFillPoints(cx, cy, r)
 	local err=1-r
 
 	local lines={}
-	local points={}
+	local xs = {}
+	local ys = {}
 
 	while y<=x do
 		_plot4points(lines, cx, cy, x, y)
@@ -706,14 +710,17 @@ local function getCircFillPoints(cx, cy, r)
 		y=y+1
 	end
 
+	local pointCount = 0
 	for i=1, #lines do
-		local circLinePoints = getLinePoints(lines[i][1], lines[i][2], lines[i][3], lines[i][4])
-		for j=1, #circLinePoints do
-			points[#points + 1] = circLinePoints[j]
+		local circLineXs, circLineYs = getLineXAndYArrays(lines[i][1], lines[i][2], lines[i][3], lines[i][4])
+		for j=1, #circLineXs do
+			pointCount = pointCount + 1
+			xs[pointCount] = circLineXs[j]
+			ys[pointCount] = circLineYs[j]
 		end
 	end
 
-	return points
+	return xs, ys
 end
 
 function api.circfill(cx, cy, r, col)
@@ -721,13 +728,9 @@ function api.circfill(cx, cy, r, col)
 		color(col)
 	end
 
-	local points = getCircFillPoints(cx, cy, r)
-	
-	if points then
-		--love.graphics.points(points)
+	local xs, ys = getCircFillXAndYArrays(cx, cy, r)
 
-		setPointsOnScreenBuffer(points, col)
-	end
+	setSeparatedPointsOnScreenBuffer(xs, ys, col)
 
 end
 
@@ -737,14 +740,9 @@ function api.line(x0, y0, x1, y1, col)
 		color(col)
 	end
 
-	local points = getLinePoints(x0, y0, x1, y1)
-	
-	if points then
-		--love.graphics.points(points)
+	local xs, ys = getLineXAndYArrays(x0, y0, x1, y1)
 
-		setPointsOnScreenBuffer(points, col)
-	end
-
+	setSeparatedPointsOnScreenBuffer(xs, ys, col)
 end
 
 
