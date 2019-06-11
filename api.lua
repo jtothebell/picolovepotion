@@ -11,36 +11,6 @@ local function clipContains(clip, x, y)
 		y < clip[2] + clip[4]
 end
 
-
-local function setPointsOnScreenBuffer(points, colorIdx)
-	local lp8 = pico8
-	local clip = lp8.clip
-	local camera_x = lp8.camera_x
-	local camera_y = lp8.camera_y
-	local screen_buffer = lp8.screen_buffer
-	local draw_palette = lp8.draw_palette
-	local globalColor = lp8.color
-	local color = colorIdx or globalColor
-	color = draw_palette[color]
-
-	if points then
-		for i=1, #points do
-			local p = points[i]
-			local x = p[1] - camera_x
-			local y = p[2] - camera_y
-			if (x >= 0 and x < 128 and y >= 0 and y < 128) and (clip == nil or clipContains(clip, x, y)) then
-				local index = flr(y)*resY + flr(x) + 1
-				
-				
-				if p[3] ~= nil then
-					color = draw_palette[p[3]]
-				end
-				screen_buffer[index] = color
-			end
-		end
-	end
-end
-
 	--possible optimization- 3 separate tables instead of 1 table of tables for points
 local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colorIdx)
 	local lp8 = pico8
@@ -454,10 +424,12 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 end
 
 --s: sprite sheet coords, d: screen coords
-local function getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+local function getSsprArrays(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
     dw=dw or sw
     dh=dh or sh
-	points = {}
+	local xs = {}
+	local ys = {}
+	local colors = {}
 	local widthFactor = sw / dw
 	local heightFactor = sh / dh
 
@@ -472,20 +444,20 @@ local function getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 
             local color = ssTable[sx + ssDeltaX][sy + ssDeltaY]
             if color > 0 then
-                points[pixelIdx] = {dx + xInc, dy + yInc, color}
+				xs[pixelIdx] = dx + xInc
+				ys[pixelIdx] = dy + yInc
+				colors[pixelIdx] =  color
                 pixelIdx = pixelIdx + 1
             end
         end
     end
-    return points
+    return xs, ys, colors
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
-	local points = getSsprPoints(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+	local xs, ys, colors = getSsprArrays(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 
-	if points then
-		setPointsOnScreenBuffer(points)
-	end
+	setSeparatedSpritePointsOnScreenBuffer(xs, ys, colors)
 end
 
 local function getRectXAndYArrays(x0, y0, x1, y1)
@@ -826,15 +798,6 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 							local yPos = sy + (8*y) - pico8.camera_y;
 							--limit drawing to what is on screen
 							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
-								--love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
-
-								--[[
-								local points = getSprPoints(v, sx + (8*x), sy + (8*y))
-
-								if points then
-									setPointsOnScreenBuffer(points)
-								end
-								]]
 								local xs, ys, colors = getSprArrays(v, sx + (8*x), sy + (8*y))
 
 								setSeparatedSpritePointsOnScreenBuffer(xs, ys, colors)
