@@ -84,7 +84,7 @@ local frametime=1/pico8.fps
 local cart=nil
 local cartname=nil
 local scale=5
-local xpadding=320
+local xpadding=0
 local ypadding=40
 
 local resX = flr(pico8.resolution[1])
@@ -191,23 +191,21 @@ function getScreenBufferPointsByColor()
 
 	local pixelIndex = 1
 	local cIdx = 1
-	local point = {0, 0}
 
 	local numPointVals = 0
 	local pointsAdded = 1
+	local sb = pico8.screen_buffer
 
-	for y=0, pico8.resolution[1] - 1  do
-		for x=0, pico8.resolution[2] - 1 do
-			pixelIndex = flr(y)*resY + flr(x) + 1
-			cIdx = (pico8.screen_buffer[pixelIndex] or 0) + 1
-			point[1] = x
-			point[2] = y
+	for y=0, resX - 1 do
+		for x=0, resY - 1 do
+			pixelIndex = y*resY + x + 1
+			cIdx = (sb[pixelIndex] or 0) + 1
 
 			numPointVals = #pointsByColor[cIdx]
 			pointsAdded = 1
 
-			pointsByColor[cIdx][numPointVals+pointsAdded] = point[1]
-			pointsByColor[cIdx][numPointVals+pointsAdded + 1] = point[2]
+			pointsByColor[cIdx][numPointVals+pointsAdded] = x
+			pointsByColor[cIdx][numPointVals+pointsAdded + 1] = y
 			pointsAdded = pointsAdded + 1
 		end
 	end
@@ -229,7 +227,7 @@ function love.load()
 
 	love.profiler = require('profile')  
   	love.profiler.hookall("Lua")
-  	--love.profiler.start()
+  	love.profiler.start()
 
 	currentButtonDown = {}
 
@@ -299,8 +297,8 @@ function love.update(dt)
 	loveFrames = loveFrames + 1
 
 	if loveFrames%100 == 0 then
-		--love.report = love.profiler.report('time', 20)
-		--love.profiler.reset()
+		love.report = love.profiler.report('time', 20)
+		love.profiler.reset()
 	end
 end
 
@@ -312,6 +310,7 @@ function love.draw()
 		if pico8.cart._draw then 
 			pico8.cart._draw() 
 		end
+
 	end
 
 	flip_screen()
