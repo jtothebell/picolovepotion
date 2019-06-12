@@ -535,12 +535,11 @@ function api.rectfill(x0, y0, x1, y1, col)
 	prof.pop("rectfill")
 end
 
-local function getCircXAndYArrays(ox, oy, r)
+local function populateBufsForCirc(ox, oy, r)
 	ox=flr(ox)--+0.5
 	oy=flr(oy)--+0.5
 	r=flr(r)
-	local xs={}
-	local ys={}
+
 	local pointCount = 0
 	local x=r
 	local y=0
@@ -549,38 +548,38 @@ local function getCircXAndYArrays(ox, oy, r)
 	while y<=x do
 		--table.insert(points, {ox+x, oy+y})
 		pointCount = pointCount + 1
-		xs[pointCount] = ox + x
-		ys[pointCount] = oy + y
+		xBuf[pointCount] = ox + x
+		yBuf[pointCount] = oy + y
 		--table.insert(points, {ox+y, oy+x})
 		pointCount = pointCount + 1
-		xs[pointCount] = ox + y
-		ys[pointCount] = oy + x
+		xBuf[pointCount] = ox + y
+		yBuf[pointCount] = oy + x
 		--table.insert(points, {ox-x, oy+y})
 		pointCount = pointCount + 1
-		xs[pointCount] = ox - x
-		ys[pointCount] = oy + y
+		xBuf[pointCount] = ox - x
+		yBuf[pointCount] = oy + y
 		--table.insert(points, {ox-y, oy+x})
 		pointCount = pointCount + 1
-		xs[pointCount] = ox - y
-		ys[pointCount] = oy + x
+		xBuf[pointCount] = ox - y
+		yBuf[pointCount] = oy + x
 		
 
 		--table.insert(points, {ox-x, oy-y})
 		pointCount = pointCount + 1
-		xs[pointCount] = ox - x
-		ys[pointCount] = oy - y
+		xBuf[pointCount] = ox - x
+		yBuf[pointCount] = oy - y
 		--table.insert(points, {ox-y, oy-x})
 		pointCount = pointCount + 1
-		xs[pointCount] = ox - y
-		ys[pointCount] = oy - x
+		xBuf[pointCount] = ox - y
+		yBuf[pointCount] = oy - x
 		--table.insert(points, {ox+x, oy-y})
 		pointCount = pointCount + 1
-		xs[pointCount] = ox + x
-		ys[pointCount] = oy - y
+		xBuf[pointCount] = ox + x
+		yBuf[pointCount] = oy - y
 		--table.insert(points, {ox+y, oy-x})
 		pointCount = pointCount + 1
-		xs[pointCount] = ox + y
-		ys[pointCount] = oy - x
+		xBuf[pointCount] = ox + y
+		yBuf[pointCount] = oy - x
 		y=y+1
 		if decisionOver2<0 then
 			decisionOver2=decisionOver2+2*y+1
@@ -590,7 +589,7 @@ local function getCircXAndYArrays(ox, oy, r)
 		end
 	end
 
-	return xs, ys
+	return pointCount
 end
 
 function api.circ(ox, oy, r, col)
@@ -598,9 +597,9 @@ function api.circ(ox, oy, r, col)
 		color(col)
 	end
 
-	local xs, ys = getCircXAndYArrays(ox, oy, r)
+	local count = populateBufsForCirc(ox, oy, r)
 
-	setSeparatedPointsOnScreenBuffer(xs, ys, col)
+	moveXAndYBufToScreen(count, col)
 
 end
 
