@@ -521,35 +521,6 @@ local function populateBufsForRectFill(x0, y0, x1, y1)
 	return pointCount
 end
 
-local function getRectFillXAndYArrays(x0, y0, x1, y1)
-	if x1<x0 then
-		x0, x1=x1, x0
-	end
-	if y1<y0 then
-		y0, y1=y1, y0
-	end
-
-	--love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
-
-	x0 = flr(x0)
-	y0 = flr(y0)
-	local w, h=flr(x1-x0), flr(y1-y0)
-
-	local xs = {}
-	local ys = {}
-	local pointCount = 0
-
-	for i = 0, w do
-		for j = 0, h  do
-			pointCount = pointCount + 1
-			xs[pointCount] = x0 + i
-			ys[pointCount] = y0 + j		
-		end
-	end
-
-	return xs, ys
-end
-
 function api.rectfill(x0, y0, x1, y1, col)
 	prof.push("rectfill")
 	if col then
