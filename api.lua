@@ -423,37 +423,6 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 	moveXAndYAndCBufToScreen(count)
 end
 
---s: sprite sheet coords, d: screen coords
-local function getSsprArrays(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
-    dw=dw or sw
-    dh=dh or sh
-	local xs = {}
-	local ys = {}
-	local colors = {}
-	local widthFactor = sw / dw
-	local heightFactor = sh / dh
-
-    local pixelIdx = 1
-    local ssTable = pico8.spritesheet_table
-    for yInc=0, dh - 1 do
-		for xInc=0, dw - 1 do
-			local ssDeltaX = flr(xInc * widthFactor)
-			if flip_x then ssDeltaX = sw - ssDeltaX end
-			local ssDeltaY = flr(yInc * heightFactor)
-			if flip_y then ssDeltaY = sh - ssDeltaY end
-
-            local color = ssTable[sx + ssDeltaX][sy + ssDeltaY]
-            if color > 0 then
-				xs[pixelIdx] = dx + xInc
-				ys[pixelIdx] = dy + yInc
-				colors[pixelIdx] =  color
-                pixelIdx = pixelIdx + 1
-            end
-        end
-    end
-    return xs, ys, colors
-end
-
 local function populateBufsForSspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
     dw=dw or sw
     dh=dh or sh
@@ -486,34 +455,6 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 	local count = populateBufsForSspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 
 	moveXAndYAndCBufToScreen(count)
-end
-
-local function getRectXAndYArrays(x0, y0, x1, y1)
-	local w, h=flr(x1-x0), flr(y1-y0)
-
-	local xs = {}
-	local ys = {}
-	local pointCount = 0
-
-	for i = 1, w + 1 do
-		local index = pointCount + 1
-		xs[index] = x0 + (i - 1)
-		ys[index] = y0
-		xs[index + 1] = x0 + (i - 1)
-		ys[index + 1] = y1
-		pointCount = pointCount + 2
-	end
-
-	for i = 1, h + 1 do
-		local index = pointCount + 1
-		xs[index] = x0
-		ys[index] = y0 + (i - 1)
-		xs[index + 1] = x1
-		ys[index + 1] = y0 + (i - 1)
-		pointCount = pointCount + 2
-	end
-
-	return xs, ys
 end
 
 local function populateBufsForRect(x0, y0, x1, y1)
