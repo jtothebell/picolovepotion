@@ -674,7 +674,7 @@ local function populateBufsForLine(x0, y0, x1, y1)
 
 	local ceil = math.ceil
 
-	local i = 1
+	local pointCount = 0
 
 	if run == 0 then
 		--vertical line
@@ -682,6 +682,7 @@ local function populateBufsForLine(x0, y0, x1, y1)
 			xBuf[i] = xmin
 			yBuf[i] = ymin + (i - 1)
 		end
+		pointCount = rise + 1
 	else
 		local slope = rise / run
 		if slope >= 1 then
@@ -689,16 +690,18 @@ local function populateBufsForLine(x0, y0, x1, y1)
 				xBuf[i] = xmin + ceil((i - 1) / slope)
 				yBuf[i] = ymin + (i - 1)
 			end
+			pointCount = rise + 1
 		else
 			for i = 1, run + 1 do
 				xBuf[i] = xmin + (i - 1)
 				yBuf[i] = ymin + ceil((i - 1) * slope)
 			end
+			pointCount = run + 1
 
 		end
 	end
 
-	return i
+	return pointCount
 end
 
 local function populateBufsForCircFill(cx, cy, r)
