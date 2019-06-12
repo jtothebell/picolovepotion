@@ -337,7 +337,6 @@ local function populateBufsForPrint(str, x, y)
 	return pointCount
 end
 
-
 function api.print(str, x, y, col)
 	if col then
 		color(col)
@@ -425,10 +424,59 @@ local function getSprArrays(n, x, y, w, h, flip_x, flip_y)
 	return xs, ys, colors
 end
 
+local function populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
+
+	n=flr(n)
+	w=w or 1
+	h=h or 1
+
+
+	local pixelW = flr(8 * w)
+	local pixelH = flr(8 * h)
+
+	local sx = flr(n%16)*8;
+	local sy = flr(n/16)*8
+
+	local pixelIdx = 1
+
+	local ssTable = pico8.spritesheet_table
+
+	for yInc=0, pixelH - 1 do
+		for xInc=0, pixelW - 1 do
+			local ssX = xInc
+			if flip_x then
+				ssX = pixelW - xInc - 1
+			end
+
+			local ssY = yInc
+			if flip_y then
+				ssY = pixelH - yInc - 1
+			end
+
+			local color = ssTable[sx + ssX][sy + ssY]
+			--todo check transparency here
+			if color > 0 then
+				xBuf[pixelIdx] = x + xInc
+				yBuf[pixelIdx] = y + yInc
+				cBuf[pixelIdx] = color	
+				pixelIdx = pixelIdx + 1
+			end
+		end
+	end
+
+	return pixelIdx
+end
+
 function api.spr(n, x, y, w, h, flip_x, flip_y)
+	--[[
 	local xs, ys, colors = getSprArrays(n, x, y, w, h, flip_x, flip_y)
 
 	setSeparatedSpritePointsOnScreenBuffer(xs, ys, colors)
+	]]
+
+	local count = populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
+
+	moveXAndYAndCBufToScreen(count)
 end
 
 --s: sprite sheet coords, d: screen coords
