@@ -143,16 +143,6 @@ local function warning(msg)
 	updateStatus("WARNING: "..msg)
 end
 
-local function _horizontal_line(lines, x0, y, x1)
-	table.insert(lines, {x0+0.5, y+0.5, x1+1.5, y+0.5})
-end
-
-local function _plot4points(lines, cx, cy, x, y)
-	_horizontal_line(lines, cx-x, cy+y, cx+x)
-	if y~=0 then
-		_horizontal_line(lines, cx-x, cy-y, cx+x)
-	end
-end
 
 --------------------------------------------------------------------------------
 -- PICO-8 API
@@ -387,7 +377,7 @@ local function populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
 	local sx = flr(n%16)*8;
 	local sy = flr(n/16)*8
 
-	local pixelIdx = 1
+	local pixelIdx = 0
 
 	local ssTable = pico8.spritesheet_table
 
@@ -406,10 +396,10 @@ local function populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
 			local color = ssTable[sx + ssX][sy + ssY]
 			--todo check transparency here
 			if color > 0 then
+				pixelIdx = pixelIdx + 1
 				xBuf[pixelIdx] = x + xInc
 				yBuf[pixelIdx] = y + yInc
 				cBuf[pixelIdx] = color	
-				pixelIdx = pixelIdx + 1
 			end
 		end
 	end
@@ -704,23 +694,53 @@ local function populateBufsForLine(x0, y0, x1, y1)
 	return pointCount
 end
 
+
+local function plotCircleLinePoints(cx, cy, x, y, pointStart)
+	local currX
+	local xEnd = cx + x
+	local pointCount = 0
+
+	for currX = cx - x, xEnd do
+		pointCount = pointCount + 1
+		xBuf[pointStart + pointCount] = currX
+		yBuf[pointStart + pointCount] = cy + y
+
+		if y ~= 0 then
+			pointCount = pointCount + 1
+			xBuf[pointStart + pointCount] = currX
+			yBuf[pointStart + pointCount] = cy - y
+		end
+	end
+
+	return pointCount
+end
+
 local function populateBufsForCircFill(cx, cy, r)
 	cx=flr(cx)
 	cy=flr(cy)
 	r=flr(r)
+
 	local x=r
 	local y=0
 	local err=1-r
 
-	local lines={}
+
+	local pointCount = 0
+	local linePointCount = 0
+
 
 	while y<=x do
-		_plot4points(lines, cx, cy, x, y)
+		linePointCount = plotCircleLinePoints(cx, cy, x, y, pointCount)
+
+		pointCount = pointCount + linePointCount
+
 		if err<0 then
 			err=err+2*y+3
 		else
 			if x~=y then
-				_plot4points(lines, cx, cy, y, x)
+				linePointCount = plotCircleLinePoints(cx, cy, y, x, pointCount)
+
+				pointCount = pointCount + linePointCount
 			end
 			x=x-1
 			err=err+2*(y-x)+3
@@ -728,17 +748,8 @@ local function populateBufsForCircFill(cx, cy, r)
 		y=y+1
 	end
 
-	local pointCount = 0
-	for i=1, #lines do
-		local circLineXs, circLineYs = getLineXAndYArrays(lines[i][1], lines[i][2], lines[i][3], lines[i][4])
-		for j=1, #circLineXs do
-			pointCount = pointCount + 1
-			xBuf[pointCount] = circLineXs[j]
-			yBuf[pointCount] = circLineYs[j]
-		end
-	end
-
 	return pointCount
+	
 end
 
 function api.circfill(cx, cy, r, col)
