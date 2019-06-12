@@ -18,9 +18,9 @@ end
 
 local function clipContains(clip, x, y)
 	return clip[1] <= x and 
-		x < clip[1] + clip[3] and 
+		x < clip[3] and 
 		clip[2] <= y and 
-		y < clip[2] + clip[4]
+		y < clip[4]
 end
 
 local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colorIdx)
@@ -186,10 +186,8 @@ end
 
 function api.clip(x, y, w, h)
 	if x and y and w and h then
-		--love.graphics.setScissor(x, y, w, h)
-		pico8.clip={x, y, w, h}
+		pico8.clip={x, y, x + w, x + h}
 	else
-		--love.graphics.setScissor()
 		pico8.clip=nil
 	end
 end
