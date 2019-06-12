@@ -422,7 +422,6 @@ local function populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
 end
 
 function api.spr(n, x, y, w, h, flip_x, flip_y)
-
 	local count = populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
 
 	moveXAndYAndCBufToScreen(count)
@@ -841,9 +840,9 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 							local yPos = sy + (8*y) - pico8.camera_y;
 							--limit drawing to what is on screen
 							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
-								local xs, ys, colors = getSprArrays(v, sx + (8*x), sy + (8*y))
+								local count = populateBufsForSpr(v, sx + (8*x), sy + (8*y))
 
-								setSeparatedSpritePointsOnScreenBuffer(xs, ys, colors)
+								moveXAndYAndCBufToScreen(count)
 							end
 						end
 					end
