@@ -343,15 +343,77 @@ local function getPrintArrays(str, x, y)
 	return xs, ys
 end
 
+local function populateBufsForPrint(str, x, y)
+
+	if x and y then
+		pico8.cursor[1]=flr(tonumber(x) or 0)
+		pico8.cursor[2]=flr(tonumber(y) or 0)
+	end
+
+	local pointCount = 0
+
+	
+	local str=tostring(str):gsub("[%z\1-\9\11-\31\154-\255]", " "):gsub("[\128-\153]", "\194%1").."\n"
+	local size=0
+
+	for line in str:gmatch("(.-)\n") do
+		local xAdd = 0
+		for i = 1, #tostring(line) do
+			local character = string.sub(line, i, i)
+			local charTable = api.fontSpriteTable[character]
+
+			if charTable ~= nil then
+				local startX = pico8.cursor[1] + xAdd
+				local startY =  pico8.cursor[2] + size
+				local tableX = 0
+				local tableY = 0
+
+				for tableY = 1, #charTable do
+					for tableX = 1, #charTable[tableY] do
+						local val = charTable[tableY][tableX]
+
+						if val > 0 then
+							pointCount = pointCount + 1
+							local x = startX + tableX - 1
+							local y = startY + tableY - 1
+							xBuf[pointCount] = x
+							yBuf[pointCount] = y
+						end
+					end
+				end
+			end
+
+        	xAdd = xAdd + 4
+    	end
+		size=size+6
+	end
+
+	if not x and not y then
+		if pico8.cursor[2]+size>122 then
+			
+		else
+			pico8.cursor[2]=pico8.cursor[2]+size
+		end
+	end
+
+	return pointCount
+end
+
 
 function api.print(str, x, y, col)
 	if col then
 		color(col)
 	end
 
+	--[[
 	local xs, ys = getPrintArrays(str, x, y)
 
 	setSeparatedPointsOnScreenBuffer(xs, ys, col)
+
+	]]
+	local pointCount = populateBufsForPrint(str, x, y)
+
+	moveXAndYBufToScreen(pointCount, col)
 
 end
 
