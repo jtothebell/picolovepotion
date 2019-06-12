@@ -186,7 +186,7 @@ end
 
 function api.clip(x, y, w, h)
 	if x and y and w and h then
-		pico8.clip={x, y, x + w, x + h}
+		pico8.clip={x, y, x + w, y + h}
 	else
 		pico8.clip=nil
 	end
@@ -522,7 +522,7 @@ local function populateBufsForRectFill(x0, y0, x1, y1)
 end
 
 function api.rectfill(x0, y0, x1, y1, col)
-	prof.push("rectfill")
+	--prof.push("rectfill")
 	if col then
 		color(col)
 	end
@@ -532,7 +532,7 @@ function api.rectfill(x0, y0, x1, y1, col)
 	moveXAndYBufToScreen(count, col)
 	
 
-	prof.pop("rectfill")
+	--prof.pop("rectfill")
 end
 
 local function populateBufsForCirc(ox, oy, r)
