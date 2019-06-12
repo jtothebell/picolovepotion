@@ -23,37 +23,6 @@ local function clipContains(clip, x, y)
 		y < clip[4]
 end
 
-local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colorIdx)
-	local lp8 = pico8
-	local clip = lp8.clip
-	local camera_x = lp8.camera_x
-	local camera_y = lp8.camera_y
-	local screen_buffer = lp8.screen_buffer
-	local draw_palette = lp8.draw_palette
-	local globalColor = lp8.color
-	local color = colorIdx or globalColor
-	color = draw_palette[color]
-	local x = 0
-	local y = 0
-	local index = 1
-
-	if xvalues and yvalues then
-		for i=1, #xvalues do
-			x = xvalues[i] - camera_x
-			y = yvalues[i] - camera_y
-			if (x >= 0 and x < 128 and y >= 0 and y < 128) and (clip == nil or clipContains(clip, x, y)) then
-				index = flr(y)*resY + flr(x) + 1
-				
-				
-				if colvalues ~= nil then
-					color = draw_palette[ colvalues[i] ]
-				end
-				screen_buffer[index] = color
-			end
-		end
-	end
-end
-
 local function moveXAndYBufToScreen(count, colorIdx)
 	local lp8 = pico8
 	local clip = lp8.clip
@@ -74,38 +43,7 @@ local function moveXAndYBufToScreen(count, colorIdx)
 		if (x >= 0 and x < 128 and y >= 0 and y < 128) and (clip == nil or clipContains(clip, x, y)) then
 			index = flr(y)*resY + flr(x) + 1
 			
-			
-			if colvalues ~= nil then
-				color = draw_palette[ colvalues[i] ]
-			end
 			screen_buffer[index] = color
-		end
-	end
-end
-
-local function setSeparatedSpritePointsOnScreenBuffer(xvalues, yvalues, colvalues)
-	local lp8 = pico8
-	local clip = lp8.clip
-	local camera_x = lp8.camera_x
-	local camera_y = lp8.camera_y
-	local screen_buffer = lp8.screen_buffer
-	local draw_palette = lp8.draw_palette
-	local x = 0
-	local y = 0
-	local index = 1
-
-
-	if xvalues and yvalues and colvalues then
-		for i=1, #xvalues do
-			x = xvalues[i] - camera_x
-			y = yvalues[i] - camera_y
-			if (x >= 0 and x < 128 and y >= 0 and y < 128) and (clip == nil or clipContains(clip, x, y)) then
-				index = flr(y)*resY + flr(x) + 1
-
-				color = draw_palette[ colvalues[i] ]
-
-				screen_buffer[index] = color
-			end
 		end
 	end
 end
@@ -120,6 +58,7 @@ local function moveXAndYAndCBufToScreen(count)
 	local x = 0
 	local y = 0
 	local index = 1
+	local color = 0
 
 	for i=1, count do
 		x = xBuf[i] - camera_x
