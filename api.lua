@@ -4,6 +4,18 @@ local resX = flr(pico8.resolution[1])
 local resY = flr(pico8.resolution[2])
 local pixelCount = resX * resY
 
+--these buffers and counts will be reused instead of re-initializing on every draw call
+local xBuf = {}
+local yBuf = {}
+local cBuf = {}
+
+local function preFillBuffer(buffer, count)
+	local i=1
+	for i=1, count do
+		buffer[i] = 0
+	end
+end
+
 local function clipContains(clip, x, y)
 	return clip[1] <= x and 
 		x < clip[1] + clip[3] and 
@@ -11,7 +23,6 @@ local function clipContains(clip, x, y)
 		y < clip[2] + clip[4]
 end
 
-	--possible optimization- 3 separate tables instead of 1 table of tables for points
 local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colorIdx)
 	local lp8 = pico8
 	local clip = lp8.clip
@@ -43,6 +54,35 @@ local function setSeparatedPointsOnScreenBuffer(xvalues, yvalues, colorIdx)
 	end
 end
 
+local function moveXAndYBufToScreen(count, colorIdx)
+	local lp8 = pico8
+	local clip = lp8.clip
+	local camera_x = lp8.camera_x
+	local camera_y = lp8.camera_y
+	local screen_buffer = lp8.screen_buffer
+	local draw_palette = lp8.draw_palette
+	local globalColor = lp8.color
+	local color = colorIdx or globalColor
+	color = draw_palette[color]
+	local x = 0
+	local y = 0
+	local index = 1
+
+	for i=1, count do
+		x = xBuf[i] - camera_x
+		y = yBuf[i] - camera_y
+		if (x >= 0 and x < 128 and y >= 0 and y < 128) and (clip == nil or clipContains(clip, x, y)) then
+			index = flr(y)*resY + flr(x) + 1
+			
+			
+			if colvalues ~= nil then
+				color = draw_palette[ colvalues[i] ]
+			end
+			screen_buffer[index] = color
+		end
+	end
+end
+
 local function setSeparatedSpritePointsOnScreenBuffer(xvalues, yvalues, colvalues)
 	local lp8 = pico8
 	local clip = lp8.clip
@@ -66,6 +106,28 @@ local function setSeparatedSpritePointsOnScreenBuffer(xvalues, yvalues, colvalue
 
 				screen_buffer[index] = color
 			end
+		end
+	end
+end
+
+local function moveXAndYAndCBufToScreen(count)
+	local lp8 = pico8
+	local clip = lp8.clip
+	local camera_x = lp8.camera_x
+	local camera_y = lp8.camera_y
+	local screen_buffer = lp8.screen_buffer
+	local draw_palette = lp8.draw_palette
+	local x = 0
+	local y = 0
+	local index = 1
+
+	for i=1, count do
+		x = xBuf[i] - camera_x
+		y = yBuf[i] - camera_y
+		if (x >= 0 and x < 128 and y >= 0 and y < 128) and (clip == nil or clipContains(clip, x, y)) then
+			index = flr(y)*resY + flr(x) + 1
+			color = draw_palette[ cBuf[i] ]
+			screen_buffer[index] = color
 		end
 	end
 end
@@ -98,6 +160,13 @@ end
 local api={
 	fontSpriteTable = require("fontSpriteTable")
 }
+
+function api._init()
+	--Fill in these buffers with lots of dummy data do we don't waste time reinitializing
+	preFillBuffer(xBuf, pixelCount)
+	preFillBuffer(yBuf, pixelCount)
+	preFillBuffer(cBuf, pixelCount)
+end
 
 function api.flip()
 	flip_screen()
@@ -499,6 +568,32 @@ function api.rect(x0, y0, x1, y1, col)
 
 end
 
+local function populateBufsForRectFill(x0, y0, x1, y1)
+	if x1<x0 then
+		x0, x1=x1, x0
+	end
+	if y1<y0 then
+		y0, y1=y1, y0
+	end
+
+	--love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
+
+	x0 = flr(x0)
+	y0 = flr(y0)
+	local w, h=flr(x1-x0), flr(y1-y0)
+
+	local pointCount = 0
+
+	for i = 0, w do
+		for j = 0, h  do
+			pointCount = pointCount + 1
+			xBuf[pointCount] = x0 + i
+			yBuf[pointCount] = y0 + j		
+		end
+	end
+
+	return pointCount
+end
 
 local function getRectFillXAndYArrays(x0, y0, x1, y1)
 	if x1<x0 then
@@ -530,14 +625,24 @@ local function getRectFillXAndYArrays(x0, y0, x1, y1)
 end
 
 function api.rectfill(x0, y0, x1, y1, col)
+	prof.push("rectfill")
 	if col then
 		color(col)
 	end
 
+	--[[
 	local xs, ys = getRectFillXAndYArrays(x0, y0, x1, y1)
 
 	setSeparatedPointsOnScreenBuffer(xs, ys, col)
+	]]
 
+	
+	local count = populateBufsForRectFill(x0, y0, x1, y1)
+
+	moveXAndYBufToScreen(count, col)
+	
+
+	prof.pop("rectfill")
 end
 
 local function getCircXAndYArrays(ox, oy, r)
