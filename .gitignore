@@ -5,3 +5,5 @@ binaries/
 profile.lua
 ProFi.lua
 inspect.lua
+jprof.lua
+MessagePack.lua

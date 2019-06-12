@@ -1,6 +1,10 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
+--local cartPath = 'game/otherTestGames/lilking.p8'
 --local cartPath = 'game/otherTestGames/celeste.p8'
 local cartPath = 'game/otherTestGames/api.p8'
+
+PROF_CAPTURE = true
+prof = require("jprof")
 
 pico8={
 	fps=30,
@@ -225,9 +229,14 @@ end
 
 function love.load()
 
-	love.profiler = require('profile')  
-  	love.profiler.hookall("Lua")
-  	love.profiler.start()
+	--love.profiler = require('profile')  
+  	--love.profiler.hookall("Lua")
+	--love.profiler.start()
+
+	
+	
+		
+
 
 	currentButtonDown = {}
 
@@ -278,6 +287,9 @@ function love.load()
 	end
 
 	api=require("api")
+
+	if api._init then api._init() end
+
 	cart=require("cart")
 
 	-- load the cart
@@ -286,34 +298,50 @@ end
 
 
 function love.update(dt)
+	prof.push("frame")
+	
 	--hack to force 30 fps. TODO: support 30 or 60
 	if (loveFrames % 2 == 0) then
 		pico8.frames=pico8.frames+1
 
+		prof.push("update_buttons")
 		update_buttons()
+		prof.pop("update_buttons")
 
+		prof.push("cart update")
 		if pico8.cart._update then pico8.cart._update() end
+		prof.pop("cart update")
 	end
 	loveFrames = loveFrames + 1
 
 	if loveFrames%100 == 0 then
-		love.report = love.profiler.report('time', 20)
-		love.profiler.reset()
+		--love.report = love.profiler.report('time', 20)
+		--love.profiler.reset()
 	end
 end
 
 function love.draw()
+	prof.push("draw")
 	--hack to force 30 fps. TODO: support 30 or 60
 	if (loveFrames % 2 == 0) then
 		--love.graphics.setCanvas(pico8.screen)
 
+		prof.push("cart draw")
 		if pico8.cart._draw then 
 			pico8.cart._draw() 
 		end
+		prof.pop("cart draw")
 
+		prof.push("drawScreenBuffer")
+		drawScreenBuffer()
+		prof.pop("drawScreenBuffer")
 	end
 
+	prof.push("flip screen")
 	flip_screen()
+	prof.pop("flip screen")
+	prof.pop("draw")
+	prof.pop("frame")
 end
 
 function restore_camera()
@@ -343,13 +371,11 @@ function flip_screen()
 
 	love.graphics.clear()
 
-	love.graphics.print(love.report or "Please wait...", 500, 0)
+	--love.graphics.print(love.report or "Please wait...", 640, 0)
 
 	if showDebugInfo then
 		love.graphics.print(status, 0, 10)
 	end
-
-	drawScreenBuffer()
 
 	love.graphics.setColor(1, 1, 1, 1)
 	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
@@ -408,4 +434,8 @@ function update_buttons()
 	if pico8.keypressed.counter<=0 then
 		pico8.keypressed.counter=loop
 	end
+end
+
+function love.quit()
+    prof.write("prof.mpack")
 end
