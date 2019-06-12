@@ -652,7 +652,56 @@ local function getLineXAndYArrays(x0, y0, x1, y1)
 	return xs, ys
 end
 
-local function getCircFillXAndYArrays(cx, cy, r)
+local function populateBufsForLine(x0, y0, x1, y1)
+	if x0~=x0 or y0~=y0 or x1~=x1 or y1~=y1 then
+		warning("line has NaN value")
+		return
+	end
+
+	x0=flr(x0)
+	y0=flr(y0)
+	x1=flr(x1)
+	y1=flr(y1)
+
+	local xmin = api.min(x0, x1)
+	local xmax = api.max(x0, x1)
+	
+	local ymin = api.min(y0, y1)
+	local ymax = api.max(y0, y1)
+
+	local rise = ymax - ymin
+	local run = xmax - xmin
+
+	local ceil = math.ceil
+
+	local i = 1
+
+	if run == 0 then
+		--vertical line
+		for i = 1, rise + 1 do
+			xBuf[i] = xmin
+			yBuf[i] = ymin + (i - 1)
+		end
+	else
+		local slope = rise / run
+		if slope >= 1 then
+			for i = 1, rise + 1 do
+				xBuf[i] = xmin + ceil((i - 1) / slope)
+				yBuf[i] = ymin + (i - 1)
+			end
+		else
+			for i = 1, run + 1 do
+				xBuf[i] = xmin + (i - 1)
+				yBuf[i] = ymin + ceil((i - 1) * slope)
+			end
+
+		end
+	end
+
+	return i
+end
+
+local function populateBufsForCircFill(cx, cy, r)
 	cx=flr(cx)
 	cy=flr(cy)
 	r=flr(r)
@@ -661,8 +710,6 @@ local function getCircFillXAndYArrays(cx, cy, r)
 	local err=1-r
 
 	local lines={}
-	local xs = {}
-	local ys = {}
 
 	while y<=x do
 		_plot4points(lines, cx, cy, x, y)
@@ -683,12 +730,12 @@ local function getCircFillXAndYArrays(cx, cy, r)
 		local circLineXs, circLineYs = getLineXAndYArrays(lines[i][1], lines[i][2], lines[i][3], lines[i][4])
 		for j=1, #circLineXs do
 			pointCount = pointCount + 1
-			xs[pointCount] = circLineXs[j]
-			ys[pointCount] = circLineYs[j]
+			xBuf[pointCount] = circLineXs[j]
+			yBuf[pointCount] = circLineYs[j]
 		end
 	end
 
-	return xs, ys
+	return pointCount
 end
 
 function api.circfill(cx, cy, r, col)
@@ -696,9 +743,9 @@ function api.circfill(cx, cy, r, col)
 		color(col)
 	end
 
-	local xs, ys = getCircFillXAndYArrays(cx, cy, r)
+	local count = populateBufsForCircFill(cx, cy, r)
 
-	setSeparatedPointsOnScreenBuffer(xs, ys, col)
+	moveXAndYBufToScreen(count, col)
 
 end
 
@@ -708,9 +755,9 @@ function api.line(x0, y0, x1, y1, col)
 		color(col)
 	end
 
-	local xs, ys = getLineXAndYArrays(x0, y0, x1, y1)
+	local count = populateBufsForLine(x0, y0, x1, y1)
 
-	setSeparatedPointsOnScreenBuffer(xs, ys, col)
+	moveXAndYBufToScreen(count, col)
 end
 
 
