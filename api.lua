@@ -246,8 +246,15 @@ function api.pset(x, y, col)
 		color(col)
 	end
 
+	--[[
 	setSeparatedPointsOnScreenBuffer({flr(x)}, {flr(y)}, col)
-	
+	]]
+
+	xBuf[1] = flr(x)
+	yBuf[1] = flr(y)
+
+	moveXAndYBufToScreen(1, col)
+
 end
 
 
