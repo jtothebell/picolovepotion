@@ -378,52 +378,6 @@ function api.tostr(val, hex)
 	end
 end
 
-local function getSprArrays(n, x, y, w, h, flip_x, flip_y)
-
-	n=flr(n)
-	w=w or 1
-	h=h or 1
-
-
-	local pixelW = flr(8 * w)
-	local pixelH = flr(8 * h)
-
-	local sx = flr(n%16)*8;
-	local sy = flr(n/16)*8
-
-	xs = {}
-	ys = {}
-	colors = {}
-	local pixelIdx = 1
-
-	local ssTable = pico8.spritesheet_table
-
-	for yInc=0, pixelH - 1 do
-		for xInc=0, pixelW - 1 do
-			local ssX = xInc
-			if flip_x then
-				ssX = pixelW - xInc - 1
-			end
-
-			local ssY = yInc
-			if flip_y then
-				ssY = pixelH - yInc - 1
-			end
-
-			local color = ssTable[sx + ssX][sy + ssY]
-			--todo check transparency here
-			if color > 0 then
-				xs[pixelIdx] = x + xInc
-				ys[pixelIdx] = y + yInc
-				colors[pixelIdx] = color	
-				pixelIdx = pixelIdx + 1
-			end
-		end
-	end
-
-	return xs, ys, colors
-end
-
 local function populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
 
 	n=flr(n)
@@ -468,11 +422,6 @@ local function populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
 end
 
 function api.spr(n, x, y, w, h, flip_x, flip_y)
-	--[[
-	local xs, ys, colors = getSprArrays(n, x, y, w, h, flip_x, flip_y)
-
-	setSeparatedSpritePointsOnScreenBuffer(xs, ys, colors)
-	]]
 
 	local count = populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
 
