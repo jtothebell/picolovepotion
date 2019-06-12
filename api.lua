@@ -246,10 +246,6 @@ function api.pset(x, y, col)
 		color(col)
 	end
 
-	--[[
-	setSeparatedPointsOnScreenBuffer({flr(x)}, {flr(y)}, col)
-	]]
-
 	xBuf[1] = flr(x)
 	yBuf[1] = flr(y)
 
@@ -458,10 +454,38 @@ local function getSsprArrays(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
     return xs, ys, colors
 end
 
-function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
-	local xs, ys, colors = getSsprArrays(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+local function populateBufsForSspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+    dw=dw or sw
+    dh=dh or sh
 
-	setSeparatedSpritePointsOnScreenBuffer(xs, ys, colors)
+	local widthFactor = sw / dw
+	local heightFactor = sh / dh
+
+    local pixelIdx = 0
+    local ssTable = pico8.spritesheet_table
+    for yInc=0, dh - 1 do
+		for xInc=0, dw - 1 do
+			local ssDeltaX = flr(xInc * widthFactor)
+			if flip_x then ssDeltaX = sw - ssDeltaX end
+			local ssDeltaY = flr(yInc * heightFactor)
+			if flip_y then ssDeltaY = sh - ssDeltaY end
+
+            local color = ssTable[sx + ssDeltaX][sy + ssDeltaY]
+			if color > 0 then
+				pixelIdx = pixelIdx + 1
+				xs[pixelIdx] = dx + xInc
+				ys[pixelIdx] = dy + yInc
+				colors[pixelIdx] =  color
+            end
+        end
+    end
+    return pixelIdx
+end
+
+function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+	local count = populateBufsForSspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+
+	moveXAndYAndCBufToScreen(count)
 end
 
 local function getRectXAndYArrays(x0, y0, x1, y1)
