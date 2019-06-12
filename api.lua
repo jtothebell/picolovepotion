@@ -516,14 +516,40 @@ local function getRectXAndYArrays(x0, y0, x1, y1)
 	return xs, ys
 end
 
+local function populateBufsForRect(x0, y0, x1, y1)
+	local w, h=flr(x1-x0), flr(y1-y0)
+
+	local pointCount = 0
+
+	for i = 1, w + 1 do
+		local index = pointCount + 1
+		xs[index] = x0 + (i - 1)
+		ys[index] = y0
+		xs[index + 1] = x0 + (i - 1)
+		ys[index + 1] = y1
+		pointCount = pointCount + 2
+	end
+
+	for i = 1, h + 1 do
+		local index = pointCount + 1
+		xs[index] = x0
+		ys[index] = y0 + (i - 1)
+		xs[index + 1] = x1
+		ys[index + 1] = y0 + (i - 1)
+		pointCount = pointCount + 2
+	end
+
+	return pointCount
+end
+
 function api.rect(x0, y0, x1, y1, col)
 	if col then
 		color(col)
 	end
 
-	local xs, ys = getRectXAndYArrays(x0, y0, x1, y1)
+	local count = populateBufsForRect(x0, y0, x1, y1)
 
-	setSeparatedPointsOnScreenBuffer(xs, ys, col)
+	moveXAndYBufToScreen(count, col)
 
 end
 
