@@ -189,17 +189,7 @@ function api.pget(x, y)
 
 	local index = y*pico8.resolution[2] + x + 1
 	return pico8.screen_buffer[index]
-	--TODO: ruh roh :( need imageData support from LovePotion, or huge refactor
-	--[[
-	if x>=0 and x<pico8.resolution[1] and y>=0 and y<pico8.resolution[2] then
-		love.graphics.setCanvas()
-		local c=pico8.screen:newImageData():getPixel(flr(x), flr(y))*15
-		love.graphics.setCanvas(pico8.screen)
-		return c
-	end
-	warning(string.format("pget out of screen %d, %d", x, y))
-	]]
-	--return 0
+
 end
 
 function api.color(c)
