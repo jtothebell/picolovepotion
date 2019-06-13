@@ -380,7 +380,9 @@ function love.draw()
 		end
 		prof.pop("cart draw")
 
+		--faster on switch, minimally slower on pc
 		--drawScreenBuffer()
+		--(slightly) faster on pc, significantly slower on switch
 		drawScreenBuffer2()
 	end
 
