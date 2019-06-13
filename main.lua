@@ -4,8 +4,8 @@ local cartPath = 'game/otherTestGames/celeste.p8'
 --local cartPath = 'game/otherTestGames/api.p8'
 --local cartPath = 'game/linetest.p8'
 
---PROF_CAPTURE = false
---prof = require("jprof")
+PROF_CAPTURE = true
+prof = require("jprof")
 
 --require("strict")
 
@@ -265,21 +265,21 @@ end
 
 
 function love.update(dt)
-	--prof.push("frame")
+	prof.push("frame")
 	
 	--hack to force 30 fps. TODO: support 30 or 60
 	if (loveFrames % 2 == 0) then
 		pico8.frames=pico8.frames+1
 
-		--prof.push("update_buttons")
+		prof.push("update_buttons")
 		update_buttons()
-		--prof.pop("update_buttons")
+		prof.pop("update_buttons")
 
-		--prof.push("cart update")
+		prof.push("cart update")
 		if pico8.cart._update then 
 			pico8.cart._update() 
 		end
-		--prof.pop("cart update")
+		prof.pop("cart update")
 	end
 	loveFrames = loveFrames + 1
 
@@ -290,6 +290,7 @@ function love.update(dt)
 end
 
 local function getScreenBufferPointsByColor()
+	prof.push("getScreenBufferPointsByColor")
 	local pointsByColor = {}
 	for i=1, 16 do
 		pointsByColor[i] = {}
@@ -311,47 +312,83 @@ local function getScreenBufferPointsByColor()
 			pointsByColor[cIdx][numPointVals+1] = {x, y}
 		end
 	end
+	prof.pop("getScreenBufferPointsByColor")
 
 	return pointsByColor
 end
 
 local function drawScreenBuffer()
+	prof.push("drawScreenBuffer")
 	local pointsByColor = getScreenBufferPointsByColor()
+	local palette = pico8.palette
 
 	love.graphics.setCanvas(pico8.screen)
 	love.graphics.clear()
 	for c, table in pairs(pointsByColor) do
 		if table ~= nil then
-			setShiftedColor(c - 1, true)
+			local color = palette[c]
+
+			prof.push("setColorAndPoints")
+			love.graphics.setColor(color[1], color[2], color[3], 1)
 
 			love.graphics.points(table)
+			prof.pop("setColorAndPoints")
 		end
 	end
 	love.graphics.setCanvas()
+	prof.pop("drawScreenBuffer")
+end
+
+local function drawScreenBuffer2()
+	prof.push("drawScreenBuffer2")
+
+	local palette = pico8.palette
+
+	love.graphics.setCanvas(pico8.screen)
+	love.graphics.clear()
+
+	local pixelIndex = 1
+	local cIdx = 1
+	local sb = pico8.screen_buffer
+
+	for y=0, resX - 1 do
+		for x=0, resY - 1 do
+			pixelIndex = y*resY + x + 1
+			cIdx = (sb[pixelIndex] or 0) + 1
+			local color = palette[cIdx]
+
+			love.graphics.setColor(color[1], color[2], color[3], 1)
+
+			love.graphics.points(x, y)
+		end
+	end
+			
+
+	love.graphics.setCanvas()
+	prof.pop("drawScreenBuffer2")
 end
 
 function love.draw()
-	--prof.push("draw")
+	prof.push("draw")
 	--hack to force 30 fps. TODO: support 30 or 60
 	if (loveFrames % 2 == 0) then
 		--love.graphics.setCanvas(pico8.screen)
 
-		--prof.push("cart draw")
+		prof.push("cart draw")
 		if pico8.cart._draw then 
 			pico8.cart._draw() 
 		end
-		--prof.pop("cart draw")
+		prof.pop("cart draw")
 
-		--prof.push("drawScreenBuffer")
-		drawScreenBuffer()
-		--prof.pop("drawScreenBuffer")
+		--drawScreenBuffer()
+		drawScreenBuffer2()
 	end
 
-	--prof.push("flip screen")
+	prof.push("flip screen")
 	flip_screen()
-	--prof.pop("flip screen")
-	--prof.pop("draw")
-	--prof.pop("frame")
+	prof.pop("flip screen")
+	prof.pop("draw")
+	prof.pop("frame")
 end
 
 
@@ -379,7 +416,8 @@ function flip_screen()
 end
 
 function love.gamepadpressed(joy, button)
-    if button == exitKey then
+	if button == exitKey then
+		prof.write("prof.mpack")
         love.event.quit()
     else
 		api.add(currentButtonDown, button)
@@ -426,6 +464,6 @@ function update_buttons()
 	end
 end
 
---function love.quit()
-    --prof.write("--prof.mpack")
---end
+function love.quit()
+    prof.write("prof.mpack")
+end

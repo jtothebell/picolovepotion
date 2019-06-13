@@ -24,6 +24,7 @@ local function clipContains(clip, x, y)
 end
 
 local function moveXAndYBufToScreen(count, colorIdx)
+	prof.push("moveXAndYBufToScreen")
 	local lp8 = pico8
 	local clip = lp8.clip
 	local camera_x = lp8.camera_x
@@ -46,9 +47,11 @@ local function moveXAndYBufToScreen(count, colorIdx)
 			screen_buffer[index] = color
 		end
 	end
+	prof.pop("moveXAndYBufToScreen")
 end
 
 local function moveXAndYAndCBufToScreen(count)
+	prof.push("moveXAndYAndCBufToScreen")
 	local lp8 = pico8
 	local clip = lp8.clip
 	local camera_x = lp8.camera_x
@@ -69,6 +72,7 @@ local function moveXAndYAndCBufToScreen(count)
 			screen_buffer[index] = color
 		end
 	end
+	prof.pop("moveXAndYAndCBufToScreen")
 end
 
 
@@ -253,6 +257,7 @@ local function populateBufsForPrint(str, x, y)
 end
 
 function api.print(str, x, y, col)
+	prof.push("print")
 	if col then
 		color(col)
 	end
@@ -260,7 +265,7 @@ function api.print(str, x, y, col)
 	local pointCount = populateBufsForPrint(str, x, y)
 
 	moveXAndYBufToScreen(pointCount, col)
-
+	prof.pop("print")
 end
 
 api.printh=print
@@ -337,9 +342,11 @@ local function populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
 end
 
 function api.spr(n, x, y, w, h, flip_x, flip_y)
+	prof.push("spr")
 	local count = populateBufsForSpr(n, x, y, w, h, flip_x, flip_y)
 
 	moveXAndYAndCBufToScreen(count)
+	prof.pop("spr")
 end
 
 local function populateBufsForSspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
@@ -371,9 +378,11 @@ local function populateBufsForSspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+	prof.push("sspr")
 	local count = populateBufsForSspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 
 	moveXAndYAndCBufToScreen(count)
+	prof.pop("sspr")
 end
 
 local function populateBufsForRect(x0, y0, x1, y1)
@@ -403,6 +412,7 @@ local function populateBufsForRect(x0, y0, x1, y1)
 end
 
 function api.rect(x0, y0, x1, y1, col)
+	prof.push("rect")
 	if col then
 		color(col)
 	end
@@ -410,6 +420,7 @@ function api.rect(x0, y0, x1, y1, col)
 	local count = populateBufsForRect(x0, y0, x1, y1)
 
 	moveXAndYBufToScreen(count, col)
+	prof.pop("rect")
 
 end
 
@@ -441,7 +452,7 @@ local function populateBufsForRectFill(x0, y0, x1, y1)
 end
 
 function api.rectfill(x0, y0, x1, y1, col)
-	--prof.push("rectfill")
+	prof.push("rectfill")
 	if col then
 		color(col)
 	end
@@ -451,7 +462,7 @@ function api.rectfill(x0, y0, x1, y1, col)
 	moveXAndYBufToScreen(count, col)
 	
 
-	--prof.pop("rectfill")
+	prof.pop("rectfill")
 end
 
 local function populateBufsForCirc(ox, oy, r)
@@ -512,6 +523,7 @@ local function populateBufsForCirc(ox, oy, r)
 end
 
 function api.circ(ox, oy, r, col)
+	prof.push("circ")
 	if col then
 		color(col)
 	end
@@ -519,6 +531,7 @@ function api.circ(ox, oy, r, col)
 	local count = populateBufsForCirc(ox, oy, r)
 
 	moveXAndYBufToScreen(count, col)
+	prof.pop("circ")
 
 end
 
@@ -682,6 +695,7 @@ local function populateBufsForCircFill(cx, cy, r)
 end
 
 function api.circfill(cx, cy, r, col)
+	prof.push("circfill")
 	if col then
 		color(col)
 	end
@@ -689,11 +703,13 @@ function api.circfill(cx, cy, r, col)
 	local count = populateBufsForCircFill(cx, cy, r)
 
 	moveXAndYBufToScreen(count, col)
+	prof.pop("circfill")
 
 end
 
 
 function api.line(x0, y0, x1, y1, col)
+	prof.push("line")
 	if col then
 		color(col)
 	end
@@ -701,6 +717,7 @@ function api.line(x0, y0, x1, y1, col)
 	local count = populateBufsForLine(x0, y0, x1, y1)
 
 	moveXAndYBufToScreen(count, col)
+	prof.pop("line")
 end
 
 
@@ -766,6 +783,7 @@ function api.fillp(p)
 end
 
 function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
+	prof.push("map")
 	cel_x=flr(cel_x or 0)
 	cel_y=flr(cel_y or 0)
 	sx=flr(sx or 0)
@@ -794,6 +812,8 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 			end
 		end
 	end
+
+	prof.pop("map")
 end
 api.mapdraw=api.map
 
