@@ -242,7 +242,6 @@ function cart.load_p8(filename)
 		love.graphics.setCanvas(pico8.screen)
 		love.graphics.clear()
 		love.graphics.origin()
-		restore_clip()
 		ok, result=pcall(f)
 		if not ok then
 			updateStatus("Error running lua: "..tostring(result))

@@ -1,10 +1,13 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
 --local cartPath = 'game/otherTestGames/lilking.p8'
---local cartPath = 'game/otherTestGames/celeste.p8'
-local cartPath = 'game/otherTestGames/api.p8'
+local cartPath = 'game/otherTestGames/celeste.p8'
+--local cartPath = 'game/otherTestGames/api.p8'
+--local cartPath = 'game/linetest.p8'
 
-PROF_CAPTURE = true
-prof = require("jprof")
+--PROF_CAPTURE = false
+--prof = require("jprof")
+
+--require("strict")
 
 pico8={
 	fps=30,
@@ -88,7 +91,7 @@ local frametime=1/pico8.fps
 local cart=nil
 local cartname=nil
 local scale=5
-local xpadding=0
+local xpadding=320
 local ypadding=40
 
 local resX = flr(pico8.resolution[1])
@@ -97,6 +100,8 @@ local resY = flr(pico8.resolution[2])
 local api, cart
 
 local loveFrames = 0
+
+local currentButtonDown = {}
 
 --log=print
 --log=function() end
@@ -110,16 +115,6 @@ end
 
 function toggleShowDebugInfo(isOn)
 	showDebugInfo = isOn
-end
-
-function restore_clip()
-	--[[
-	if pico8.clip then
-		love.graphics.setScissor(unpack(pico8.clip))
-	else
-		love.graphics.setScissor()
-	end
-	]]
 end
 
 function setColor(c)
@@ -173,6 +168,7 @@ function _load(filename)
 	updateStatus('calling load_p8 on ' .. filename)
 	pico8.cart=cart.load_p8(filename)
 
+	updateStatus('cart loaded')
 	for i=0, 0x1c00-1 do
 		pico8.usermemory[i]=0
 	end
@@ -185,37 +181,11 @@ function _load(filename)
 	else
 		setfps(30)
 	end
+
+	updateStatus('_load completed')
 end
 
-function getScreenBufferPointsByColor()
-	local pointsByColor = {}
-	for i=1, 16 do
-		pointsByColor[i] = {}
-	end
 
-	local pixelIndex = 1
-	local cIdx = 1
-
-	local numPointVals = 0
-	local pointsAdded = 1
-	local sb = pico8.screen_buffer
-
-	for y=0, resX - 1 do
-		for x=0, resY - 1 do
-			pixelIndex = y*resY + x + 1
-			cIdx = (sb[pixelIndex] or 0) + 1
-
-			numPointVals = #pointsByColor[cIdx]
-			pointsAdded = 1
-
-			pointsByColor[cIdx][numPointVals+pointsAdded] = x
-			pointsByColor[cIdx][numPointVals+pointsAdded + 1] = y
-			pointsAdded = pointsAdded + 1
-		end
-	end
-
-	return pointsByColor
-end
 
 
 function setfps(fps)
@@ -232,11 +202,6 @@ function love.load()
 	--love.profiler = require('profile')  
   	--love.profiler.hookall("Lua")
 	--love.profiler.start()
-
-	
-	
-		
-
 
 	currentButtonDown = {}
 
@@ -294,23 +259,27 @@ function love.load()
 
 	-- load the cart
 	_load(cartPath)
+
+	updateStatus('load completed')
 end
 
 
 function love.update(dt)
-	prof.push("frame")
+	--prof.push("frame")
 	
 	--hack to force 30 fps. TODO: support 30 or 60
 	if (loveFrames % 2 == 0) then
 		pico8.frames=pico8.frames+1
 
-		prof.push("update_buttons")
+		--prof.push("update_buttons")
 		update_buttons()
-		prof.pop("update_buttons")
+		--prof.pop("update_buttons")
 
-		prof.push("cart update")
-		if pico8.cart._update then pico8.cart._update() end
-		prof.pop("cart update")
+		--prof.push("cart update")
+		if pico8.cart._update then 
+			pico8.cart._update() 
+		end
+		--prof.pop("cart update")
 	end
 	loveFrames = loveFrames + 1
 
@@ -320,36 +289,33 @@ function love.update(dt)
 	end
 end
 
-function love.draw()
-	prof.push("draw")
-	--hack to force 30 fps. TODO: support 30 or 60
-	if (loveFrames % 2 == 0) then
-		--love.graphics.setCanvas(pico8.screen)
-
-		prof.push("cart draw")
-		if pico8.cart._draw then 
-			pico8.cart._draw() 
-		end
-		prof.pop("cart draw")
-
-		prof.push("drawScreenBuffer")
-		drawScreenBuffer()
-		prof.pop("drawScreenBuffer")
+local function getScreenBufferPointsByColor()
+	local pointsByColor = {}
+	for i=1, 16 do
+		pointsByColor[i] = {}
 	end
 
-	prof.push("flip screen")
-	flip_screen()
-	prof.pop("flip screen")
-	prof.pop("draw")
-	prof.pop("frame")
+	local pixelIndex = 1
+	local cIdx = 1
+
+	local numPointVals = 0
+	local sb = pico8.screen_buffer
+
+	for y=0, resX - 1 do
+		for x=0, resY - 1 do
+			pixelIndex = y*resY + x + 1
+			cIdx = (sb[pixelIndex] or 0) + 1
+
+			numPointVals = #pointsByColor[cIdx]
+
+			pointsByColor[cIdx][numPointVals+1] = {x, y}
+		end
+	end
+
+	return pointsByColor
 end
 
-function restore_camera()
-	--love.graphics.origin()
-	--love.graphics.translate(-pico8.camera_x, -pico8.camera_y)
-end
-
-function drawScreenBuffer()
+local function drawScreenBuffer()
 	local pointsByColor = getScreenBufferPointsByColor()
 
 	love.graphics.setCanvas(pico8.screen)
@@ -363,6 +329,32 @@ function drawScreenBuffer()
 	end
 	love.graphics.setCanvas()
 end
+
+function love.draw()
+	--prof.push("draw")
+	--hack to force 30 fps. TODO: support 30 or 60
+	if (loveFrames % 2 == 0) then
+		--love.graphics.setCanvas(pico8.screen)
+
+		--prof.push("cart draw")
+		if pico8.cart._draw then 
+			pico8.cart._draw() 
+		end
+		--prof.pop("cart draw")
+
+		--prof.push("drawScreenBuffer")
+		drawScreenBuffer()
+		--prof.pop("drawScreenBuffer")
+	end
+
+	--prof.push("flip screen")
+	flip_screen()
+	--prof.pop("flip screen")
+	--prof.pop("draw")
+	--prof.pop("frame")
+end
+
+
 
 function flip_screen()
 	love.graphics.setCanvas()
@@ -384,8 +376,6 @@ function flip_screen()
 	--setting canvas here doesn't work for lovePotion. 
 	--we do it just before calling _draw() instead, but that may cause problems
 	--love.graphics.setCanvas(pico8.screen)
-	restore_clip()
-	restore_camera()
 end
 
 function love.gamepadpressed(joy, button)
@@ -436,6 +426,6 @@ function update_buttons()
 	end
 end
 
-function love.quit()
-    prof.write("prof.mpack")
-end
+--function love.quit()
+    --prof.write("--prof.mpack")
+--end
