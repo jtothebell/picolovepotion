@@ -1,5 +1,7 @@
 local flr=math.floor
 local lg=love.graphics
+local tinsert = table.insert
+local tremove = table.remove
 
 local function color(c, disallowShift)
 	c=flr(c or 0)%16
@@ -16,7 +18,7 @@ local function warning(msg)
 end
 
 local function _horizontal_line(lines, x0, y, x1)
-	table.insert(lines, {x0+0.5, y+0.5, x1+1.5, y+0.5})
+	tinsert(lines, {x0+0.5, y+0.5, x1+1.5, y+0.5})
 end
 
 local function _plot4points(lines, cx, cy, x, y)
@@ -57,6 +59,7 @@ function api.clip(x, y, w, h)
 	end
 end
 
+
 function api.cls(c)
 	c = tonumber(c) or 0
 	if c == nil then
@@ -72,7 +75,8 @@ function api.cls(c)
 	--pico love uses the background color for clear. This doesn't match love behavior
 	lg.setBackgroundColor(color[1], color[2], color[3])
 	lg.clear()
-	pico8.cursor={0, 0}
+	pico8.cursor[1] = 0
+	pico8.cursor[2] = 0
 
 end
 
@@ -171,7 +175,8 @@ end
 api.printh=print
 
 function api.cursor(x, y)
-	pico8.cursor={x or 0, y or 0}
+	pico8.cursor[1] = x or 0
+	pico8.cursor[2] = y or 0
 end
 
 function api.tonum(val)
@@ -288,15 +293,23 @@ function api.circ(ox, oy, r, col)
 	local decisionOver2=1-x
 
 	while y<=x do
-		table.insert(points, {ox+x, oy+y})
-		table.insert(points, {ox+y, oy+x})
-		table.insert(points, {ox-x, oy+y})
-		table.insert(points, {ox-y, oy+x})
+		tinsert(points, ox+x)
+		tinsert(points, oy+y)
+		tinsert(points, ox+y)
+		tinsert(points, oy+x)
+		tinsert(points, ox-x)
+		tinsert(points, oy+y)
+		tinsert(points, ox-y)
+		tinsert(points, oy+x)
 
-		table.insert(points, {ox-x, oy-y})
-		table.insert(points, {ox-y, oy-x})
-		table.insert(points, {ox+x, oy-y})
-		table.insert(points, {ox+y, oy-x})
+		tinsert(points, ox-x)
+		tinsert(points, oy-y)
+		tinsert(points, ox-y)
+		tinsert(points, oy-x)
+		tinsert(points, ox+x)
+		tinsert(points, oy-y)
+		tinsert(points, ox+y)
+		tinsert(points, oy-x)
 		y=y+1
 		if decisionOver2<0 then
 			decisionOver2=decisionOver2+2*y+1
@@ -824,7 +837,7 @@ function api.stat(x)
 	elseif x == 30 then
 		return #pico8.kbdbuffer ~= 0
 	elseif x == 31 then
-		return (table.remove(pico8.kbdbuffer, 1) or "")
+		return (tremove(pico8.kbdbuffer, 1) or "")
 	elseif x == 32 then
 		return getMouseX()
 	elseif x == 33 then
@@ -909,7 +922,7 @@ function api.del(a, dv)
 	if a==nil then return end
 	for i=1, #a do
 		if a[i]==dv then
-			table.remove(a, i)
+			tremove(a, i)
 			return
 		end
 	end
