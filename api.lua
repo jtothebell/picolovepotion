@@ -101,37 +101,12 @@ function api.splore()
 end
 
 function api.pset(x, y, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
 
 	love.graphics.points(flr(x), flr(y))
-
-	if prevCol then
-		color(prevCol)
-	end
 end
---[[
---attempt at setting up a functional approach to preserving color
-local function coloredFunc(col, func)
-	local prevCol = pico8.color
-	if col then
-		color(col)
-	end
-
-	func()
-
-	if prevCol then
-		color(prevCol)
-	end
-end
-
-function api.pset(x, y, col)
-	local func = function() love.graphics.points(flr(x), flr(y)) end
-	coloredFunc(col, func)
-end
-]]
 
 
 function api.pget(x, y)
@@ -155,7 +130,6 @@ function api.color(c)
 end
 
 function api.print(str, x, y, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -190,10 +164,6 @@ function api.print(str, x, y, col)
 		else
 			pico8.cursor[2]=pico8.cursor[2]+size
 		end
-	end
-
-	if prevCol then
-		color(prevCol)
 	end
 end
 
@@ -250,10 +220,14 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 	if not q then
 		updateStatus('missing quad', n)
 	end
+
+	love.graphics.setColor(1, 1, 1)
 	love.graphics.draw(pico8.spritesheet_data, q,
 		flr(x)+(w*8*(flip_x and 1 or 0)),
 		flr(y)+(h*8*(flip_y and 1 or 0)),
 		0, flip_x and-1 or 1, flip_y and-1 or 1)
+	
+	setColor(pico8.color)
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
@@ -262,14 +236,16 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 	-- FIXME: cache this quad
 	local q=love.graphics.newQuad(sx, sy, sw, sh, pico8.spritesheet_data:getDimensions())
 
+	love.graphics.setColor(1, 1, 1)
 	love.graphics.draw(pico8.spritesheet_data, q,
 		flr(dx)+(flip_x and dw or 0),
 		flr(dy)+(flip_y and dh or 0),
 		0, dw/sw*(flip_x and-1 or 1), dh/sh*(flip_y and-1 or 1))
+	
+	setColor(pico8.color)
 end
 
 function api.rect(x0, y0, x1, y1, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -279,14 +255,9 @@ function api.rect(x0, y0, x1, y1, col)
 	else
 		love.graphics.rectangle("line", flr(x0)+0.5, flr(y0)+0.5, w, h)
 	end
-
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 function api.rectfill(x0, y0, x1, y1, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -298,13 +269,9 @@ function api.rectfill(x0, y0, x1, y1, col)
 	end
 	love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 function api.circ(ox, oy, r, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -338,13 +305,9 @@ function api.circ(ox, oy, r, col)
 		love.graphics.points(points)
 	end
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 function api.circfill(cx, cy, r, col)
-	local prevCol = pico8.color
 	if col then
 		color(col)
 	end
@@ -376,14 +339,9 @@ function api.circfill(cx, cy, r, col)
 		end
 	end
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 function api.line(x0, y0, x1, y1, col)
-	local prevCol = pico8.color
-
 	if col then
 		color(col)
 	end
@@ -409,9 +367,6 @@ function api.line(x0, y0, x1, y1, col)
 		--love.graphics.points(x1+0.5, y1+0.5)
 	end
 
-	if prevCol then
-		color(prevCol)
-	end
 end
 
 function api.pal(c0, c1, p)
@@ -493,7 +448,9 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 							local yPos = sy + (8*y) - pico8.camera_y;
 							--limit drawing to what is on screen
 							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
+								love.graphics.setColor(1, 1, 1, 1)
 								love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
+								setColor(pico8.color)
 							end
 						end
 					end

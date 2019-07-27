@@ -88,6 +88,7 @@ local ypadding=40
 local api, cart
 
 local loveFrames = 0
+local fps = 30
 
 --log=print
 --log=function() end
@@ -176,6 +177,7 @@ function setfps(fps)
 	if pico8.fps<=0 then
 		pico8.fps=30
 	end
+	fps = pico8.fps
 	frametime=1/pico8.fps
 end
 
@@ -294,7 +296,7 @@ end
 
 function love.update(dt)
 	--hack to force 30 fps. TODO: support 30 or 60
-	if shouldDraw(pico8.fps, loveFrames) then
+	if shouldDraw(fps, loveFrames) then
 		pico8.frames=pico8.frames+1
 
 		update_buttons()
@@ -310,7 +312,7 @@ end
 
 function love.draw()
 	--hack to force 30 fps. TODO: support 30 or 60
-	if shouldDraw(pico8.fps, loveFrames) then
+	if shouldDraw(fps, loveFrames) then
 		love.graphics.setCanvas(pico8.screen)
 
 		if pico8.cart._draw then 
