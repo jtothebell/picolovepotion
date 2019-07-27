@@ -87,6 +87,7 @@ local api, cart
 
 local loveFrames = 0
 local fps = 30
+local currentButtonDown = {}
 
 --log=print
 --log=function() end
@@ -181,9 +182,6 @@ end
 
 
 function love.load()
-
-	currentButtonDown = {}
-
     local down, OS = "plus", {love.system.getOS()}
     if OS[2] == "3DS" then
         down = "start"
