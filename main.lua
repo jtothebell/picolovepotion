@@ -284,8 +284,17 @@ function getSpritesheetCanvas()
 	return canvas
 end
 
+local function shouldDraw(frameRate, drawCount)
+	if framerate and frameRate > 59 then
+		return true
+	end
+
+	return drawCount % 2 == 0
+end
+
 function love.update(dt)
-	if pico8.fps < 59 and loveFrames % 2 == 0 then
+	--hack to force 30 fps. TODO: support 30 or 60
+	if shouldDraw(pico8.fps, loveFrames) then
 		pico8.frames=pico8.frames+1
 
 		update_buttons()
@@ -300,7 +309,8 @@ function love.update(dt)
 end
 
 function love.draw()
-	if (pico8.fps < 59 and loveFrames % 2 == 0) then
+	--hack to force 30 fps. TODO: support 30 or 60
+	if shouldDraw(pico8.fps, loveFrames) then
 		love.graphics.setCanvas(pico8.screen)
 
 		if pico8.cart._draw then 
