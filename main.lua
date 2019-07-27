@@ -60,13 +60,11 @@ pico8={
 	spritesheet_cache={}
 }
 
-function add(a, v)
-	if a==nil then return end
+local function add(a, v)
 	a[#a+1]=v
 end
 
-function del(a, dv)
-	if a==nil then return end
+local function del(a, dv)
 	for i=1, #a do
 		if a[i]==dv then
 			table.remove(a, i)
@@ -356,12 +354,12 @@ function love.gamepadpressed(joy, button)
     if button == exitKey then
         love.event.quit()
     else
-		api.add(currentButtonDown, button)
+		add(currentButtonDown, button)
     end
 end
 
 function love.gamepadreleased(joy, button)
-	api.del(currentButtonDown, button)
+	del(currentButtonDown, button)
 end
 
 function update_buttons()
