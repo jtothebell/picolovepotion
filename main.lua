@@ -338,7 +338,10 @@ function flip_screen()
 	end
 
 
+	local r, g, b, a = love.graphics.getColor()
+	love.graphics.setColor(1, 1, 1)
 	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
+	love.graphics.setColor(r, g, b, a)
 
 	-- get ready for next time
 	--setting canvas here doesn't work for lovePotion. 

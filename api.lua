@@ -221,13 +221,14 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 		updateStatus('missing quad', n)
 	end
 
+	local r, g, b, a = love.graphics.getColor()
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.draw(pico8.spritesheet_data, q,
 		flr(x)+(w*8*(flip_x and 1 or 0)),
 		flr(y)+(h*8*(flip_y and 1 or 0)),
 		0, flip_x and-1 or 1, flip_y and-1 or 1)
 	
-	setColor(pico8.color)
+	love.graphics.setColor(r, g, b, a)
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
@@ -236,6 +237,7 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 	-- FIXME: cache this quad
 	local q=love.graphics.newQuad(sx, sy, sw, sh, pico8.spritesheet_data:getDimensions())
 
+	local r, g, b, a = love.graphics.getColor()
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.draw(pico8.spritesheet_data, q,
 		flr(dx)+(flip_x and dw or 0),
@@ -243,6 +245,7 @@ function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 		0, dw/sw*(flip_x and-1 or 1), dh/sh*(flip_y and-1 or 1))
 	
 	setColor(pico8.color)
+	love.graphics.setColor(r, g, b, a)
 end
 
 function api.rect(x0, y0, x1, y1, col)
@@ -448,9 +451,10 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 							local yPos = sy + (8*y) - pico8.camera_y;
 							--limit drawing to what is on screen
 							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
+								local r, g, b, a = love.graphics.getColor()
 								love.graphics.setColor(1, 1, 1, 1)
 								love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
-								setColor(pico8.color)
+								love.graphics.setColor(r, g, b, a)
 							end
 						end
 					end
