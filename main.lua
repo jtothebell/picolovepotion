@@ -87,8 +87,8 @@ local ypadding=40
 local api, cart
 
 local loveFrames = 0
-local fps = 30
 local currentButtonDown = {}
+local nthDrawFrame
 
 --log=print
 --log=function() end
@@ -164,11 +164,16 @@ function _load(filename)
 		pico8.cartdata[i]=0
 	end
 	if pico8.cart._init then pico8.cart._init() end
+
 	if pico8.cart._update60 then
+		updateStatus('setting fps to 60')
 		setfps(60)
 	else
+		updateStatus('setting fps to 30')
 		setfps(30)
 	end
+
+	updateStatus('nthDrawFrame: ' .. nthDrawFrame)
 end
 
 
@@ -177,7 +182,13 @@ function setfps(fps)
 	if pico8.fps<=0 then
 		pico8.fps=30
 	end
-	fps = pico8.fps
+
+	if fps > 30 then
+		nthDrawFrame = 1
+	else
+		nthDrawFrame = 2
+	end
+
 	frametime=1/pico8.fps
 end
 
@@ -283,17 +294,9 @@ function getSpritesheetCanvas()
 	return canvas
 end
 
-local function shouldDraw(frameRate, drawCount)
-	if framerate and frameRate > 59 then
-		return true
-	end
-
-	return drawCount % 2 == 0
-end
 
 function love.update(dt)
-	--hack to force 30 fps. TODO: support 30 or 60
-	if shouldDraw(fps, loveFrames) then
+	if loveFrames % nthDrawFrame == 0 then
 		pico8.frames=pico8.frames+1
 
 		update_buttons()
@@ -308,8 +311,7 @@ function love.update(dt)
 end
 
 function love.draw()
-	--hack to force 30 fps. TODO: support 30 or 60
-	if shouldDraw(fps, loveFrames) then
+	if loveFrames % nthDrawFrame == 0  then
 		lg.setCanvas(pico8.screen)
 
 		if pico8.cart._draw then 
