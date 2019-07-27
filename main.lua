@@ -1,5 +1,5 @@
 --!!!!EDIT HERE TO LOAD A DIFFERENT CART!!!!--
-local cartPath = 'game/otherTestGames/celeste.p8'
+local cartPath = 'game/otherTestGames/mrblast.p8'
 
 pico8={
 	fps=30,
@@ -285,20 +285,22 @@ function getSpritesheetCanvas()
 end
 
 function love.update(dt)
-	--hack to force 30 fps. TODO: support 30 or 60
-	if (loveFrames % 2 == 0) then
+	if pico8.fps < 59 and loveFrames % 2 == 0 then
 		pico8.frames=pico8.frames+1
 
 		update_buttons()
 
-		if pico8.cart._update then pico8.cart._update() end
+		if pico8.cart._update60 then
+			pico8.cart._update60()
+		elseif pico8.cart._update then
+			pico8.cart._update()
+		end
 	end
 	loveFrames = loveFrames + 1
 end
 
 function love.draw()
-	--hack to force 30 fps. TODO: support 30 or 60
-	if (loveFrames % 2 == 0) then
+	if (pico8.fps < 59 and loveFrames % 2 == 0) then
 		love.graphics.setCanvas(pico8.screen)
 
 		if pico8.cart._draw then 
