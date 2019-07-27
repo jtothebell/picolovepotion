@@ -1,4 +1,5 @@
 local flr=math.floor
+local lg=love.graphics
 
 local function color(c, disallowShift)
 	c=flr(c or 0)%16
@@ -48,10 +49,10 @@ end
 
 function api.clip(x, y, w, h)
 	if x and y and w and h then
-		love.graphics.setScissor(x, y, w, h)
+		lg.setScissor(x, y, w, h)
 		pico8.clip={x, y, w, h}
 	else
-		love.graphics.setScissor()
+		lg.setScissor()
 		pico8.clip=nil
 	end
 end
@@ -64,13 +65,13 @@ function api.cls(c)
 
 	pico8.clip=nil
 	--size of pico 8 screen
-	love.graphics.setScissor()
+	lg.setScissor()
 	--TODO clear the color passed
 	local color = pico8.palette[c + 1]
-	--love.graphics.clear(color[1], color[2], color[3], 1)
+	--lg.clear(color[1], color[2], color[3], 1)
 	--pico love uses the background color for clear. This doesn't match love behavior
-	love.graphics.setBackgroundColor(color[1], color[2], color[3])
-	love.graphics.clear()
+	lg.setBackgroundColor(color[1], color[2], color[3])
+	lg.clear()
 	pico8.cursor={0, 0}
 
 end
@@ -105,7 +106,7 @@ function api.pset(x, y, col)
 		color(col)
 	end
 
-	love.graphics.points(flr(x), flr(y))
+	lg.points(flr(x), flr(y))
 end
 
 
@@ -115,9 +116,9 @@ function api.pget(x, y)
 	--TODO: ruh roh :( need imageData support from LovePotion, or huge refactor
 	--[[
 	if x>=0 and x<pico8.resolution[1] and y>=0 and y<pico8.resolution[2] then
-		love.graphics.setCanvas()
+		lg.setCanvas()
 		local c=pico8.screen:newImageData():getPixel(flr(x), flr(y))*15
-		love.graphics.setCanvas(pico8.screen)
+		lg.setCanvas(pico8.screen)
 		return c
 	end
 	warning(string.format("pget out of screen %d, %d", x, y))
@@ -145,7 +146,7 @@ function api.print(str, x, y, col)
 	for line in str:gmatch("(.-)\n") do
 		local xAdd = 0
     	for i = 1, #tostring(line) do
-        	love.graphics.draw(pico8.fontImg, pico8.fontQuads[string.sub(line, i, i)], pico8.cursor[1]+xAdd, pico8.cursor[2]+size)
+        	lg.draw(pico8.fontImg, pico8.fontQuads[string.sub(line, i, i)], pico8.cursor[1]+xAdd, pico8.cursor[2]+size)
         	xAdd = xAdd + 4
     	end
 		size=size+6
@@ -153,13 +154,13 @@ function api.print(str, x, y, col)
 
 	if not x and not y then
 		if pico8.cursor[2]+size>122 then
-			love.graphics.setColor(1, 1, 1, 1)
-			love.graphics.setCanvas(pico8.tmpscr)
-			love.graphics.draw(pico8.screen)
-			love.graphics.setCanvas(pico8.screen)
-			love.graphics.draw(pico8.tmpscr, 0, -size)
-			love.graphics.setColor(0, 0, 0, 1)
-			love.graphics.rectangle("fill", 0, pico8.resolution[2]-size, pico8.resolution[1], size)
+			lg.setColor(1, 1, 1, 1)
+			lg.setCanvas(pico8.tmpscr)
+			lg.draw(pico8.screen)
+			lg.setCanvas(pico8.screen)
+			lg.draw(pico8.tmpscr, 0, -size)
+			lg.setColor(0, 0, 0, 1)
+			lg.rectangle("fill", 0, pico8.resolution[2]-size, pico8.resolution[1], size)
 			setColor(pico8.color)
 		else
 			pico8.cursor[2]=pico8.cursor[2]+size
@@ -213,7 +214,7 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 		if pico8.quads[id] then
 			q=pico8.quads[id]
 		else
-			q=love.graphics.newQuad(flr(n%16)*8, flr(n/16)*8, 8*w, 8*h, 128, 128)
+			q=lg.newQuad(flr(n%16)*8, flr(n/16)*8, 8*w, 8*h, 128, 128)
 			pico8.quads[id]=q
 		end
 	end
@@ -221,31 +222,31 @@ function api.spr(n, x, y, w, h, flip_x, flip_y)
 		updateStatus('missing quad', n)
 	end
 
-	local r, g, b, a = love.graphics.getColor()
-	love.graphics.setColor(1, 1, 1)
-	love.graphics.draw(pico8.spritesheet_data, q,
+	local r, g, b, a = lg.getColor()
+	lg.setColor(1, 1, 1)
+	lg.draw(pico8.spritesheet_data, q,
 		flr(x)+(w*8*(flip_x and 1 or 0)),
 		flr(y)+(h*8*(flip_y and 1 or 0)),
 		0, flip_x and-1 or 1, flip_y and-1 or 1)
 	
-	love.graphics.setColor(r, g, b, a)
+	lg.setColor(r, g, b, a)
 end
 
 function api.sspr(sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
 	dw=dw or sw
 	dh=dh or sh
 	-- FIXME: cache this quad
-	local q=love.graphics.newQuad(sx, sy, sw, sh, pico8.spritesheet_data:getDimensions())
+	local q=lg.newQuad(sx, sy, sw, sh, pico8.spritesheet_data:getDimensions())
 
-	local r, g, b, a = love.graphics.getColor()
-	love.graphics.setColor(1, 1, 1)
-	love.graphics.draw(pico8.spritesheet_data, q,
+	local r, g, b, a = lg.getColor()
+	lg.setColor(1, 1, 1)
+	lg.draw(pico8.spritesheet_data, q,
 		flr(dx)+(flip_x and dw or 0),
 		flr(dy)+(flip_y and dh or 0),
 		0, dw/sw*(flip_x and-1 or 1), dh/sh*(flip_y and-1 or 1))
 	
 	setColor(pico8.color)
-	love.graphics.setColor(r, g, b, a)
+	lg.setColor(r, g, b, a)
 end
 
 function api.rect(x0, y0, x1, y1, col)
@@ -254,9 +255,9 @@ function api.rect(x0, y0, x1, y1, col)
 	end
 	local w, h=flr(x1-x0), flr(y1-y0)
 	if w==0 or h==0 then
-		love.graphics.rectangle("fill", flr(x0), flr(y0), w+1, h+1)
+		lg.rectangle("fill", flr(x0), flr(y0), w+1, h+1)
 	else
-		love.graphics.rectangle("line", flr(x0)+0.5, flr(y0)+0.5, w, h)
+		lg.rectangle("line", flr(x0)+0.5, flr(y0)+0.5, w, h)
 	end
 end
 
@@ -270,7 +271,7 @@ function api.rectfill(x0, y0, x1, y1, col)
 	if y1<y0 then
 		y0, y1=y1, y0
 	end
-	love.graphics.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
+	lg.rectangle("fill", flr(x0), flr(y0), flr(x1-x0)+1, flr(y1-y0)+1)
 
 end
 
@@ -305,7 +306,7 @@ function api.circ(ox, oy, r, col)
 		end
 	end
 	if #points>0 then
-		love.graphics.points(points)
+		lg.points(points)
 	end
 
 end
@@ -338,7 +339,7 @@ function api.circfill(cx, cy, r, col)
 	end
 	if #lines>0 then
 		for i=1, #lines do
-			love.graphics.line(lines[i])
+			lg.line(lines[i])
 		end
 	end
 
@@ -361,13 +362,13 @@ function api.line(x0, y0, x1, y1, col)
 
 	if x0==x1 or y0==y1 then
 		-- simple case draw a straight line
-		love.graphics.rectangle("fill", x0, y0, x1-x0+1, y1-y0+1)
+		lg.rectangle("fill", x0, y0, x1-x0+1, y1-y0+1)
 	else
 		--this line is too fat, but it will do for now
 		--TODO: redraw using points that isn't fat
-		love.graphics.line(x0+0.5, y0+0.5, x1+0.5, y1+0.5)
+		lg.line(x0+0.5, y0+0.5, x1+0.5, y1+0.5)
 		-- Final pixel not being reached?
-		--love.graphics.points(x1+0.5, y1+0.5)
+		--lg.points(x1+0.5, y1+0.5)
 	end
 
 end
@@ -451,10 +452,10 @@ function api.map(cel_x, cel_y, sx, sy, cel_w, cel_h, bitmask)
 							local yPos = sy + (8*y) - pico8.camera_y;
 							--limit drawing to what is on screen
 							if xPos > -9 and xPos < 128 and yPos > -9 and yPos < 128 then
-								local r, g, b, a = love.graphics.getColor()
-								love.graphics.setColor(1, 1, 1, 1)
-								love.graphics.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
-								love.graphics.setColor(r, g, b, a)
+								local r, g, b, a = lg.getColor()
+								lg.setColor(1, 1, 1, 1)
+								lg.draw(pico8.spritesheet_data, pico8.quads[v], sx + (8*x), sy + (8*y))
+								lg.setColor(r, g, b, a)
 							end
 						end
 					end

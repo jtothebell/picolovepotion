@@ -75,6 +75,7 @@ end
 
 
 local flr, abs=math.floor, math.abs
+local lg = love.graphics
 
 local frametime=1/pico8.fps
 local cart=nil
@@ -105,15 +106,15 @@ end
 
 function restore_clip()
 	if pico8.clip then
-		love.graphics.setScissor(unpack(pico8.clip))
+		lg.setScissor(unpack(pico8.clip))
 	else
-		love.graphics.setScissor()
+		lg.setScissor()
 	end
 end
 
 function setColor(c)
 	c = c + 1
-	love.graphics.setColor(pico8.palette[c][1], pico8.palette[c][2], pico8.palette[c][3], 1)
+	lg.setColor(pico8.palette[c][1], pico8.palette[c][2], pico8.palette[c][3], 1)
 end
 
 function setShiftedColor(c, alphat)
@@ -125,7 +126,7 @@ function setShiftedColor(c, alphat)
 	local colorIndex = pal_c + 1
 	local color = pico8.palette[colorIndex]
 
-	love.graphics.setColor(color[1], color[2], color[3], alpha)
+	lg.setColor(color[1], color[2], color[3], alpha)
 end
 
 local exts={'', '.p8'}
@@ -144,13 +145,13 @@ function _load(filename)
 
 	pico8.camera_x=0
 	pico8.camera_y=0
-	love.graphics.origin()
+	lg.origin()
 	pico8.clip=nil
-	love.graphics.setScissor()
+	lg.setScissor()
 	api.pal()
 	pico8.color=6
 	setColor(pico8.color)
-	love.graphics.setCanvas(pico8.screen)
+	lg.setCanvas(pico8.screen)
 	
 
 	updateStatus('calling load_p8 on ' .. filename)
@@ -188,15 +189,15 @@ function love.load()
     end
 	exitKey = down
 
-	love.graphics.clear()
-	love.graphics.setDefaultFilter('nearest', 'nearest')
-	pico8.screen=love.graphics.newCanvas(pico8.resolution[1], pico8.resolution[2])
-	pico8.tmpscr=love.graphics.newCanvas(pico8.resolution[1], pico8.resolution[2])
+	lg.clear()
+	lg.setDefaultFilter('nearest', 'nearest')
+	pico8.screen=lg.newCanvas(pico8.resolution[1], pico8.resolution[2])
+	pico8.tmpscr=lg.newCanvas(pico8.resolution[1], pico8.resolution[2])
 
 	--this runs initially, but font is not working... come back to this
-	--local font=love.graphics.newFont("PICO-8 mono.fnt", 1)
-	--love.graphics.setFont(font)
-	pico8.fontImg = love.graphics.newImage("font32bit.png")
+	--local font=lg.newFont("PICO-8 mono.fnt", 1)
+	--lg.setFont(font)
+	pico8.fontImg = lg.newImage("font32bit.png")
     pico8.fontQuads = {}
 
     local glyphs=""
@@ -208,18 +209,18 @@ function love.load()
 	end
 	pico8.glyphs = glyphs
     for i = 1, #glyphs do
-        pico8.fontQuads[string.sub(glyphs, i, i)] = love.graphics.newQuad((i-1)*4+1, 0, 3, 5, 593, 5)
+        pico8.fontQuads[string.sub(glyphs, i, i)] = lg.newQuad((i-1)*4+1, 0, 3, 5, 593, 5)
     end
 
 	--not implemented on switch
-	if love.graphics.setLineStyle then
-		love.graphics.setLineStyle('rough')
+	if lg.setLineStyle then
+		lg.setLineStyle('rough')
 	end
-	if love.graphics.setPointsize then
-		love.graphics.setPointSize(1)
+	if lg.setPointsize then
+		lg.setPointSize(1)
 	end
-	if love.graphics.setLineWidth then
-		love.graphics.setLineWidth(1)
+	if lg.setLineWidth then
+		lg.setLineWidth(1)
 	end
 
 	for i=0, 15 do
@@ -258,25 +259,25 @@ function getSpritesheetCanvas()
 		return cached
 	end
 
-	local canvas = love.graphics.newCanvas(128, 128)
+	local canvas = lg.newCanvas(128, 128)
 
 	pico8.spritesheet_cache[currentPalKey] = canvas
-	love.graphics.setCanvas(canvas)
+	lg.setCanvas(canvas)
 	--workaround for bug in current lovepotion (5/2/19)
-	love.graphics.clear()
+	lg.clear()
 	--need to call this in case the camera has moved, we don't want our spritesheet offset
-	love.graphics.origin()
+	lg.origin()
 	
 
 	for c, table in pairs(pico8.spritesheet_pointsByColor) do
 		if table ~= nil then
 			setShiftedColor(c, true)
 
-			love.graphics.points(table)
+			lg.points(table)
 		end
 	end
 
-	love.graphics.setCanvas()
+	lg.setCanvas()
 	restore_camera()
 
 	return canvas
@@ -309,7 +310,7 @@ end
 function love.draw()
 	--hack to force 30 fps. TODO: support 30 or 60
 	if shouldDraw(fps, loveFrames) then
-		love.graphics.setCanvas(pico8.screen)
+		lg.setCanvas(pico8.screen)
 
 		if pico8.cart._draw then 
 			pico8.cart._draw() 
@@ -320,33 +321,33 @@ function love.draw()
 end
 
 function restore_camera()
-	love.graphics.origin()
-	love.graphics.translate(-pico8.camera_x, -pico8.camera_y)
+	lg.origin()
+	lg.translate(-pico8.camera_x, -pico8.camera_y)
 end
 
 function flip_screen()
-	love.graphics.setCanvas()
-	love.graphics.origin()
-	love.graphics.setScissor()
+	lg.setCanvas()
+	lg.origin()
+	lg.setScissor()
 
-	love.graphics.clear()
+	lg.clear()
 
-	--love.graphics.print(love.system.getOS(), 0, 0)
+	--lg.print(love.system.getOS(), 0, 0)
 
 	if showDebugInfo then
-		love.graphics.print(status, 0, 10)
+		lg.print(status, 0, 10)
 	end
 
 
-	local r, g, b, a = love.graphics.getColor()
-	love.graphics.setColor(1, 1, 1)
-	love.graphics.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
-	love.graphics.setColor(r, g, b, a)
+	local r, g, b, a = lg.getColor()
+	lg.setColor(1, 1, 1)
+	lg.draw(pico8.screen, xpadding, ypadding, 0, scale, scale)
+	lg.setColor(r, g, b, a)
 
 	-- get ready for next time
 	--setting canvas here doesn't work for lovePotion. 
 	--we do it just before calling _draw() instead, but that may cause problems
-	--love.graphics.setCanvas(pico8.screen)
+	--lg.setCanvas(pico8.screen)
 	restore_clip()
 	restore_camera()
 end
