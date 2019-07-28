@@ -57,7 +57,8 @@ pico8={
 	draw_palette={},
 	display_palette={},
 	pal_transparent={},
-	spritesheet_cache={}
+	spritesheet_cache={},
+	cartrom={}
 }
 
 local function add(a, v)

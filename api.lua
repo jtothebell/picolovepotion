@@ -591,6 +591,31 @@ function api.memset(dest_addr, val, len)
 end
 
 function api.reload(dest_addr, source_addr, len)
+	dest_addr = flr(dest_addr or 0)
+	source_addr = flr(source_addr or 0)
+	len = flr(len or 0x4300)
+
+	--reset everything
+	if dest_addr == 0 and source_addr == 0 and len == 0x4300 then
+		for i =0, 127 do
+			pico8.spritesheet_table[i] = {}
+			for j = 0, 127 do
+				pico8.spritesheet_table[i][j] = pico8.cartrom.spritesheet_table[i][j]
+			end
+		end
+
+		for y=0, 63 do
+			pico8.map[y]={}
+			for x=0, 127 do
+				pico8.map[y][x]=pico8.cartrom.map[y][x]
+			end
+		end
+
+		for i=0, 255 do
+			pico8.spriteflags[i]=pico8.cartrom.spriteflags[i]
+		end
+	end
+
 end
 
 function api.cstore(dest_addr, source_addr, len)

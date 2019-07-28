@@ -188,6 +188,28 @@ function cart.load_p8(filename)
 		end
 	end
 
+	--store data in cart section of pico8 for reload if necessary
+	pico8.cartrom.spritesheet_table={}
+	for i =0, 127 do
+		pico8.cartrom.spritesheet_table[i] = {}
+		for j = 0, 127 do
+			pico8.cartrom.spritesheet_table[i][j] = pico8.spritesheet_table[i][j]
+		end
+	end
+
+	pico8.cartrom.map={}
+	for y=0, 63 do
+		pico8.cartrom.map[y]={}
+		for x=0, 127 do
+			pico8.cartrom.map[y][x]=pico8.map[y][x]
+		end
+	end
+
+	pico8.cartrom.spriteflags={}
+	for i=0, 255 do
+		pico8.cartrom.spriteflags[i]=pico8.spriteflags[i]
+	end
+
 	-- patch the lua
 	lua=lua:gsub("!=", "~=").."\n"
 	-- rewrite shorthand if statements eg. if (not b) i=1 j=2
