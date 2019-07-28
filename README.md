@@ -24,7 +24,7 @@ LÖVE: https://love2d.org/
 
 #### How to use
  * Get a homebrew capable switch (I can't offher help on this, but you can start here: https://nh-server.github.io/switch-guide/)
- * Download the latest nightly LovePotion build (see doozer link on this page: https://github.com/TurtleP/LovePotion. Currently latest build is https://doozer.io/artifact/pr1zdkxfyj/LovePotion-switch-1.0.2.2.47.nro)
+ * Download the latest LovePotion build (see the releases page: https://github.com/TurtleP/LovePotion/releases. Currently latest build is 1.1.0)
  * put the LovePotion build in the "switch" folder of you Switch's SD card, and then PicoLovePotion (all files from this repo) in the "switch/LovePotion/game" directory
  * add your own *.p8 cart and change the name of the in main.lua
  * cross your fingers
@@ -34,7 +34,6 @@ LÖVE: https://love2d.org/
 #### Basic Roadmap:
 
  * Fix bugs
- * make both 30 and 60 fps work properly
  * optimize slowness (palette shifting, other places to combine pixel setting calls)
  * add png cart support? (may need image data support from LovePotion for this)
  * Add SFX and music support (may need support for creating in memory sound objects from LovePotion)
@@ -59,7 +58,6 @@ LÖVE: https://love2d.org/
 ##### Differences/Known issues:
 
  * pget() does not work (will require an update to LovePotion or a very big refactor to graphics)
- * Hard coded to use 30 fps update/draw calls for now
  * pal() and palt() are very slow on initial use, and screen palette shifting is not supported
  * Based on Lua 5.1, so GOTO (and possible other pico 8 supported features) not working
  * memory functions (peek(), poke(), memcpy(), memset(), etc) not implemented
