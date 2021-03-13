@@ -1,6 +1,8 @@
 PICOLOVEPOTION
 --------
 
+This project is no longer in development. Consider using https://github.com/jtothebell/fake-08 to play Pico 8 games on the Switch.
+
 A fork of the gamax92's fork of PICOLOVE, an implementation of PICO-8's API for the Löve Potion implementation of the LÖVE2D game engine
 
 Original PICOLOVE is on github at: https://github.com/picolove/picolove  
